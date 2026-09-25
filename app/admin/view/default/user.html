@@ -90,7 +90,12 @@
                   </div>
                 </td>
                 <td data-label="ID">{$u.id}</td>
-                <td data-label="名称">{$u.name}</td>
+                <td data-label="名称">
+                  <div class="ucell">
+                    <img class="uavatar" src="{:get_user_avatar($u)}" alt="" loading="lazy" onerror="this.classList.add('uavatar-err');this.src='data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22100%22%20height%3D%22100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23e2e8f0%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2240%22%20r%3D%2218%22%20fill%3D%22%2394a3b8%22%2F%3E%3Cpath%20d%3D%22M20%2090c0-16%2013-26%2030-26s30%2010%2030%2026%22%20fill%3D%22%2394a3b8%22%2F%3E%3C%2Fsvg%3E'">
+                    <span class="uname" title="{$u.name}">{$u.name}</span>
+                  </div>
+                </td>
                 <td data-label="账号">{$u.user}</td>
                 <td data-label="邮箱">{$u.mail|default='--'}</td>
                 <td data-label="QQ">{$u.qq|default='--'}</td>
@@ -189,6 +194,9 @@
 .nbadge.r { background:#fef2f2; color:#dc2626; }
 .nbadge.b { background:#eff6ff; color:#2563eb; }
 .finp { width:100%; padding:9px 13px; border:2px solid #e2e8f0; border-radius:10px; font-size:13px; transition:.2s; color:#334155; }
+.ucell { display:flex; align-items:center; gap:9px; min-width:0; }
+.uavatar { width:34px; height:34px; border-radius:50%; object-fit:cover; border:1.5px solid #e2e8f0; background:#f1f5f9; flex:0 0 34px; box-shadow:0 1px 3px rgba(15,23,42,.08); }
+.uname { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .finp:focus { border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,.1); outline:none; }
 .flbl { display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:5px; }
 .d-flex { display:flex; }
@@ -205,9 +213,11 @@
 </style>
 
 <script>
-// 全选
-$('#check-all').on('change', function() {
-    $('.ids').prop('checked', this.checked);
+// 全选（必须等 footer 里 jQuery 加载完成后再绑定，否则报 $ is not defined）
+document.addEventListener('DOMContentLoaded', function () {
+    $('#check-all').on('change', function() {
+        $('.ids').prop('checked', this.checked);
+    });
 });
 
 // 批量删除
@@ -218,7 +228,7 @@ function batchDel(){
     });
     var id = id.join(",");
     if(id==""){
-        layer.msg('请先选择用户', {icon:2});
+        GlassTip.error('请先选择用户');
     }else{
         layer.confirm('确定要删除所选 <span style="color:#ef4444">' + $("input[name='ids']:checked").length + '</span> 个用户吗？<br>用户下有未删除产品的将无法删除。', {icon:3, title:'批量删除确认'}, function(){
             delSubmit(id);
@@ -233,7 +243,7 @@ function batchBan(){
         id[i] = $(this).val();
     });
     if(id.length == 0){
-        layer.msg('请先选择用户', {icon:2});
+        GlassTip.error('请先选择用户');
         return;
     }
     layer.open({
@@ -262,10 +272,10 @@ function batchBanSubmit(ids){
     var duration = $('#batch_ban_duration').val();
     var reason = $('#batch_ban_reason').val();
     if(!duration || duration < 1){
-        layer.msg('请填写有效的封禁时长', {icon:2});
+        GlassTip.error('请填写有效的封禁时长');
         return;
     }
-    var load = layer.msg('封禁中...', {icon:16, time:false});
+    var load = layer.msg('封禁中...', {icon:16, shade:0.8, time:false});
     var promises = ids.map(function(id){
         return $.ajax({
             type:'POST', url:'', data:{act:'banUser', userid:id, ban_duration:duration, ban_reason:reason},
@@ -277,7 +287,7 @@ function batchBanSubmit(ids){
         layer.msg('批量封禁完成', {icon:1}, function(){ window.location.reload(); });
     }).catch(function(){
         layer.close(load);
-        layer.msg('部分封禁失败', {icon:2});
+        GlassTip.error('部分封禁失败');
     });
 }
 
@@ -324,7 +334,7 @@ function adduser(){
           + '</div>'
           + '<div class="mb-3"><label class="form-label">密码 <span style="color:#de350b">*</span></label>'
           + '<input class="form-control" type="text" id="add_password" placeholder="初始登录密码">'
-          + '<span class="admin-field-hint">初始密码，用户登录后可自行修改</span></div>'
+          + '<span class="admin-field-hint">≥8位，须包含大写字母、小写字母和数字</span></div>'
           + '<div class="d-flex gap-2" style="padding-bottom:8px">'
           + '<button type="button" onclick="addUserSubmit()" class="btn-admin btn-admin-primary">添加用户</button>'
           + '<button type="button" onclick="layer.closeAll()" class="btn btn-secondary">取消</button>'
@@ -333,7 +343,11 @@ function adduser(){
 }
 
 function addUserSubmit(){
-    var load = layer.msg('添加中...', {icon:16, time:false});
+    var au = $('#add_user').val(), ap = $('#add_password').val();
+    if(au.length < 1){ GlassTip.error('请填写登录账号'); return; }
+    if(ap.length < 8){ GlassTip.error('密码长度至少 8 位'); return; }
+    if(!(/[A-Z]/.test(ap) && /[a-z]/.test(ap) && /\d/.test(ap))){ GlassTip.error('密码必须同时包含大写字母、小写字母和数字'); return; }
+    var load = layer.msg('添加中...', {icon:16, shade:0.8, time:false});
     $.ajax({
         type:'POST', url:'',
         data:{
@@ -350,7 +364,7 @@ function addUserSubmit(){
             if(data.code == 1){
                 layer.alert(data.msg, {icon:1}, function(){ window.location.reload(); });
             }else{
-                layer.msg(data.msg, {icon:2});
+                GlassTip.error(data.msg);
             }
         }
     });
@@ -375,7 +389,7 @@ function banUser(userid){
 }
 
 function banSubmit(userid){
-    var load = layer.msg('封禁中...', {icon:16, time:false});
+    var load = layer.msg('封禁中...', {icon:16, shade:0.8, time:false});
     $.ajax({
         type:'POST', url:'',
         data:{act:'banUser', userid:userid, ban_duration: $('#ban_duration').val(), ban_reason: $('#ban_reason').val()},
@@ -393,7 +407,7 @@ function banSubmit(userid){
 
 function unbanUser(userid){
     layer.confirm('确定要解封用户 <span style="color:#10b981">#'+ userid +'</span> 吗？<br>解封后主机需手动恢复。', {icon:3}, function(){
-        var load = layer.msg('解封中...', {icon:16, time:false});
+        var load = layer.msg('解封中...', {icon:16, shade:0.8, time:false});
         $.ajax({
             type:'POST', url:'', data:{act:'unbanUser', userid:userid}, dataType:'json',
             success:function(data){
@@ -410,7 +424,7 @@ function unbanUser(userid){
 
 function delUser(userid){
     layer.confirm('确定要删除用户 <span style="color:#ef4444">#'+ userid +'</span> 吗？<br>该用户下有未删除的产品将无法删除。', {icon:3}, function(){
-        var load = layer.msg('删除中...', {icon:16, time:false});
+        var load = layer.msg('删除中...', {icon:16, shade:0.8, time:false});
         $.ajax({
             type:'POST', url:'', data:{act:'delete', userid:userid}, dataType:'json',
             success:function(data){

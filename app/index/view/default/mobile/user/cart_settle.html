@@ -1,0 +1,15 @@
+{php}$title = '结算结果'; $tab_active = 'order';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="text-align:center;padding:40px 20px;">
+    {if isset($success) && $success}
+    <div style="font-size:56px;color:#10B981;margin-bottom:16px;"><i class="fas fa-check-circle"></i></div>
+    {else}
+    <div style="font-size:56px;color:#F59E0B;margin-bottom:16px;"><i class="fas fa-exclamation-circle"></i></div>
+    {/if}
+    <div style="font-size:16px;color:var(--glass-text);margin-bottom:8px;line-height:1.6;">{$msg|default=''}</div>
+    <div style="font-size:24px;font-weight:800;color:var(--glass-primary);margin:16px 0;">支付金额：¥{$total|default='0.00'}</div>
+    <a href="__ROOT__/user/order" class="app-btn" style="display:inline-flex;align-items:center;gap:8px;margin-top:8px;">
+        <i class="fas fa-server"></i> 查看我的产品
+    </a>
+</div>
+{include file="default/mobile/footer" /}

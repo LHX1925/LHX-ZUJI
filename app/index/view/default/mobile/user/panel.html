@@ -1,0 +1,150 @@
+{php}$title = '产品控制台'; $tab_active = 'host'; $back_url = '/user/order';{/php}
+{include file="default/mobile/header" /}
+<a href="__ROOT__/user/order" class="app-list-item" style="display:inline-flex;align-items:center;gap:8px;color:var(--glass-text-secondary);text-decoration:none;font-size:14px;margin-bottom:12px;padding:10px 16px;">
+    <i class="fas fa-arrow-left"></i> 返回产品列表
+</a>
+<!-- 产品信息 -->
+<div class="app-card" style="margin-bottom:12px;padding:16px;">
+    <div style="font-size:15px;font-weight:700;color:var(--glass-text);margin-bottom:12px;padding-left:8px;border-left:3px solid var(--glass-primary);">产品信息</div>
+    <div class="app-info-row"><span>产品名称</span><span>{$cart.name|default='--'}</span></div>
+    <div class="app-info-row"><span>主机账号</span><span>{$data.user|default='--'}</span></div>
+    <div class="app-info-row">
+        <span>主机密码</span>
+        <span>
+            <span id="passText">********</span>
+            <button type="button" onclick="togglePass()" style="background:none;border:none;color:var(--glass-primary);font-size:11px;cursor:pointer;padding:0;">显示</button>
+            <button type="button" onclick="copyPass()" style="background:none;border:none;color:var(--glass-primary);font-size:11px;cursor:pointer;padding:0;">复制</button>
+        </span>
+    </div>
+    <div class="app-info-row"><span>套餐类型</span><span>{$cart.name|default='--'}</span></div>
+    <div class="app-info-row"><span>开通时间</span><span>{:date('Y-m-d', $data.atime)}</span></div>
+    <div class="app-info-row"><span>到期时间</span><span>{:date('Y-m-d', $data.ztime)}</span></div>
+    <div class="app-info-row">
+        <span>运行状态</span>
+        <span>
+            {if $data.state=="1"}<span class="app-status-dot" style="background:#10B981;"></span>运行中
+            {elseif $data.state=="2"}<span class="app-status-dot" style="background:#F59E0B;"></span>暂停
+            {elseif $data.state=="3"}<span class="app-status-dot" style="background:#EF4444;"></span>终止
+            {elseif $data.state=="0"}<span class="app-status-dot" style="background:#F59E0B;"></span>待开通
+            {/if}
+        </span>
+    </div>
+</div>
+<!-- 产品操作 -->
+<div class="app-card" style="margin-bottom:12px;padding:16px;">
+    <div style="font-size:15px;font-weight:700;color:var(--glass-text);margin-bottom:12px;padding-left:8px;border-left:3px solid var(--glass-primary);">产品操作</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+        <button type="button" class="app-btn" onclick="renewHost()" style="font-size:13px;padding:12px;"><i class="fas fa-sync-alt"></i> 续费</button>
+        {if isset($server.serverplugins) && $server.serverplugins=='mnbt' && $server.host && $server.port}
+        <form action="{if $server.ssl=='1'}https{else}http{/if}://{$server.host}:{$server.port}/user/idcdl.php?gn=logine" method="post" target="_blank" style="display:block;">
+            <input type="hidden" name="username" value="{$data.user}">
+            <input type="hidden" name="password" value="{$data.password}">
+            <button type="submit" class="app-btn" style="width:100%;font-size:13px;padding:12px;background:transparent;color:var(--glass-text);border:1px solid var(--glass-border);"><i class="fas fa-sign-in-alt"></i> 控制面板</button>
+        </form>
+        {elseif isset($server.serverplugins) && $server.serverplugins=='easypanel' && $server.host && $server.port}
+        <form action="{if $server.ssl=='1'}https{else}http{/if}://{$server.host}:{$server.port}/vhost/?c=session&a=login" method="post" target="_blank" style="display:block;">
+            <input type="hidden" name="username" value="{$data.user}">
+            <input type="hidden" name="passwd" value="{$data.password}">
+            <button type="submit" class="app-btn" style="width:100%;font-size:13px;padding:12px;background:transparent;color:var(--glass-text);border:1px solid var(--glass-border);"><i class="fas fa-sign-in-alt"></i> 控制面板</button>
+        </form>
+        {else}
+        <button type="button" class="app-btn" onclick="appToast('未配置服务器地址，请联系管理员', 'warning')" style="font-size:13px;padding:12px;background:transparent;color:var(--glass-text);border:1px solid var(--glass-border);"><i class="fas fa-sign-in-alt"></i> 控制面板</button>
+        {/if}
+        <button type="button" class="app-btn" onclick="resetPass({$data.id})" style="font-size:13px;padding:12px;background:transparent;color:var(--glass-text);border:1px solid var(--glass-border);"><i class="fas fa-key"></i> 重置密码</button>
+        <button type="button" class="app-btn" onclick="upgradeHost()" style="font-size:13px;padding:12px;background:transparent;color:var(--glass-text);border:1px solid var(--glass-border);"><i class="fas fa-arrow-up"></i> 升降级</button>
+        {if $data.state=="1"}
+        <button type="button" class="app-btn" onclick="hostAction('suspend', {$data.id})" style="font-size:13px;padding:12px;background:transparent;color:var(--glass-text);border:1px solid var(--glass-border);"><i class="fas fa-pause-circle"></i> 停用</button>
+        {/if}
+        {if $data.state=="2"}
+        <button type="button" class="app-btn" onclick="hostAction('unsuspend', {$data.id})" style="font-size:13px;padding:12px;background:transparent;color:var(--glass-text);border:1px solid var(--glass-border);"><i class="fas fa-play-circle"></i> 恢复</button>
+        {/if}
+        <button type="button" class="app-btn" onclick="hostAction('delete', {$data.id})" style="font-size:13px;padding:12px;background:transparent;color:#EF4444;border:1px solid #EF4444;"><i class="fas fa-trash-alt"></i> 删除</button>
+    </div>
+</div>
+<!-- 主机实时状态 -->
+{if isset($server.serverplugins) && $server.serverplugins=='mnbt' && $server.host && $server.port}
+<div class="app-card" style="margin-bottom:12px;padding:16px;" id="hostStatusCard">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:15px;font-weight:700;color:var(--glass-text);padding-left:8px;border-left:3px solid var(--glass-primary);">主机实时状态</div>
+        <button class="app-btn" onclick="fetchHostStatus()" style="font-size:11px;padding:4px 10px;background:transparent;color:var(--glass-text);border:1px solid var(--glass-border);"><i class="fas fa-sync-alt"></i> 刷新</button>
+    </div>
+    <div id="hostStatusContent" style="text-align:center;padding:16px;color:var(--glass-text-muted);">
+        <i class="fas fa-spinner fa-pulse"></i> 正在加载...
+    </div>
+</div>
+{/if}
+<script>
+var realPass = '{:addslashes($data.password)}';
+function togglePass() {
+    var el = document.getElementById('passText');
+    var btn = event.target;
+    if (el.textContent === '********') { el.textContent = realPass; btn.textContent = '隐藏'; }
+    else { el.textContent = '********'; btn.textContent = '显示'; }
+}
+function copyPass() {
+    var ta = document.createElement('textarea');
+    ta.value = realPass;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    appToast('密码已复制', 'success');
+}
+function resetPass(id) {
+    if (!confirm('确定要重置密码吗？')) return;
+    fetch('', { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: 'act=reset&id=' + id })
+    .then(function(r) { return r.json(); }).then(function(data) {
+        if (data.code == 1) { appToast(data.msg, 'success'); setTimeout(function() { location.href = ''; }, 1800); }
+        else { appToast(data.msg || '操作失败', 'error'); }
+    });
+}
+function hostAction(act, id) {
+    var msgs = { suspend: '确定要停用该主机吗？', unsuspend: '确定要恢复该主机吗？', delete: '确定要删除该主机吗？删除后不可恢复！' };
+    if (!confirm(msgs[act] || '确定要执行此操作吗？')) return;
+    fetch('', { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: 'act=' + act + '&id=' + id })
+    .then(function(r) { return r.json(); }).then(function(data) {
+        if (data.code == 1) { appToast(data.msg, 'success'); setTimeout(function() { location.href = ''; }, 1800); }
+        else { appToast(data.msg || '操作失败', 'error'); }
+    });
+}
+function renewHost() {
+    var time = prompt('请输入续费时长（{if $cart.cycle=="day"}天{/if}{if $cart.cycle=="month"}月{/if}{if $cart.cycle=="year"}年{/if}{if $cart.cycle=="unrestricted"}一次性{/if}）', '1');
+    if (!time) return;
+    if (!confirm('确定要续费 ' + time + ' {if $cart.cycle=="day"}天{/if}{if $cart.cycle=="month"}月{/if}{if $cart.cycle=="year"}年{/if}{if $cart.cycle=="unrestricted"}一次性{/if}吗？')) return;
+    fetch('', { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: 'act=renew&id={$data.id}&time=' + time })
+    .then(function(r) { return r.json(); }).then(function(data) {
+        if (data.code == 1) { appToast(data.msg, 'success'); setTimeout(function() { location.href = ''; }, 1800); }
+        else { appToast(data.msg || '续费失败', 'error'); }
+    });
+}
+function upgradeHost() {
+    var newId = prompt('请输入要升级到的产品ID', '');
+    if (!newId) return;
+    fetch('', { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: 'act=upgrade&newcartid=' + newId })
+    .then(function(r) { return r.json(); }).then(function(data) {
+        if (data.code == 1) { appToast(data.msg, 'success'); setTimeout(function() { location.href = ''; }, 1800); }
+        else { appToast(data.msg || '操作失败', 'error'); }
+    });
+}
+function fetchHostStatus() {
+    var container = document.getElementById('hostStatusContent');
+    container.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 正在刷新...';
+    fetch('__ROOT__/api/host_status_proxy', { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: 'order_id={$data.id}&host_user={$data.user}' })
+    .then(function(r) { return r.json(); }).then(function(res) {
+        if (res.code == 200 && res.data) {
+            var d = res.data;
+            var html = '';
+            if (d.web_space) html += '<div class="app-info-row"><span>主机空间</span><span>' + d.web_space.used_mb.toFixed(1) + ' / ' + d.web_space.max_mb.toFixed(0) + ' MB (' + d.web_space.used_percent + '%)</span></div>';
+            if (d.db_space) html += '<div class="app-info-row"><span>数据库空间</span><span>' + d.db_space.used_mb.toFixed(1) + ' / ' + d.db_space.max_mb.toFixed(0) + ' MB (' + d.db_space.used_percent + '%)</span></div>';
+            if (d.traffic) html += '<div class="app-info-row"><span>本月流量</span><span>' + d.traffic.used_gb.toFixed(2) + ' / ' + d.traffic.max_gb.toFixed(0) + ' GB (' + d.traffic.used_percent + '%)</span></div>';
+            if (d.network) html += '<div class="app-info-row"><span>网络状态</span><span><span class="app-status-dot" style="background:' + (d.network.status=='online'?'#10B981':'#EF4444') + ';"></span> ' + (d.network.status=='online'?'在线':'离线') + (d.network.ping_ms>0?' ('+d.network.ping_ms+'ms)':'') + '</span></div>';
+            if (d.runtime) html += '<div class="app-info-row"><span>运行时间</span><span>' + d.runtime + '</span></div>';
+            container.innerHTML = html || '<div style="color:var(--glass-text-muted);">暂无状态数据</div>';
+        } else {
+            container.innerHTML = '<div style="color:#EF4444;"><i class="fas fa-exclamation-triangle"></i> ' + (res.msg || '状态查询失败') + '</div>';
+        }
+    }).catch(function() { container.innerHTML = '<div style="color:#EF4444;">无法连接主机服务器</div>'; });
+}
+if (document.getElementById('hostStatusCard')) { fetchHostStatus(); setInterval(fetchHostStatus, 60000); }
+</script>
+{include file="default/mobile/footer" /}

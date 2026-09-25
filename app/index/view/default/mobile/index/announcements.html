@@ -1,0 +1,32 @@
+{php}$title = '公告列表'; $tab_active = 'home'; $back_url = '/';{/php}
+{include file="default/mobile/header" /}
+
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--text);margin:0 0 4px;">网站公告</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin:0;">了解最新动态与服务更新</p>
+</div>
+
+{if isset($announcement) && count($announcement) > 0}
+<div class="app-card" style="overflow:hidden;padding:0;margin-bottom:12px;">
+    {foreach $announcement as $a}
+    <a href="__ROOT__/announcement/{$a.id}" class="app-list-item" style="padding:14px 16px;">
+        <div class="app-list-body">
+            <div class="app-list-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{$a.title|default='未命名公告'}</div>
+            <div class="app-list-sub"><i class="far fa-clock"></i> {:date('Y-m-d H:i', $a.created_at)}</div>
+        </div>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+    {/foreach}
+</div>
+{if method_exists($announcement, 'render')}
+<div style="padding:16px;text-align:center;">{$announcement->render()}</div>
+{/if}
+{else}
+<div class="app-empty">
+    <i class="fas fa-inbox"></i>
+    <h3>暂无公告</h3>
+    <p>稍后再来看看吧</p>
+</div>
+{/if}
+
+{include file="default/mobile/footer" /}

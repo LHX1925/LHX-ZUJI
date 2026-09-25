@@ -265,7 +265,7 @@ layer.open({
 }
 
 function add1(){
-             var load = layer.msg('添加中，请稍后...',{icon:16,time:false});
+             var load = layer.msg('添加中，请稍后...', {icon:16, shade:0.8, time:false});
             var name = $("input[name='name']").val();
             var time = $("input[name='time']").val();
         var information = $("textarea[name='information']").val();
@@ -279,6 +279,7 @@ time:time,
 information:information,
             },
             dataType:'json',
+            timeout: 15000,
             success:function (data){
                 layer.close(load)
                 if(data.code == 1){
@@ -287,7 +288,7 @@ information:information,
                     },1000);
                     layer.alert(data.msg,{icon:1});
                 }else{
-                    layer.msg(data.msg,{icon:2});
+                    GlassTip.error(data.msg);
                 }
             }
         });

@@ -1,0 +1,93 @@
+{php}$title = '个性化主题'; $tab_active = 'profile'; $back_url = '/user';{/php}
+{include file="default/mobile/header" /}
+
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--text);margin:0 0 4px;">个性化主题</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin:0;">按自己的喜好定制站点外观，未自定义的项将自动使用全站默认主题设置</p>
+</div>
+
+<div class="app-card" style="padding:20px 16px;">
+    <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">主题外观</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">保存后立即生效，可随时恢复默认</div>
+    <form id="themeForm">
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">深浅色</label>
+            <select name="theme_mode" class="app-input" style="appearance:auto;">
+                <option value="" {if !isset($user.theme_mode) || $user.theme_mode == ''}selected{/if}>跟随后台默认</option>
+                <option value="light" {if isset($user.theme_mode) && $user.theme_mode == 'light'}selected{/if}>浅色</option>
+                <option value="dark" {if isset($user.theme_mode) && $user.theme_mode == 'dark'}selected{/if}>深色</option>
+            </select>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">液态玻璃</label>
+            <select name="theme_glass" class="app-input" style="appearance:auto;">
+                <option value="" {if !isset($user.theme_glass) || $user.theme_glass == ''}selected{/if}>跟随后台默认</option>
+                <option value="1" {if isset($user.theme_glass) && $user.theme_glass == '1'}selected{/if}>开启</option>
+                <option value="0" {if isset($user.theme_glass) && $user.theme_glass == '0'}selected{/if}>关闭</option>
+            </select>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">背景类型</label>
+            <select name="theme_bg_type" class="app-input" style="appearance:auto;">
+                <option value="" {if !isset($user.theme_bg_type) || $user.theme_bg_type == ''}selected{/if}>跟随后台默认</option>
+                <option value="image" {if isset($user.theme_bg_type) && $user.theme_bg_type == 'image'}selected{/if}>图片</option>
+                <option value="video" {if isset($user.theme_bg_type) && $user.theme_bg_type == 'video'}selected{/if}>视频</option>
+                <option value="gif" {if isset($user.theme_bg_type) && $user.theme_bg_type == 'gif'}selected{/if}>GIF动图</option>
+                <option value="none" {if isset($user.theme_bg_type) && $user.theme_bg_type == 'none'}selected{/if}>无背景</option>
+            </select>
+        </div>
+        <div style="margin-bottom:16px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">背景地址</label>
+            <input type="text" name="theme_bg_image" class="app-input" value="{$user.theme_bg_image|default=''}" placeholder="图片/视频/GIF 的 http(s) 地址，留空则使用后台默认">
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button type="submit" class="app-btn" style="flex:1;">保存主题</button>
+            <button type="button" class="app-btn" id="themeReset" style="flex:1;background:transparent;color:var(--text);border:1px solid var(--glass-border);">恢复默认</button>
+        </div>
+    </form>
+</div>
+
+<script>
+$(function() {
+    function appToast(msg, type) {
+        type = type || 'info';
+        var t = document.getElementById('appToast');
+        if (!t) return;
+        clearTimeout(window._appToastTimer);
+        t.className = 'app-toast app-toast-' + type + ' show';
+        t.textContent = msg;
+        window._appToastTimer = setTimeout(function(){ t.className = 'app-toast'; }, 2500);
+    }
+
+    function saveTheme(data) {
+        appToast('保存中...', 'info');
+        $.ajax({
+            type: 'POST', url: window.__ROOT__ + '/user/settheme',
+            data: data, dataType: 'json',
+            success: function(res) {
+                if (res.code == 1) { appToast(res.msg || '保存成功', 'success'); setTimeout(function() { location.reload(); }, 1200); }
+                else { appToast(res.msg || '保存失败', 'error'); }
+            },
+            error: function() { appToast('网络错误，请稍后重试', 'error'); }
+        });
+    }
+
+    $("#themeForm").off('submit').on('submit', function(e) {
+        e.preventDefault();
+        saveTheme({
+            theme_mode: $("select[name='theme_mode']").val(),
+            theme_glass: $("select[name='theme_glass']").val(),
+            theme_bg_type: $("select[name='theme_bg_type']").val(),
+            theme_bg_image: $("input[name='theme_bg_image']").val()
+        });
+    });
+
+    $("#themeReset").off('click').on('click', function(e) {
+        e.preventDefault();
+        if (!confirm('确定恢复默认主题设置？')) return;
+        saveTheme({ theme_mode: '', theme_glass: '', theme_bg_type: '', theme_bg_image: '' });
+    });
+});
+</script>
+
+{include file="default/mobile/footer" /}

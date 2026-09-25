@@ -1,0 +1,98 @@
+{php}$title = '提交工单'; $tab_active = 'order';{/php}
+{include file="default/mobile/header" /}
+{if isset($isBanned) && $isBanned}
+<div class="app-card" style="border-left:4px solid #F59E0B;background:rgba(245,158,11,0.08);padding:14px 16px;margin-bottom:12px;font-size:13px;color:#92400E;">
+    <strong><i class="fas fa-exclamation-triangle"></i> 您的账号已被封禁，无法提交工单</strong><br>
+    封禁至：<strong>{:date('Y-m-d H:i:s', $banEndTime)}</strong><br>
+    封禁原因：{$banReason|default:'管理员未填写原因'}
+</div>
+{else}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">提交技术工单</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">描述问题后，运维人员将尽快为你处理</p>
+</div>
+<div class="app-card" style="padding:20px 16px;">
+    <form id="ticketForm">
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">选择服务</label>
+            <select class="app-input" name="service_type" id="serviceType" style="appearance:auto;">
+                <option value="无法访问">无法访问</option>
+                <option value="其他问题">其他问题</option>
+            </select>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">问题标签</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                <label class="app-tag" style="cursor:pointer;padding:8px 14px;font-size:13px;border:1.5px solid var(--glass-primary);color:var(--glass-primary);background:var(--glass-bg);border-radius:20px;">
+                    <input type="radio" name="problem_tag" value="无法访问" checked style="display:none;"> 无法访问
+                </label>
+                <label class="app-tag" style="cursor:pointer;padding:8px 14px;font-size:13px;border:1.5px solid var(--glass-border);color:var(--glass-text);border-radius:20px;">
+                    <input type="radio" name="problem_tag" value="数据库异常" style="display:none;"> 数据库异常
+                </label>
+                <label class="app-tag" style="cursor:pointer;padding:8px 14px;font-size:13px;border:1.5px solid var(--glass-border);color:var(--glass-text);border-radius:20px;">
+                    <input type="radio" name="problem_tag" value="配置故障" style="display:none;"> 配置故障
+                </label>
+                <label class="app-tag" style="cursor:pointer;padding:8px 14px;font-size:13px;border:1.5px solid var(--glass-border);color:var(--glass-text);border-radius:20px;">
+                    <input type="radio" name="problem_tag" value="其他问题" style="display:none;"> 其他问题
+                </label>
+            </div>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">问题标题</label>
+            <input type="text" class="app-input" name="title" id="titleInput" placeholder="请输入工单标题">
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">详细描述</label>
+            <textarea class="app-textarea" name="content" id="contentInput" rows="5" placeholder="请详细描述您遇到的问题"></textarea>
+        </div>
+        <button type="submit" class="app-btn" style="width:100%;"><i class="fas fa-paper-plane"></i> 提交工单</button>
+    </form>
+</div>
+<div class="app-card" style="margin-top:12px;padding:16px;">
+    <div style="font-size:14px;font-weight:700;color:var(--glass-text);margin-bottom:10px;">提交前检查</div>
+    <a href="__ROOT__/user/order" class="app-list-item" style="display:flex;align-items:center;gap:10px;text-decoration:none;padding:12px 0;">
+        <i class="fas fa-check-circle" style="color:var(--glass-primary);font-size:14px;"></i>
+        <span style="font-size:13px;color:var(--glass-text);">确认主机是否已到期</span>
+    </a>
+    <a href="__ROOT__/user/order" class="app-list-item" style="display:flex;align-items:center;gap:10px;text-decoration:none;padding:12px 0;">
+        <i class="fas fa-check-circle" style="color:var(--glass-primary);font-size:14px;"></i>
+        <span style="font-size:13px;color:var(--glass-text);">检查域名解析状态</span>
+    </a>
+    <a href="__ROOT__/announcement" class="app-list-item" style="display:flex;align-items:center;gap:10px;text-decoration:none;padding:12px 0;">
+        <i class="fas fa-check-circle" style="color:var(--glass-primary);font-size:14px;"></i>
+        <span style="font-size:13px;color:var(--glass-text);">查看系统通知</span>
+    </a>
+</div>
+<script>
+document.querySelectorAll('input[name="problem_tag"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        document.getElementById('serviceType').value = this.value;
+        document.querySelectorAll('input[name="problem_tag"]').forEach(function(r) {
+            var label = r.parentElement;
+            if (r.checked) { label.style.borderColor = 'var(--glass-primary)'; label.style.color = 'var(--glass-primary)'; label.style.background = 'var(--glass-bg)'; }
+            else { label.style.borderColor = 'var(--glass-border)'; label.style.color = 'var(--glass-text)'; label.style.background = 'transparent'; }
+        });
+    });
+});
+document.getElementById('ticketForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var title = document.getElementById('titleInput').value.trim();
+    var content = document.getElementById('contentInput').value.trim();
+    var serviceType = document.getElementById('serviceType').value;
+    var problemTag = document.querySelector('input[name="problem_tag"]:checked').value;
+    if (!title || !content) { appToast('标题和详细描述不能为空', 'warning'); return; }
+    var fullContent = '【服务类型】' + serviceType + '\n';
+    fullContent += '【问题标签】' + problemTag + '\n';
+    fullContent += '【详细描述】\n' + content;
+    var btn = this.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = '提交中...';
+    fetch('', { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: 'title=' + encodeURIComponent(title) + '&content=' + encodeURIComponent(fullContent) })
+    .then(function(r) { return r.json(); }).then(function(data) {
+        if (data.code == '1') { appToast(data.msg || '提交成功', 'success'); setTimeout(function() { location.href = '__ROOT__/user/supportticket/' + data.id; }, 1800); }
+        else { appToast(data.msg, 'error'); btn.disabled = false; btn.textContent = '提交工单'; }
+    }).catch(function() { appToast('网络错误，请稍后重试', 'error'); btn.disabled = false; btn.textContent = '提交工单'; });
+});
+</script>
+{/if}
+{include file="default/mobile/footer" /}

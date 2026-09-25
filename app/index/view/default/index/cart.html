@@ -4,286 +4,973 @@
     <title>{$webname} - 购买产品</title>
     {include file="default/index/header" /}
     <style>
-        .main-content {
-            padding: 32px 0 60px;
-            min-height: calc(100vh - 64px);
-        }
-        .page-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            margin-bottom: 28px;
-            flex-wrap: wrap;
-        }
-        .page-header h1 {
-            font-size: 26px;
-            color: var(--glass-text);
-            font-weight: 800;
-            margin: 0 0 6px;
-        }
-        .page-header p {
-            font-size: 14px;
-            color: var(--glass-text-secondary);
-            margin: 0;
-        }
-        .search-bar {
-            position: relative;
-            max-width: 340px;
-            margin-bottom: 28px;
-        }
-        .search-bar input {
-            width: 100%;
-            padding: 12px 14px 12px 40px;
-            background: var(--glass-bg-input);
-            backdrop-filter: blur(var(--glass-blur-light));
-            -webkit-backdrop-filter: blur(var(--glass-blur-light));
-            border: 1.5px solid var(--glass-border);
-            border-radius: var(--glass-radius-sm);
-            font-size: 14px;
-            color: var(--glass-text);
-            outline: none;
-            transition: all var(--glass-transition);
-            box-shadow: var(--glass-shadow-inset);
-        }
-        .search-bar input:focus {
-            border-color: var(--glass-primary);
-            box-shadow: 0 0 0 4px var(--glass-primary-glow);
-        }
-        .search-bar i {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--glass-text-muted);
-            font-size: 14px;
-        }
-        .category-selector {
-            margin-bottom: 28px;
-        }
-        .category-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .category-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 9px 18px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(var(--glass-blur-light));
-            -webkit-backdrop-filter: blur(var(--glass-blur-light));
-            color: var(--glass-text-secondary);
-            border: 1.5px solid var(--glass-border);
-            border-radius: var(--glass-radius-full);
-            font-size: 14px;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all var(--glass-transition);
-        }
-        .category-link:hover {
-            border-color: var(--glass-primary);
-            color: var(--glass-primary);
-            background: var(--glass-bg-hover);
-            text-decoration: none;
-            transform: translateY(-1px);
-        }
-        .category-link.active {
-            background: linear-gradient(135deg, var(--glass-primary), var(--glass-primary-light));
-            color: #fff;
-            border-color: transparent;
-            box-shadow: 0 4px 16px var(--glass-primary-glow);
-        }
-        .products-grid {
+        .buy-page { padding: 32px 0 60px; }
+        .buy-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 20px;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 24px;
+            align-items: start;
         }
-        .product-card {
+        .buy-main { min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+        .buy-side { position: sticky; top: 90px; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+        .buy-card {
             background: var(--glass-bg);
             backdrop-filter: blur(var(--glass-blur));
             -webkit-backdrop-filter: blur(var(--glass-blur));
             border: 1px solid var(--glass-border);
             border-radius: var(--glass-radius-lg);
             padding: 24px;
-            transition: all var(--glass-transition);
-            display: flex;
-            flex-direction: column;
             box-shadow: var(--glass-shadow-sm), var(--glass-shadow-inset);
         }
-        .product-card:hover {
-            box-shadow: var(--glass-shadow-lg), var(--glass-shadow-inset);
-            transform: translateY(-3px);
-            border-color: var(--glass-border-strong);
-            background: var(--glass-bg-hover);
-        }
-        .product-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--glass-text);
-            margin-bottom: 14px;
-        }
-        .product-price {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--glass-text);
-            line-height: 1;
-            margin-bottom: 4px;
-        }
-        .product-price small {
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--glass-text-muted);
-        }
-        .product-price.free {
-            font-size: 22px;
-            color: var(--glass-success);
-        }
-        .product-content {
-            color: var(--glass-text-secondary);
-            margin: 16px 0 20px;
-            font-size: 13px;
-            line-height: 1.6;
-            flex: 1;
-            min-height: 60px;
-        }
-        .btn-buy {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            width: 100%;
-            padding: 11px;
-            background: linear-gradient(135deg, var(--glass-primary), var(--glass-primary-light));
-            color: #fff;
-            font-weight: 600;
-            font-size: 14px;
-            border-radius: var(--glass-radius-full);
-            text-decoration: none;
+        .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+        .section-title { font-size: 18px; font-weight: 800; color: var(--glass-text); margin: 0; }
+        .section-hint { font-size: 12px; color: var(--glass-text-muted); }
+        .section-desc { font-size: 13px; color: var(--glass-text-secondary); margin: 0 0 16px; line-height: 1.6; }
+        .opt-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .opt-card {
+            position: relative; cursor: pointer; user-select: none;
+            background: var(--glass-bg-light);
+            backdrop-filter: blur(var(--glass-blur-light));
+            -webkit-backdrop-filter: blur(var(--glass-blur-light));
+            border: 1.5px solid var(--glass-border);
+            border-radius: var(--glass-radius-md, 16px);
+            padding: 18px;
             transition: all var(--glass-transition);
-            border: none;
-            cursor: pointer;
+        }
+        .opt-card:hover { border-color: var(--glass-primary); box-shadow: 0 4px 16px var(--glass-primary-glow); transform: translateY(-1px); }
+        .opt-card.selected { border-color: var(--glass-primary); background: var(--glass-bg-hover); box-shadow: 0 0 0 3px var(--glass-primary-glow); }
+        .opt-card .opt-check {
+            position: absolute; top: 12px; right: 12px;
+            width: 22px; height: 22px; border-radius: 50%;
+            border: 1.5px solid var(--glass-border); background: var(--glass-bg);
+            display: flex; align-items: center; justify-content: center;
+            color: transparent; font-size: 11px; transition: all var(--glass-transition);
+        }
+        .opt-card.selected .opt-check { background: var(--glass-primary); border-color: var(--glass-primary); color: #fff; }
+        .opt-name { font-size: 15px; font-weight: 700; color: var(--glass-text); margin-bottom: 4px; padding-right: 30px; }
+        .opt-badge { display: inline-block; font-size: 11px; font-weight: 600; color: var(--glass-primary); background: var(--glass-bg-hover); border-radius: 999px; padding: 2px 10px; margin-bottom: 8px; }
+        .opt-desc { font-size: 12px; color: var(--glass-text-secondary); line-height: 1.6; margin-bottom: 10px; }
+        .opt-price { font-size: 16px; font-weight: 800; color: var(--glass-text); }
+        .opt-price small { font-size: 12px; font-weight: 500; color: var(--glass-text-muted); }
+        .opt-price.free { color: var(--glass-success); }
+        .opt-specs { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--glass-text-secondary); margin-bottom: 8px; }
+        .opt-specs i { width: 12px; margin-right: 3px; color: var(--glass-primary); }
+        .cfg-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--glass-border); font-size: 13px; }
+        .cfg-row:last-child { border-bottom: none; }
+        .cfg-row .k { color: var(--glass-text-secondary); }
+        .cfg-row .v { color: var(--glass-text); font-weight: 700; max-width: 60%; text-align: right; overflow-wrap: break-word; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--glass-text-secondary); margin-bottom: 6px; }
+        .form-label small { font-weight: 400; color: var(--glass-text-muted); }
+        .input-row {
+            display: flex; border: 1.5px solid var(--glass-border); border-radius: var(--glass-radius-sm);
+            overflow: hidden; transition: all var(--glass-transition); background: var(--glass-bg-input);
+        }
+        .input-row:focus-within { border-color: var(--glass-primary); box-shadow: 0 0 0 3px var(--glass-primary-glow); }
+        .input-row .form-control {
+            flex: 1; padding: 10px 12px; font-size: 14px; border: none;
+            background: transparent; color: var(--glass-text); outline: none; min-width: 0;
+        }
+        .input-row .btn-mini {
+            display: flex; align-items: center; padding: 0 12px; cursor: pointer;
+            background: var(--glass-bg-light); border-left: 1.5px solid var(--glass-border);
+            font-size: 12px; color: var(--glass-primary); font-weight: 600; white-space: nowrap; user-select: none;
+        }
+        .cfg-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+        .cfg-item input {
+            width: 100%; padding: 10px 8px; font-size: 13px; text-align: center;
+            border: 1.5px solid var(--glass-border); border-radius: var(--glass-radius-sm);
+            background: var(--glass-bg-input); color: var(--glass-text); outline: none;
+            transition: all var(--glass-transition); -moz-appearance: textfield;
+        }
+        .cfg-item input::-webkit-outer-spin-button, .cfg-item input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .cfg-item input:focus { border-color: var(--glass-primary); box-shadow: 0 0 0 3px var(--glass-primary-glow); }
+        .cfg-item .cfg-name { font-size: 11px; color: var(--glass-text-secondary); text-align: center; margin-top: 5px; }
+        .cfg-item .cfg-unit { font-size: 10px; color: var(--glass-text-muted); text-align: center; }
+        .price-hint { font-size: 11px; color: var(--glass-text-muted); margin-top: 6px; line-height: 1.6; }
+        .cycle-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .cycle-chip {
+            padding: 8px 16px; border-radius: 14px; cursor: pointer; user-select: none;
+            border: 1.5px solid var(--glass-border); background: var(--glass-bg-light);
+            font-size: 13px; font-weight: 600; color: var(--glass-text-secondary);
+            transition: all var(--glass-transition); text-align: center; line-height: 1.35;
+        }
+        .cycle-chip:hover { border-color: var(--glass-primary); color: var(--glass-primary); }
+        .cycle-chip.active { background: linear-gradient(135deg, var(--glass-primary), var(--glass-primary-light)); color: #fff; border-color: transparent; box-shadow: 0 4px 12px var(--glass-primary-glow); }
+        .cycle-chip .chip-price { display: block; font-size: 11px; font-weight: 700; opacity: .85; margin-top: 3px; }
+        .cycle-chip .chip-tag { display: inline-block; font-size: 9px; font-weight: 700; padding: 0 5px; border-radius: 6px; background: rgba(220,38,38,.12); color: #dc2626; margin-left: 4px; vertical-align: 1px; }
+        .cycle-chip.active .chip-tag { background: rgba(255,255,255,.25); color: #fff; }
+        .total-box {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 16px; margin: 16px 0;
+            background: var(--glass-bg-light); border: 1px solid var(--glass-border);
+            border-radius: var(--glass-radius-sm);
+        }
+        .total-box .total-label { font-size: 13px; color: var(--glass-text-secondary); font-weight: 500; }
+        .total-box .total-value { font-size: 24px; font-weight: 800; color: var(--glass-primary); }
+        .price-breakdown { font-size: 11px; color: var(--glass-text-muted); margin: -8px 0 12px; line-height: 1.7; }
+        .btn-submit {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            width: 100%; padding: 14px;
+            background: linear-gradient(135deg, var(--glass-primary), var(--glass-primary-light));
+            color: #fff; font-size: 15px; font-weight: 700; border: none;
+            border-radius: var(--glass-radius-full); cursor: pointer;
+            transition: all var(--glass-transition);
             box-shadow: 0 4px 16px var(--glass-primary-glow);
         }
-        .btn-buy:hover {
-            box-shadow: 0 6px 24px var(--glass-primary-glow);
-            text-decoration: none;
-            color: #fff;
-            transform: translateY(-1px);
+        .btn-submit:hover { box-shadow: 0 6px 24px var(--glass-primary-glow); transform: translateY(-1px); }
+        .btn-submit:disabled { background: var(--glass-bg); color: var(--glass-text-muted); cursor: not-allowed; box-shadow: none; border: 1px solid var(--glass-border); }
+        .steps { display: flex; flex-direction: column; gap: 14px; }
+        .step { display: flex; gap: 12px; align-items: flex-start; }
+        .step-no {
+            width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+            background: var(--glass-primary); color: #fff; font-size: 12px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; margin-top: 1px;
         }
-        .btn-buy.sold-out {
-            background: var(--glass-bg);
-            color: var(--glass-text-muted);
-            cursor: not-allowed;
-            box-shadow: none;
-            border: 1px solid var(--glass-border);
+        .step-text { font-size: 13px; color: var(--glass-text-secondary); line-height: 1.6; }
+        .step-text b { color: var(--glass-text); }
+        .empty-tip { text-align: center; padding: 60px 20px; color: var(--glass-text-secondary); }
+        .empty-tip i { font-size: 44px; color: var(--glass-text-muted); margin-bottom: 14px; display: block; }
+        .plan-desc { font-size: 12px; color: var(--glass-text-secondary); line-height: 1.7; margin: 8px 0 10px; overflow-wrap: break-word; word-break: break-word; }
+        .pay-mask {
+            position: fixed; inset: 0; z-index: 9999; display: none;
+            align-items: center; justify-content: center; padding: 20px;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
         }
-        .no-products {
-            text-align: center;
-            padding: 60px 20px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(var(--glass-blur));
-            -webkit-backdrop-filter: blur(var(--glass-blur));
-            border: 1px solid var(--glass-border);
-            border-radius: var(--glass-radius-lg);
-            grid-column: 1 / -1;
-            box-shadow: var(--glass-shadow-sm), var(--glass-shadow-inset);
+        .pay-mask.show { display: flex; }
+        .pay-dialog {
+            width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto;
+            background: #FFFFFF; border: 1px solid #E2E8F0;
+            border-radius: 18px; box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+            animation: payDialogIn 0.22s ease;
         }
-        .no-products i {
-            font-size: 48px;
-            color: var(--glass-text-muted);
-            margin-bottom: 16px;
+        body[data-theme='dark'] .pay-dialog { background: #1E293B; border-color: rgba(255,255,255,0.12); }
+        @keyframes payDialogIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+        .pay-dialog-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid #E2E8F0;
         }
-        .no-products h2 {
-            color: var(--glass-text);
-            font-size: 18px;
-            margin-bottom: 8px;
+        body[data-theme='dark'] .pay-dialog-head { border-bottom-color: rgba(255,255,255,0.1); }
+        .pay-dialog-title { font-size: 16px; font-weight: 800; color: #0F172A; }
+        .pay-dialog-title i { color: var(--glass-primary); margin-right: 6px; }
+        body[data-theme='dark'] .pay-dialog-title { color: #E2E8F0; }
+        .pay-dialog-close { cursor: pointer; font-size: 15px; color: #64748B; padding: 4px; }
+        .pay-dialog-close:hover { color: var(--glass-primary); }
+        .pay-dialog-body { padding: 18px 20px; }
+        .pay-summary {
+            background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px;
+            padding: 12px 14px; margin-bottom: 18px; font-size: 13px; line-height: 1.9; color: #334155;
         }
-        .no-products p {
-            color: var(--glass-text-secondary);
+        body[data-theme='dark'] .pay-summary { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: #94A3B8; }
+        .pay-summary b { color: #0F172A; }
+        body[data-theme='dark'] .pay-summary b { color: #E2E8F0; }
+        .pay-summary .pm-amount { color: var(--glass-primary); font-weight: 800; }
+        .pay-section-label { font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 10px; }
+        body[data-theme='dark'] .pay-section-label { color: #E2E8F0; }
+        .pay-dialog-foot {
+            display: flex; gap: 10px; padding: 14px 20px 18px; border-top: 1px solid #E2E8F0;
+        }
+        body[data-theme='dark'] .pay-dialog-foot { border-top-color: rgba(255,255,255,0.1); }
+        .pay-btn-cancel {
+            flex: 0 0 34%; padding: 12px; border-radius: 999px; cursor: pointer;
+            background: #F1F5F9; border: 1px solid #E2E8F0; color: #475569;
+            font-size: 14px; font-weight: 600;
+        }
+        body[data-theme='dark'] .pay-btn-cancel { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.12); color: #94A3B8; }
+        .pay-btn-cancel:hover { color: var(--glass-primary); border-color: var(--glass-primary); }
+        .pay-btn-confirm {
+            flex: 1; padding: 12px; border-radius: 999px; cursor: pointer; border: none;
+            background: linear-gradient(135deg, var(--glass-primary), var(--glass-primary-light));
+            color: #fff; font-size: 14px; font-weight: 700;
+            box-shadow: 0 4px 14px var(--glass-primary-glow);
+        }
+        .pay-btn-confirm:disabled { background: #CBD5E1; color: #64748B; cursor: not-allowed; box-shadow: none; }
+        body[data-theme='dark'] .pay-btn-confirm:disabled { background: rgba(255,255,255,0.12); color: #64748B; }
+        .pay-list { display: flex; flex-direction: column; gap: 8px; }
+        .pay-item {
+            display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;
+            padding: 11px 12px; border: 1.5px solid #E2E8F0; border-radius: 10px;
+            background: #F8FAFC; transition: all var(--glass-transition);
+        }
+        body[data-theme='dark'] .pay-item { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.12); }
+        .pay-item:hover { border-color: var(--glass-primary); }
+        .pay-item.selected { border-color: var(--glass-primary); background: rgba(79, 124, 255, 0.1); box-shadow: 0 0 0 3px var(--glass-primary-glow); }
+        .pay-item .pay-radio {
+            width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+            border: 1.5px solid #CBD5E1; background: #FFFFFF;
+            display: flex; align-items: center; justify-content: center; transition: all var(--glass-transition);
+        }
+        body[data-theme='dark'] .pay-item .pay-radio { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.08); }
+        .pay-item.selected .pay-radio { border-color: var(--glass-primary); background: var(--glass-primary); color: #fff; }
+        .pay-item .pay-radio i { font-size: 9px; color: transparent; }
+        .pay-item.selected .pay-radio i { color: #fff; }
+        .pay-item .pay-name { flex: 1; font-size: 13px; font-weight: 600; color: #0F172A; min-width: 0; }
+        body[data-theme='dark'] .pay-item .pay-name { color: #E2E8F0; }
+        .pay-item .pay-balance { font-size: 12px; color: #64748B; font-weight: 500; }
+        body[data-theme='dark'] .pay-item .pay-balance { color: #94A3B8; }
+        .pay-tip { font-size: 11px; color: #d97706; margin-top: 8px; line-height: 1.6; }
+        .login-tip {
+            padding: 12px 14px; border-radius: var(--glass-radius-sm); margin-bottom: 14px;
+            background: var(--glass-bg-light); border: 1px dashed var(--glass-border);
+            font-size: 13px; color: var(--glass-text-secondary); text-align: center;
+        }
+        .login-tip a { color: var(--glass-primary); font-weight: 700; }
+        .realname-tip {
+            padding: 12px 14px; border-radius: var(--glass-radius-sm); margin-bottom: 14px;
+            background: rgba(217,119,6,0.1); border: 1px solid rgba(217,119,6,0.35);
+            font-size: 13px; color: #d97706; line-height: 1.6;
+        }
+        .realname-tip a { color: var(--glass-primary); font-weight: 700; }
+        @media (max-width: 1024px) {
+            .buy-grid { grid-template-columns: minmax(0, 1fr); }
+            .buy-side { position: static; }
         }
         @media (max-width: 768px) {
-            .page-header { flex-direction: column; align-items: flex-start; }
-            .search-bar { max-width: none; }
-            .products-grid { grid-template-columns: 1fr; }
+            .buy-page { padding: 16px 0 48px; }
+            .buy-page .container { max-width: 100% !important; padding-left: 12px !important; padding-right: 12px !important; }
+            .opt-grid { grid-template-columns: minmax(0, 1fr); }
+            .cfg-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .buy-card { padding: 18px 14px; }
         }
     </style>
 
-    <section class="main-content">
+    <section class="buy-page">
         <div class="container">
-            <div class="page-header glass-animate-in">
-                <div>
-                    <h1>{if $class}{$class.name}{else}产品列表{/if}</h1>
-                    <p>{if $class}{$class.introduce}{else}浏览可购买的云服务与套餐{/if}</p>
-                </div>
-                <a href="__ROOT__/user/order" class="glass-btn glass-btn-primary">
-                    <i class="fas fa-list"></i> 我的产品
-                </a>
-            </div>
-
-            <div class="search-bar glass-animate-in glass-stagger-1">
-                <input type="text" id="productSearch" placeholder="搜索产品名称">
-                <i class="fas fa-search"></i>
-            </div>
-
-            <div class="category-selector glass-animate-in glass-stagger-2">
-                <ul class="category-list">
-                    {if $product}
-                    {foreach $product as $p}
-                    <li>
-                        <a class="category-link{if $productid==$p.id} active{/if}" href="__ROOT__/cart/{$p.id}">{$p.name}</a>
-                    </li>
-                    {/foreach}
-                    {/if}
-                </ul>
-            </div>
-
-            <div class="products-grid" id="productsGrid">
-                {if $cart}
-                {foreach $cart as $c}
-                <div class="product-card glass-reveal" data-name="{:strtolower($c.name)}">
-                    <div class="product-name">{$c.name}</div>
-                    <div class="product-price{if $c.money=='0'} free{/if}">
-                        {if $c.money=='0'}
-                        免费
-                        {else}
-                        ¥{$c.money}<small>/{if $c.cycle=='day'}日{elseif $c.cycle=='month'}月{elseif $c.cycle=='season'}季{elseif $c.cycle=='year'}年{elseif $c.cycle=='unrestricted'}次{/if}</small>
-                        {/if}
+            <div class="buy-grid glass-animate-in">
+                <div class="buy-main">
+                    <div class="buy-card">
+                        <div class="section-head">
+                            <h2 class="section-title">选择线路</h2>
+                            <span class="section-hint">线路即部署的服务器，购买时选哪条就部署在哪个服务器</span>
+                        </div>
+                        <p class="section-desc">以下为平台已接入的服务器线路，可任意选择；套餐也能自由搭配</p>
+                        <div class="opt-grid" id="serverGrid"></div>
+                        <div class="empty-tip" id="serverEmpty" style="display:none;">
+                            <i class="fas fa-server"></i>
+                            暂无可购买的服务器线路，请稍后再来
+                        </div>
                     </div>
-                    <div class="product-content">{$c.content}</div>
-                    {if $c.inventory<'1'}
-                    <button class="btn-buy sold-out" disabled>已售完</button>
-                    {else}
-                    <a href="__ROOT__/product/{$c.id}" class="btn-buy">立即购买</a>
-                    {/if}
+
+                    <div class="buy-card">
+                        <div class="section-head">
+                            <h2 class="section-title">选择套餐</h2>
+                            <span class="section-hint" id="planHint"></span>
+                        </div>
+                        <p class="section-desc">套餐为默认配置，可与上方任意线路搭配；右侧「购买配置」支持在默认基础上加配</p>
+                        <div class="opt-grid" id="planGrid"></div>
+                        <div class="empty-tip" id="planEmpty" style="display:none;">
+                            <i class="fas fa-box-open"></i>
+                            暂无可购买的套餐，请稍后再来
+                        </div>
+                    </div>
+
+                    <div class="buy-card">
+                        <div class="section-title" style="margin-bottom:16px;">购买流程</div>
+                        <div class="steps">
+                            <div class="step"><div class="step-no">1</div><div class="step-text"><b>选择线路与套餐</b> —— 确定部署服务器与所需配置</div></div>
+                            <div class="step"><div class="step-no">2</div><div class="step-text"><b>填写购买配置</b> —— 自定义账号密码与资源大小，所需金额实时计算</div></div>
+                            <div class="step"><div class="step-no">3</div><div class="step-text"><b>选择支付方式</b> —— 点击「立即购买」弹出支付方式，支付成功后自动开通（通常 1-2 分钟）</div></div>
+                        </div>
+                    </div>
                 </div>
-                {/foreach}
-                {else}
-                <div class="no-products">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <h2>该分类下没有产品</h2>
-                    <p>请尝试选择其他产品分类</p>
+
+                <div class="buy-side">
+                    <div class="buy-card">
+                        <div class="section-title" style="margin-bottom:14px;">购买配置</div>
+                        {if $logged}
+                            <div class="realname-tip" id="realnameTip" style="display:none;"></div>
+                        {else}
+                            <div class="login-tip">请先 <a href="__ROOT__/login">登录</a> 后再购买产品</div>
+                        {/if}
+                        <div class="cfg-row"><span class="k">已选线路</span><span class="v" id="cfgServer">-</span></div>
+                        <div class="cfg-row"><span class="k">已选套餐</span><span class="v" id="cfgPlan">-</span></div>
+
+                        <div style="height:14px;"></div>
+
+                        <div class="form-group">
+                            <label class="form-label">主机账号 <small>（小写字母开头，仅小写字母+数字）</small></label>
+                            <div class="input-row">
+                                <input type="text" class="form-control" id="hostUser" maxlength="50" placeholder="如 user123">
+                                <span class="btn-mini" onclick="randomUser()">随机</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">主机密码 <small>（仅小写字母+数字，6-50位）</small></label>
+                            <div class="input-row">
+                                <input type="text" class="form-control" id="hostPass" maxlength="50" placeholder="如 passabc123">
+                                <span class="btn-mini" onclick="randomPass()">随机</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">自定义主机配置 <small>（已按套餐默认值填好，只能上调不能低于默认）</small></label>
+                            <div class="cfg-grid">
+                                <div class="cfg-item">
+                                    <input type="number" id="cfgSpace" min="0" step="1" placeholder="0">
+                                    <div class="cfg-name">存储空间</div>
+                                    <div class="cfg-unit">MB</div>
+                                </div>
+                                <div class="cfg-item">
+                                    <input type="number" id="cfgDb" min="0" step="1" placeholder="0">
+                                    <div class="cfg-name">数据库</div>
+                                    <div class="cfg-unit">MB</div>
+                                </div>
+                                <div class="cfg-item">
+                                    <input type="number" id="cfgTraffic" min="0" step="0.1" placeholder="0">
+                                    <div class="cfg-name">月流量</div>
+                                    <div class="cfg-unit">GB</div>
+                                </div>
+                                <div class="cfg-item">
+                                    <input type="number" id="cfgDomain" min="0" step="1" placeholder="0">
+                                    <div class="cfg-name">域名绑定数</div>
+                                    <div class="cfg-unit">个</div>
+                                </div>
+                            </div>
+                            <div class="price-hint" id="cfgHint"></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">购买时长</label>
+                            <div class="cycle-chips" id="cycleChips"></div>
+                        </div>
+
+                        {if $docker.enabled}
+                        <div class="form-group" id="dockerBox" style="display:none;">
+                            <label class="form-label">Docker 容器主机 <small>（开通后可在面板内自由创建和管理容器）</small></label>
+                            <div class="opt-card docker-toggle" id="dockerToggle" onclick="toggleDocker()">
+                                <div class="opt-check"><i class="fas fa-check"></i></div>
+                                <div class="opt-name">开通 Docker 容器</div>
+                                <div class="opt-desc" id="dockerDesc"></div>
+                                <div class="opt-price" id="dockerPrice"></div>
+                            </div>
+                        </div>
+                        {/if}
+
+                        <div class="total-box">
+                            <span class="total-label">所需金额</span>
+                            <span class="total-value" id="totalPrice">¥0.00</span>
+                        </div>
+                        <div class="price-breakdown" id="priceBreakdown"></div>
+
+                        <button type="button" class="btn-submit" id="submitBtn" onclick="openPayModal()"><i class="fas fa-bolt"></i> 立即购买</button>
+                    </div>
                 </div>
-                {/if}
             </div>
         </div>
     </section>
 
+    <!-- 支付方式选择弹窗 -->
+    <div class="pay-mask" id="payMask" onclick="closePayModal()">
+            <div class="pay-dialog" onclick="event.stopPropagation()">
+                <div class="pay-dialog-head">
+                    <div class="pay-dialog-title"><i class="fas fa-credit-card"></i> 选择支付方式</div>
+                    <span class="pay-dialog-close" onclick="closePayModal()"><i class="fas fa-times"></i></span>
+                </div>
+                <div class="pay-dialog-body">
+                    <div class="pay-summary" id="pmSummary"></div>
+                    <div class="pay-section-label">支付方式</div>
+                    <div class="pay-list" id="pmPayList"></div>
+                    <div class="pay-tip" id="pmTip" style="display:none;"></div>
+                </div>
+                <div class="pay-dialog-foot">
+                    <button type="button" class="pay-btn-cancel" onclick="closePayModal()">取消</button>
+                    <button type="button" class="pay-btn-confirm" id="pmConfirm" onclick="confirmPay()">确认支付 <span id="pmTotal">¥0.00</span></button>
+                </div>
+            </div>
+        </div>
+
     {include file="default/index/footer" /}
 
     <script>
-        document.getElementById('productSearch').addEventListener('input', function() {
-            var keyword = this.value.toLowerCase();
-            var cards = document.querySelectorAll('.product-card');
-            cards.forEach(function(card) {
-                var name = card.getAttribute('data-name') || '';
-                card.style.display = name.indexOf(keyword) > -1 ? '' : 'none';
+        var SERVERS = {:json_encode($servers)};
+        var PLANS = {:json_encode($plans)};
+        var PAYS = {:json_encode($pays)};
+        var BALANCE = {:json_encode($balance)};
+        var POINTS = {:json_encode($points)};
+        var LOGGED = {:json_encode($logged)};
+        // Docker 容器开通（购买页可勾选的附加项）全局配置
+        var DOCKER = {:json_encode($docker)};
+        var CYCLE_LABEL = {day:'天', month:'月', season:'季', year:'年', unrestricted:'次'};
+        // serverLocked：用户手动改过线路后，不再随套餐自动切换线路
+        var state = {server: null, plan: null, time: 1, pay: 'balance', payid: 0, serverLocked: false, docker: false};
+        var LAST_TOTAL = 0;
+
+        // 标准档位表：一周 / 一个月 / 一季 / 一年 / 三年（按套餐计费单位换算）
+        function baseCycleOptions(p) {
+            if (!p) return [];
+            if (p.cycle == 'day')   return [{t:7,l:'一周'},{t:30,l:'一个月'},{t:90,l:'一季'},{t:365,l:'一年'},{t:1095,l:'三年'}];
+            if (p.cycle == 'month') return [{t:1,l:'一个月'},{t:3,l:'一季'},{t:12,l:'一年'},{t:36,l:'三年'}];
+            if (p.cycle == 'season')return [{t:1,l:'一季'},{t:4,l:'一年'},{t:12,l:'三年'}];
+            if (p.cycle == 'year')  return [{t:1,l:'一年'},{t:3,l:'三年'}];
+            return [{t:1,l:'一期'}];
+        }
+        // 购买时长档位：
+        //   · 一次性套餐 / 完全免费（0 价且无专属价）→ 只提供「一次性」
+        //   · 基础单价为 0 但配了周期专属价 → 只提供「已定价」的档位（未定价的档位不能 0 元成交）
+        //   · 其余情况列出标准档位，未配专属价的档位按「单价 × 时长」计算
+        function cycleOptions(p) {
+            if (!p) return [];
+            if (p.cycle == 'unrestricted') return [{t:1, l:'一次性'}];
+            if (isFree(p)) return [{t:1, l:'一次性'}];
+            var all = baseCycleOptions(p);
+            if (!(parseFloat(p.money) > 0)) {
+                var priced = all.filter(function(o) { return hasCyclePrice(p, o.t); });
+                if (priced.length) return priced;
+            }
+            return all;
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        function nl2br(s) { return String(s == null ? '' : s).replace(/\n/g, '<br>'); }
+        function money(n) {
+            n = parseFloat(n) || 0;
+            return '¥' + (Math.round(n * 100) / 100);
+        }
+        function planCycleLabel(p) {
+            return CYCLE_LABEL[p.cycle] || '期';
+        }
+        function fmtMB(mb) {
+            mb = parseInt(mb) || 0;
+            if (mb >= 1024) {
+                var gb = Math.round(mb / 1024 * 10) / 10;
+                return gb + 'GB';
+            }
+            return mb + 'MB';
+        }
+        // 月流量按 GB 展示（整数不带小数点）
+        function fmtGB(gb) {
+            gb = parseFloat(gb) || 0;
+            if (gb === Math.floor(gb)) return gb + 'GB';
+            return (Math.round(gb * 100) / 100) + 'GB';
+        }
+        // 各周期自定义价格：后台为该时长配置过就用它，否则回退「单价 × 时长」
+        function planBasePrice(p, t) {
+            if (!p) return 0;
+            var map = p.cycle_prices || {};
+            var v = parseFloat(map[String(t)]);
+            if (!isNaN(v) && v > 0) return Math.round(v * 100) / 100;
+            return Math.round(parseFloat(p.money || 0) * t * 100) / 100;
+        }
+        function hasCyclePrice(p, t) {
+            var map = (p && p.cycle_prices) || {};
+            var v = parseFloat(map[String(t)]);
+            return !isNaN(v) && v > 0;
+        }
+        // 是否配置了任意一个周期的专属价
+        function hasAnyCyclePrice(p) {
+            var map = (p && p.cycle_prices) || {};
+            for (var k in map) {
+                if (map.hasOwnProperty(k) && parseFloat(map[k]) > 0) return true;
+            }
+            return false;
+        }
+        // 列表展示用「起价」：第一档实价，否则取专属价里的最低价
+        function planFromPrice(p) {
+            var v = planBasePrice(p, 1);
+            if (v > 0) return v;
+            var map = (p && p.cycle_prices) || {}, min = 0;
+            for (var k in map) {
+                if (!map.hasOwnProperty(k)) continue;
+                var x = parseFloat(map[k]);
+                if (x > 0 && (min === 0 || x < min)) min = x;
+            }
+            return min;
+        }
+        // 套餐默认月流量（GB）与流量加价单价（元/GB）
+        function planTrafficGb(p) { return parseFloat(p && p.traffic_gb) || 0; }
+        function trafficPricePerGb(p) { return parseFloat(p && p.price_traffic_gb) || 0; }
+        // 完全免费：单价为 0 且没有配置任何周期专属价
+        // （配了专属价的套餐不能再当「一次性免费」处理，否则时长档位会塌缩成一个，各周期价格永远展示不出来）
+        function isFreePlan(p) { return !!p && parseFloat(p.money) <= 0 && !hasAnyCyclePrice(p); }
+        // 首购免费
+        function isFirstFree(p) { return !!p && p.firstmo == 1; }
+        // 整单免费：用于判断时长档位是否塌缩成「一次性」
+        function isFree(p) { return isFreePlan(p) || (isFirstFree(p) && !hasAnyCyclePrice(p)); }
+        // 档位级免费：配了专属价的档位一律按专属价收费，不再套用「免费 / 首购免费」
+        function isCycleFree(p, t) { return !hasCyclePrice(p, t) && (isFreePlan(p) || isFirstFree(p)); }
+
+        function renderServers() {
+            var html = '';
+            SERVERS.forEach(function(s) {
+                var sel = (String(state.server) === String(s.id));
+                html += '<div class="opt-card' + (sel ? ' selected' : '') + '" data-id="' + s.id + '" onclick="selectServer(' + s.id + ')">'
+                    + '<div class="opt-check"><i class="fas fa-check"></i></div>'
+                    + '<div class="opt-name">' + esc(s.name) + '</div>'
+                    + '<div class="opt-badge">' + (s.plan_count > 0 ? s.plan_count + ' 个默认套餐' : '可自由搭配套餐') + '</div>'
+                    + '<div class="opt-desc">' + (s.ip ? '服务器地址：' + esc(s.ip) : '稳定可靠的部署环境') + '</div>'
+                    + '<div class="opt-price">' + '共 ' + (s.plan_total || PLANS.length) + ' 个套餐可选</div>'
+                    + '</div>';
             });
+            document.getElementById('serverGrid').innerHTML = html;
+            document.getElementById('serverEmpty').style.display = SERVERS.length ? 'none' : '';
+        }
+
+        function renderPlans() {
+            // 套餐与线路解耦：全部套餐都可选，套餐自带的 serverid 作为默认线路
+            var list = PLANS.slice();
+            var html = '';
+            list.forEach(function(p) {
+                var soldOut = parseInt(p.inventory) < 1;
+                var fromPrice = planFromPrice(p);
+                var planOpts = cycleOptions(p);
+                // 只有一个可选档位时直接写出该档位名，避免「¥900 /月起」这种误导
+                var fromUnit = (planOpts.length === 1 && fromPrice > 0)
+                    ? ' /' + planOpts[0].l
+                    : ' /' + planCycleLabel(p) + '起';
+                var descHtml = p.content ? '<div class="plan-desc">' + nl2br(p.content) + '</div>' : '';
+                html += '<div class="opt-card' + (String(state.plan) === String(p.id) ? ' selected' : '') + '" data-id="' + p.id + '" onclick="selectPlan(' + p.id + ')">'
+                    + '<div class="opt-check"><i class="fas fa-check"></i></div>'
+                    + '<div class="opt-name">' + esc(p.name) + '</div>'
+                    + '<div class="opt-specs">'
+                    + '<span><i class="fas fa-hdd"></i>' + fmtMB(p.space) + '</span>'
+                    + '<span><i class="fas fa-database"></i>' + fmtMB(p.db) + '</span>'
+                    + '<span><i class="fas fa-chart-line"></i>' + fmtGB(p.traffic_gb) + '</span>'
+                    + '<span><i class="fas fa-link"></i>' + p.domain + ' 个域名</span>'
+                    + '</div>'
+                    + descHtml
+                    + '<div class="opt-price">' + (fromPrice > 0 ? money(fromPrice) + '<small>' + fromUnit + '</small>' : '<span class="free">免费</span>')
+                    + (hasAnyCyclePrice(p) ? ' <small>多时长专属价</small>' : '')
+                    + (p.firstmo == 1 ? ' <small>首购免费</small>' : '')
+                    + (parseInt(p.points_price) > 0 ? ' <small>或 ' + p.points_price + ' 积分</small>' : '')
+                    + '</div>'
+                    + (soldOut ? '<div class="opt-badge" style="color:#dc2626;background:#fef2f2;">已售完</div>' : '')
+                    + '</div>';
+            });
+            document.getElementById('planGrid').innerHTML = html;
+            document.getElementById('planEmpty').style.display = list.length ? 'none' : '';
+            document.getElementById('planHint').textContent = list.length + ' 个套餐可选 · 可与任意线路自由搭配';
+        }
+
+        function renderChips() {
+            var p = currentPlan();
+            var box = document.getElementById('cycleChips');
+            if (!p) { box.innerHTML = ''; return; }
+            var opts = cycleOptions(p);
+            // 修正当前时长（切换套餐后原档位可能不存在）
+            var ok = false;
+            opts.forEach(function(o) { if (o.t == state.time) ok = true; });
+            if (!ok) state.time = opts.length ? opts[0].t : 1;
+            var html = '';
+            opts.forEach(function(o) {
+                // 该档位配了专属价时按专属价显示，否则再按「免费 / 首购免费」处理
+                var chipPrice = isCycleFree(p, o.t) ? 0 : planBasePrice(p, o.t);
+                var priceTxt = chipPrice > 0 ? money(chipPrice) : '免费';
+                var tag = hasCyclePrice(p, o.t) ? '<span class="chip-tag">专属价</span>' : '';
+                html += '<span class="cycle-chip' + (state.time == o.t ? ' active' : '') + '" onclick="selectTime(' + o.t + ')">'
+                    + o.l + tag + '<small class="chip-price">' + priceTxt + '</small></span>';
+            });
+            box.innerHTML = html;
+        }
+
+        // 用套餐默认值预填「购买配置」（用户只能在此基础上上调）
+        function applyPlanDefaults(p) {
+            if (!p) return;
+            var set = function(id, v) {
+                var el = document.getElementById(id);
+                if (el) el.value = parseInt(v) || 0;
+            };
+            set('cfgSpace', p.space);
+            set('cfgDb', p.db);
+            set('cfgDomain', p.domain);
+            // 月流量按 GB 计，允许小数（如 1.5GB），不能取整丢失精度
+            var tfEl = document.getElementById('cfgTraffic');
+            if (tfEl) tfEl.value = Math.round(planTrafficGb(p) * 100) / 100;
+        }
+
+        // 校验自定义配置是否低于套餐默认值；返回错误文案或 ''
+        function checkFloor(p) {
+            if (!p) return '';
+            var sp = parseInt(document.getElementById('cfgSpace').value) || 0;
+            var db = parseInt(document.getElementById('cfgDb').value) || 0;
+            var tf = parseFloat(document.getElementById('cfgTraffic').value) || 0;
+            var dm = parseInt(document.getElementById('cfgDomain').value) || 0;
+            if (sp < parseInt(p.space)) return '存储空间不能低于套餐默认的 ' + p.space + 'MB';
+            if (db < parseInt(p.db)) return '数据库不能低于套餐默认的 ' + p.db + 'MB';
+            if (tf < planTrafficGb(p)) return '月流量不能低于套餐默认的 ' + fmtGB(planTrafficGb(p));
+            if (dm < parseInt(p.domain)) return '域名绑定数不能低于套餐默认的 ' + p.domain + ' 个';
+            return '';
+        }
+
+        function currentPlan() {
+            return PLANS.find(function(p) { return String(p.id) === String(state.plan); }) || null;
+        }
+        function currentServer() {
+            return SERVERS.find(function(s) { return String(s.id) === String(state.server); }) || null;
+        }
+
+        // Docker 容器开通是否可在当前选择下勾选：全局开关 + 当前套餐开放 + 线路插件支持
+        function dockerAvailable() {
+            if (!DOCKER || !DOCKER.enabled) return false;
+            var p = currentPlan(), s = currentServer();
+            if (!p || !p.docker_enabled) return false;
+            if (s && s.docker_supported === false) return false;
+            return true;
+        }
+        function toggleDocker() {
+            if (!dockerAvailable()) { return; }
+            state.docker = !state.docker;
+            var tg = document.getElementById('dockerToggle');
+            if (tg) tg.classList.toggle('selected', state.docker);
+            updatePrice();
+        }
+        // 切换套餐/线路后，若当前不可勾选则关闭 Docker 选项并隐藏勾选框
+        function normalizeDocker() {
+            var box = document.getElementById('dockerBox');
+            if (!box) return;
+            if (!dockerAvailable()) {
+                box.style.display = 'none';
+                if (state.docker) { state.docker = false; }
+                var tg = document.getElementById('dockerToggle');
+                if (tg) tg.classList.remove('selected');
+            } else {
+                box.style.display = '';
+                var desc = document.getElementById('dockerDesc');
+                var price = document.getElementById('dockerPrice');
+                if (desc) desc.textContent = (DOCKER.intro ? DOCKER.intro : '一次性开通费，开通后可在面板内自由创建和管理容器');
+                if (price) price.textContent = '+' + money(parseFloat(DOCKER.price) || 0) + (DOCKER.mode === 'auto' ? '（自动开通）' : '（人工开通）');
+            }
+        }
+
+        function selectServer(id) {
+            // 线路可自由切换，套餐保持不变（套餐与线路已解耦）
+            state.server = id;
+            state.serverLocked = true;
+            refresh();
+        }
+        function selectPlan(id) {
+            var p = PLANS.find(function(x) { return String(x.id) === String(id); });
+            state.plan = id;
+            state.time = 1;
+            // 用户没手动改过线路时，跟随套餐默认线路
+            if (p && !state.serverLocked && SERVERS.length) state.server = p.serverid;
+            applyPlanDefaults(p);
+            refresh();
+        }
+        function selectTime(t) {
+            state.time = t;
+            renderChips();
+            updatePrice();
+        }
+
+        function updatePrice() {
+            var p = currentPlan();
+            var totalEl = document.getElementById('totalPrice');
+            var bdEl = document.getElementById('priceBreakdown');
+            var hintEl = document.getElementById('cfgHint');
+            if (!p) {
+                totalEl.textContent = '-';
+                bdEl.innerHTML = '';
+                hintEl.innerHTML = '';
+                return;
+            }
+            // 当前档位配了专属价时以专属价为准（不再套用「免费 / 首购免费」，否则金额会被清零）
+            var freeNow = isCycleFree(p, state.time);
+            var base = freeNow ? 0 : planBasePrice(p, state.time);
+            var space = parseInt(document.getElementById('cfgSpace').value) || 0;
+            var db = parseInt(document.getElementById('cfgDb').value) || 0;
+            var trafficGb = parseFloat(document.getElementById('cfgTraffic').value) || 0;
+            var domain = parseInt(document.getElementById('cfgDomain').value) || 0;
+            var defTrafficGb = planTrafficGb(p);
+            var extraSpace = Math.max(0, space - p.space) * p.price_space_mb;
+            var extraDb = Math.max(0, db - p.db) * p.price_db_mb;
+            var extraTraffic = Math.max(0, trafficGb - defTrafficGb) * trafficPricePerGb(p);
+            var extraDomain = Math.max(0, domain - p.domain) * (parseFloat(p.price_domain) || 0);
+            var extra = Math.round((extraSpace + extraDb + extraTraffic + extraDomain) * 100) / 100;
+            var total = Math.round((base + extra) * 100) / 100;
+            // Docker 容器开通费（全局统一价，叠加到整单，不随会员折扣变化）
+            var dockerFee = (state.docker && dockerAvailable()) ? (parseFloat(DOCKER.price) || 0) : 0;
+            if (dockerFee > 0) {
+                total = Math.round((total + dockerFee) * 100) / 100;
+            }
+            LAST_TOTAL = total;
+            totalEl.textContent = money(total);
+            var parts = [];
+            if (freeNow) {
+                parts.push('套餐金额：免费');
+            } else if (hasCyclePrice(p, state.time)) {
+                parts.push('套餐金额（后台自定义价）：' + money(base));
+            } else {
+                parts.push('套餐金额：' + money(p.money) + ' × ' + state.time + ' ' + planCycleLabel(p) + ' = ' + money(base));
+            }
+            if (extraSpace > 0) parts.push('空间加配：' + money(extraSpace));
+            if (extraDb > 0) parts.push('数据库加配：' + money(extraDb));
+            if (extraTraffic > 0) parts.push('流量加配：' + money(extraTraffic));
+            if (extraDomain > 0) parts.push('域名加配：' + money(extraDomain));
+            var bd = '';
+            if (extra > 0) bd += '加配合计：' + money(extra);
+            if (dockerFee > 0) bd += (bd ? '<br>' : '') + 'Docker 容器开通：' + money(dockerFee);
+            bdEl.innerHTML = parts.join('<br>') + (bd ? '<br>' + bd : '');
+
+            // 低于套餐默认值 → 红字提示（并阻止提交）
+            var floorErr = checkFloor(p);
+            var hints = [];
+            if (floorErr) {
+                hintEl.innerHTML = '<span style="color:#dc2626;font-weight:600;">' + esc(floorErr) + '</span>';
+            } else {
+                if (parseFloat(p.price_space_mb) > 0) hints.push('空间超出 ' + fmtMB(p.space) + ' 每加 1MB +' + money(p.price_space_mb));
+                if (parseFloat(p.price_db_mb) > 0) hints.push('数据库超出 ' + fmtMB(p.db) + ' 每加 1MB +' + money(p.price_db_mb));
+                if (trafficPricePerGb(p) > 0) hints.push('月流量超出 ' + fmtGB(defTrafficGb) + ' 每加 1GB +' + money(trafficPricePerGb(p)));
+                if (parseFloat(p.price_domain) > 0) hints.push('域名超出 ' + p.domain + ' 个每加 1 个 +' + money(p.price_domain));
+                hints.push('默认配置：空间 ' + fmtMB(p.space) + ' / 数据库 ' + fmtMB(p.db) + ' / 月流量 ' + fmtGB(defTrafficGb) + ' / 域名 ' + p.domain + ' 个，只能上调');
+                hintEl.innerHTML = hints.join('；');
+            }
+            // 积分支付可用性
+            var needPoints = Math.max(0, parseInt(p.points_price) || 0) * state.time;
+            if (state.pay == 'points') { updatePmTip(); }
+        }
+
+        // ---------- 支付方式弹窗 ----------
+        function renderPmPays() {
+            var box = document.getElementById('pmPayList');
+            if (!box) { return; }
+            var html = '';
+            var p = currentPlan();
+            // 积分支付：套餐设置了积分价才显示；Docker 开通费不支持积分抵扣，勾选后隐藏
+            if (p && parseInt(p.points_price) > 0 && !(state.docker && dockerAvailable())) {
+                html += '<div class="pay-item' + (state.pay == 'points' ? ' selected' : '') + '" onclick="pickPay(\'points\', 0)">'
+                    + '<div class="pay-radio"><i class="fas fa-check"></i></div>'
+                    + '<div class="pay-name">积分支付</div>'
+                    + '<div class="pay-balance">需 ' + (parseInt(p.points_price) * state.time) + ' 积分 · 可用 ' + POINTS + '</div>'
+                    + '</div>';
+            }
+            html += '<div class="pay-item' + (state.pay == 'balance' ? ' selected' : '') + '" onclick="pickPay(\'balance\', 0)">'
+                + '<div class="pay-radio"><i class="fas fa-check"></i></div>'
+                + '<div class="pay-name">余额支付</div>'
+                + '<div class="pay-balance">可用 ' + money(BALANCE) + '</div>'
+                + '</div>';
+            (PAYS || []).forEach(function(p2) {
+                html += '<div class="pay-item' + (state.pay == 'online' && String(state.payid) === String(p2.id) ? ' selected' : '') + '" onclick="pickPay(\'online\', ' + p2.id + ')">'
+                    + '<div class="pay-radio"><i class="fas fa-check"></i></div>'
+                    + '<div class="pay-name">' + esc(p2.name) + '</div>'
+                    + '</div>';
+            });
+            box.innerHTML = html;
+        }
+        function pickPay(type, id) {
+            state.pay = type;
+            state.payid = id;
+            renderPmPays();
+            updatePmTip();
+        }
+        function updatePmTip() {
+            var el = document.getElementById('pmTip');
+            var btn = document.getElementById('pmConfirm');
+            if (!el) { return; }
+            var p = currentPlan();
+            var msg = '';
+            if (state.pay == 'points' && p) {
+                var need = Math.max(0, parseInt(p.points_price) || 0) * state.time;
+                if (need > POINTS) {
+                    msg = '积分不足，本单需 ' + need + ' 积分，当前可用 ' + POINTS + '，请改用余额或在线支付';
+                }
+            } else if (state.pay == 'balance' && LAST_TOTAL > parseFloat(BALANCE)) {
+                msg = '账户余额不足，需支付 ' + money(LAST_TOTAL) + '，当前可用 ' + money(BALANCE) + '，请先充值或改用在线支付';
+            }
+            if (msg) {
+                el.style.display = '';
+                el.textContent = msg;
+            } else {
+                el.style.display = 'none';
+            }
+            if (btn) { btn.disabled = !!msg; }
+        }
+        function buildSummary() {
+            var p = currentPlan(), s = currentServer();
+            if (!p) { return ''; }
+            var rows = [];
+            rows.push('套餐：<b>' + esc(p.name) + '</b>');
+            rows.push('线路：<b>' + esc(s ? s.name : '-') + '</b>');
+            rows.push('账号：<b>' + esc(document.getElementById('hostUser').value.trim()) + '</b>');
+            var opts = cycleOptions(p);
+            var label = '';
+            opts.forEach(function(o) { if (o.t == state.time) label = o.l; });
+            rows.push('时长：<b>' + (label || (state.time + ' ' + planCycleLabel(p))) + '</b>'
+                + (hasCyclePrice(p, state.time) ? ' <small style="color:#8b96a8">（专属价 ' + money(planBasePrice(p, state.time)) + '）</small>' : ''));
+            var sp = parseInt(document.getElementById('cfgSpace').value) || 0;
+            var db = parseInt(document.getElementById('cfgDb').value) || 0;
+            var tf = parseFloat(document.getElementById('cfgTraffic').value) || 0;
+            var dm = parseInt(document.getElementById('cfgDomain').value) || 0;
+            if (sp > 0 || db > 0 || tf > 0 || dm > 0) {
+                var arr = [];
+                if (sp > 0) arr.push('空间 ' + fmtMB(sp));
+                if (db > 0) arr.push('数据库 ' + fmtMB(db));
+                if (tf > 0) arr.push('月流量 ' + fmtGB(tf));
+                if (dm > 0) arr.push('域名 ' + dm + ' 个');
+                rows.push('主机配置：<b>' + arr.join(' / ') + '</b>');
+            }
+            if (state.docker && dockerAvailable()) {
+                rows.push('Docker 容器主机：<b>开通</b>（' + (DOCKER.mode === 'auto' ? '自动开通' : '人工开通') + '，' + money(parseFloat(DOCKER.price) || 0) + '）');
+            }
+            if (state.pay == 'points') {
+                rows.push('支付方式：<b>积分支付</b>（消耗 ' + (parseInt(p.points_price) * state.time) + ' 积分）');
+                rows.push('应付金额：<span class="pm-amount">0 元（积分支付）</span>');
+            } else {
+                rows.push('应付金额：<span class="pm-amount">' + money(LAST_TOTAL) + '</span>');
+            }
+            return rows.join('<br>');
+        }
+        function openPayModal() {
+            if (!LOGGED) {
+                showToast('请先登录后再购买', 'warning', 1800);
+                setTimeout(function() { location.href = '__ROOT__/login'; }, 1200);
+                return;
+            }
+            var p = currentPlan();
+            if (!p) { showToast('请先选择套餐', 'warning', 2000); return; }
+            if (parseInt(p.inventory) < 1) { showToast('该套餐已售完', 'danger', 2000); return; }
+            if (!SERVERS.length) { showToast('暂无可用的服务器线路，请联系管理员', 'danger', 2500); return; }
+            var user = document.getElementById('hostUser').value.trim();
+            var pass = document.getElementById('hostPass').value.trim();
+            if (!/^[a-z][a-z0-9]{2,49}$/.test(user)) { showToast('主机账号必须以小写字母开头，仅含小写字母和数字，3-50位', 'danger', 3000); return; }
+            if (!/^[a-z0-9]{6,50}$/.test(pass)) { showToast('主机密码只能包含小写字母和数字，6-50位', 'danger', 3000); return; }
+            var floorErr = checkFloor(p);
+            if (floorErr) { showToast(floorErr, 'danger', 3000); return; }
+            if (!(PAYS || []).length && LAST_TOTAL > parseFloat(BALANCE) && !(parseInt(p.points_price) > 0 && (parseInt(p.points_price) * state.time) <= POINTS)) {
+                showToast('账户余额不足且暂无可用在线支付方式', 'danger', 2500);
+                return;
+            }
+            // 默认支付方式选择：免费单价订单 → 余额；有积分价可优先余额，用户可自选
+            if (LAST_TOTAL <= 0 && state.pay == 'online') { state.pay = 'balance'; state.payid = 0; }
+            // 勾选 Docker 后不支持积分支付，强制回退到余额
+            if (state.pay == 'points' && (!(parseInt(p.points_price) > 0) || (state.docker && dockerAvailable()))) { state.pay = 'balance'; state.payid = 0; }
+            document.getElementById('pmSummary').innerHTML = buildSummary();
+            document.getElementById('pmTotal').textContent = (state.pay == 'points') ? '0.00' : money(LAST_TOTAL);
+            renderPmPays();
+            updatePmTip();
+            document.getElementById('payMask').classList.add('show');
+        }
+        function closePayModal() {
+            document.getElementById('payMask').classList.remove('show');
+        }
+
+        function refresh() {
+            renderServers();
+            renderPlans();
+            renderChips();
+            var s = currentServer(), p = currentPlan();
+            document.getElementById('cfgServer').textContent = s ? s.name : '-';
+            document.getElementById('cfgPlan').textContent = p ? p.name : '-';
+            normalizeDocker();
+            updatePrice();
+        }
+
+        function randomUser() {
+            var head = 'abcdefghijklmnopqrstuvwxyz';
+            var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            var s = head.charAt(Math.floor(Math.random() * head.length));
+            for (var i = 0; i < 7; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+            document.getElementById('hostUser').value = s;
+        }
+        function randomPass() {
+            var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            var s = '';
+            for (var i = 0; i < 10; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+            document.getElementById('hostPass').value = s;
+        }
+
+        function confirmPay() {
+            var p = currentPlan();
+            if (!p) { showToast('请先选择套餐', 'warning', 2000); return; }
+            var floorErr = checkFloor(p);
+            if (floorErr) { showToast(floorErr, 'danger', 3000); return; }
+            var user = document.getElementById('hostUser').value.trim();
+            var pass = document.getElementById('hostPass').value.trim();
+            var space = parseInt(document.getElementById('cfgSpace').value) || 0;
+            var db = parseInt(document.getElementById('cfgDb').value) || 0;
+            var traffic = parseFloat(document.getElementById('cfgTraffic').value) || 0;
+            var domain = parseInt(document.getElementById('cfgDomain').value) || 0;
+            var btn = document.getElementById('pmConfirm');
+            var oldText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+            fetch('__ROOT__/user/buyNow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                body: 'cartid=' + encodeURIComponent(p.id)
+                    + '&serverid=' + encodeURIComponent(state.server || '')
+                    + '&user=' + encodeURIComponent(user)
+                    + '&password=' + encodeURIComponent(pass)
+                    + '&time=' + encodeURIComponent(state.time)
+                    + '&space_mb=' + encodeURIComponent(space)
+                    + '&db_mb=' + encodeURIComponent(db)
+                    + '&traffic_gb=' + encodeURIComponent(traffic)
+                    + '&domain_num=' + encodeURIComponent(domain)
+                    + '&docker=' + encodeURIComponent((state.docker && dockerAvailable()) ? 1 : 0)
+                    + '&paytype=' + encodeURIComponent(state.pay)
+                    + '&payid=' + encodeURIComponent(state.pay == 'online' ? state.payid : 0)
+            })
+            .then(function(res) { return res.text().then(function(text) { try { return JSON.parse(text); } catch (err) { var hint = text ? String(text).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : ''; if (hint.length > 160) hint = hint.slice(0, 160) + '...'; throw new Error(hint || '响应异常'); } }); })
+            .then(function(data) {
+                if (data.code == 1) {
+                    closePayModal();
+                    if (data.redirect) {
+                        showToast(data.msg || '正在跳转支付...', 'success', 1500);
+                        setTimeout(function() { location.href = data.redirect; }, 800);
+                    } else {
+                        showToast(data.msg || '购买成功', 'success', 1500);
+                        setTimeout(function() { location.href = '__ROOT__/user/order'; }, 1600);
+                    }
+                }
+                else {
+                    btn.disabled = false;
+                    btn.innerHTML = oldText;
+                    if (data.login) { setTimeout(function() { location.href = '__ROOT__/login'; }, 1200); }
+                    showToast(data.msg || '购买失败', 'danger', 2500);
+                }
+            })
+            .catch(function(err) {
+                btn.disabled = false;
+                btn.innerHTML = oldText;
+                showToast(err.message || '请求失败', 'danger', 2500);
+            });
+        }
+
+        // 点击遮罩关闭 / ESC 关闭
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') { closePayModal(); }
         });
+
+        ['cfgSpace', 'cfgDb', 'cfgTraffic', 'cfgDomain'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('input', updatePrice);
+        });
+
+        (function initRealnameTip() {
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('realname_required') != '1') { return; }
+            var box = document.getElementById('realnameTip');
+            if (!box) { return; }
+            box.style.display = '';
+            box.innerHTML = esc(params.get('msg') || '请先完成实名认证后再购买') + ' <a href="__ROOT__/user/realname">前往认证</a>';
+        })();
+
+        (function init() {
+            // 主机账号 / 主机密码默认就填好，用户不需要点「随机」也能直接下单
+            randomUser();
+            randomPass();
+            if (!SERVERS.length) { refresh(); return; }
+            state.server = SERVERS[0].id;
+            var targetPlan = PLANS.length ? PLANS[0] : null;
+            // 支持 /cart?plan=id 预选套餐
+            var params = new URLSearchParams(window.location.search);
+            var preset = parseInt(params.get('plan')) || 0;
+            if (preset) {
+                var pp = PLANS.find(function(x) { return parseInt(x.id) === preset; });
+                if (pp) targetPlan = pp;
+            }
+            if (targetPlan) {
+                state.plan = targetPlan.id;
+                state.server = targetPlan.serverid || state.server;
+                // 预选套餐可能属于另一条线路，确保该线路在列表中
+                var exists = SERVERS.some(function(s) { return String(s.id) === String(state.server); });
+                if (!exists) state.server = SERVERS[0].id;
+            }
+            applyPlanDefaults(currentPlan());
+            refresh();
+        })();
     </script>
 </body>
 </html>

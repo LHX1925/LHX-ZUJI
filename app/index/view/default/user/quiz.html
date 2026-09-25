@@ -1,0 +1,200 @@
+{include file="default/user/header" title="答题活动" /}
+<main id="main-container">
+<div class="content">
+<style>
+    .quiz-page { max-width: 760px; margin: 0 auto; padding: 20px 16px 40px; }
+    .quiz-hero { background: linear-gradient(135deg, #7c3aed 0%, #4f7cff 50%, #2563eb 100%); border-radius: 20px; padding: 28px 32px; color: #fff; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(124,58,237,0.25); position: relative; overflow: hidden; }
+    .quiz-hero::before { content: ''; position: absolute; top: -50%; right: -10%; width: 50%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%); pointer-events: none; }
+    .quiz-hero h2 { font-size: 22px; font-weight: 700; margin: 0 0 6px; position: relative; }
+    .quiz-hero p { margin: 0; opacity: 0.95; font-size: 13px; position: relative; }
+    .quiz-progress { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; background: var(--glass-bg, #fff); padding: 14px 18px; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--glass-border, #eef2f7); }
+    .quiz-progress .bar { flex: 1; height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+    .quiz-progress .bar-fill { height: 100%; background: linear-gradient(90deg, #7c3aed, #4f7cff); border-radius: 999px; transition: width .3s; }
+    .quiz-progress .count { font-size: 14px; font-weight: 600; color: var(--glass-text, #334155); white-space: nowrap; }
+    .quiz-card { background: var(--glass-bg, #fff); border-radius: 16px; padding: 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid var(--glass-border, #eef2f7); margin-bottom: 16px; position: relative; overflow: hidden; }
+    .quiz-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #7c3aed, #4f7cff, #2563eb); }
+    .quiz-q-num { font-size: 13px; color: #4f7cff; font-weight: 700; margin-bottom: 8px; }
+    .quiz-question { font-size: 17px; font-weight: 600; color: var(--glass-text, #1e293b); margin-bottom: 18px; line-height: 1.5; }
+    .quiz-option { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border: 1px solid var(--glass-border, #e2e8f0); border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all .15s; font-size: 14px; color: var(--glass-text, #334155); }
+    .quiz-option:hover { border-color: #4f7cff; background: #eff6ff; }
+    .quiz-option.selected { border-color: #4f7cff; background: linear-gradient(135deg, #eff6ff, #f5f3ff); color: #1d4ed8; box-shadow: 0 0 0 3px rgba(79,124,255,0.12); }
+    .quiz-option .opt-letter { width: 26px; height: 26px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; transition: all .15s; }
+    .quiz-option.selected .opt-letter { background: linear-gradient(135deg, #4f7cff, #2563eb); color: #fff; }
+    .quiz-nav { display: flex; justify-content: space-between; gap: 12px; }
+    .quiz-btn { padding: 12px 28px; border-radius: 10px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; transition: all .2s; }
+    .quiz-btn.prev { background: #f1f5f9; color: #334155; }
+    .quiz-btn.next { background: linear-gradient(135deg, #4f7cff, #2563eb); color: #fff; box-shadow: 0 4px 12px rgba(79,124,255,0.3); }
+    .quiz-btn.submit { background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; box-shadow: 0 4px 12px rgba(22,163,74,0.3); }
+    .quiz-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .quiz-btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* 倒计时 */
+    .quiz-timer { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #ef4444; white-space: nowrap; }
+    .quiz-timer .timer-num { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 34px; border-radius: 50%; background: #fef2f2; color: #ef4444; font-size: 16px; font-weight: 800; transition: all .3s; }
+    .quiz-timer .timer-num.warning { background: #ef4444; color: #fff; animation: timerPulse 0.5s ease infinite; }
+    @keyframes timerPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+
+    body.glass-enabled .quiz-progress, body.glass-enabled .quiz-card { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-color: var(--glass-border); }
+</style>
+
+<div class="quiz-page">
+    <div class="quiz-hero">
+        <h2>{$activity.name}</h2>
+        <p>共 {$activity.question_count} 题 · 答对 {$activity.pass_count} 题即通过 · 每题限时 5 秒</p>
+    </div>
+
+    <div class="quiz-progress">
+        <span class="count" id="qCount">1/N</span>
+        <div class="bar"><div class="bar-fill" id="qBar" style="width:0%"></div></div>
+        <span class="quiz-timer">⏱ <span class="timer-num" id="timerNum">5</span>s</span>
+    </div>
+
+    <div id="quizCard"></div>
+    <div class="quiz-nav">
+        <span style="font-size:13px;color:var(--glass-text-muted,#94a3b8);display:flex;align-items:center;gap:6px;"><i class="fas fa-lock" style="font-size:12px;"></i> 本题作答后不可返回，请谨慎作答</span>
+        <button type="button" class="quiz-btn next" id="btnNext">下一题</button>
+        <button type="button" class="quiz-btn submit" id="btnSubmit" style="display:none;">提交答卷</button>
+    </div>
+</div>
+</div>
+</main>
+{include file="default/user/footer" /}
+<script>
+$(function(){
+    var questions = {$questions|json_encode};
+    var activityId = {$activity.id};
+    var total = questions.length;
+    var current = 0;
+    var answers = {}; // qid -> optIndex
+    var letters = ['A','B','C','D','E','F'];
+    var TIME_LIMIT = 5; // 每题 5 秒
+    var timer = null;
+    var timeLeft = TIME_LIMIT;
+
+    function startTimer(){
+        stopTimer();
+        timeLeft = TIME_LIMIT;
+        updateTimerUI();
+        timer = setInterval(function(){
+            timeLeft--;
+            updateTimerUI();
+            if (timeLeft <= 0) {
+                stopTimer();
+                // 超时：本题未作答，自动跳到下一题
+                if (current < total - 1) {
+                    current++;
+                    render();
+                } else {
+                    // 最后一题超时，自动提交
+                    doSubmit();
+                }
+            }
+        }, 1000);
+    }
+    function stopTimer(){
+        if (timer) { clearInterval(timer); timer = null; }
+    }
+    function updateTimerUI(){
+        var $num = $('#timerNum');
+        $num.text(Math.max(0, timeLeft));
+        if (timeLeft <= 2) {
+            $num.addClass('warning');
+        } else {
+            $num.removeClass('warning');
+        }
+    }
+
+    function render(){
+        if(total === 0){ $('#quizCard').html('<div style="text-align:center;color:#94a3b8;padding:40px;">暂无题目</div>'); return; }
+        var q = questions[current];
+        var options = [];
+        try { options = JSON.parse(q.options); } catch(e){ options = []; }
+        if(!Array.isArray(options)) options = [];
+        var html = '<div class="quiz-card">';
+        html += '<div class="quiz-q-num">第 ' + (current+1) + ' 题</div>';
+        html += '<div class="quiz-question">' + q.question + '</div>';
+        html += '<div class="quiz-options">';
+        options.forEach(function(opt, idx){
+            var selected = (answers[q.id] === idx) ? ' selected' : '';
+            html += '<div class="quiz-option' + selected + '" data-opt="' + idx + '">';
+            html += '<span class="opt-letter">' + (letters[idx] || idx) + '</span>';
+            html += '<span>' + opt + '</span></div>';
+        });
+        html += '</div></div>';
+        $('#quizCard').html(html);
+
+        // 更新进度
+        var pct = ((current + 1) / total) * 100;
+        $('#qBar').css('width', pct + '%');
+        $('#qCount').text((current + 1) + '/' + total);
+
+        // 按钮状态（已移除上一题按钮，答题不可回退）
+        if(current === total - 1){
+            $('#btnNext').hide();
+            $('#btnSubmit').show();
+        } else {
+            $('#btnNext').show();
+            $('#btnSubmit').hide();
+        }
+
+        // 启动倒计时
+        startTimer();
+    }
+
+    // 选择选项
+    $('#quizCard').on('click', '.quiz-option', function(){
+        var q = questions[current];
+        $('#quizCard .quiz-option').removeClass('selected');
+        $(this).addClass('selected');
+        answers[q.id] = parseInt($(this).data('opt'));
+    });
+
+    $('#btnPrev').on('click', function(){
+        if(current > 0){ current--; render(); }
+    });
+    $('#btnNext').on('click', function(){
+        if(current < total - 1){ current++; render(); }
+    });
+
+    function doSubmit(){
+        stopTimer();
+        if(Object.keys(answers).length < total){
+            showToast('还有题目未作答', 'warning', 2500);
+            for(var i=0;i<total;i++){
+                if(answers[questions[i].id] === undefined){
+                    current = i; render(); break;
+                }
+            }
+            return;
+        }
+        var btn = $('#btnSubmit');
+        btn.prop('disabled', true).text('提交中...');
+        $.ajax({
+            type: 'POST', url: '__ROOT__/user/quizSubmit', dataType: 'json',
+            data: { activity_id: activityId, answers: JSON.stringify(answers) },
+            success: function(res){
+                if(res.code == 1){
+                    showToast(res.msg, res.passed ? 'success' : 'warning', 3500);
+                    setTimeout(function(){ location.href = '__ROOT__/user/activity'; }, 2000);
+                } else {
+                    showToast(res.msg, 'danger', 2500);
+                    btn.prop('disabled', false).text('提交答卷');
+                    startTimer();
+                }
+            },
+            error: function(){
+                showToast('网络错误', 'danger', 2500);
+                btn.prop('disabled', false).text('提交答卷');
+                startTimer();
+            }
+        });
+    }
+
+    $('#btnSubmit').on('click', function(){
+        if(!confirm('确认提交答卷？')) return;
+        doSubmit();
+    });
+
+    render();
+});
+</script>

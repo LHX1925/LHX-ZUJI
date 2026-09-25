@@ -133,12 +133,15 @@
 
         .auth-brand-visual {
             width: 100%;
-            max-width: 480px;
+            max-width: 260px;
+            margin: 0 auto;
         }
 
         .auth-brand-visual img {
             width: 100%;
             height: auto;
+            max-height: 340px;
+            object-fit: contain;
             display: block;
         }
 
@@ -552,24 +555,97 @@
                     <div class="auth-footer">
                         还没有账号？<a href="__ROOT__/register">立即注册</a>
                     </div>
-                    {if isset($web.oauth_enabled) && $web.oauth_enabled == '1'}
                     <div class="oauth-login-buttons" style="margin-top: 20px; text-align: center; padding-top: 20px; border-top: 1px solid var(--glass-border);">
                         <p style="color: var(--glass-text-secondary); margin-bottom: 12px; font-size: 13px;">其他登录方式</p>
                         <div class="d-flex justify-content-center gap-3">
+                            {if isset($web.oauth_enabled) && $web.oauth_enabled == '1'}
                             <a href="__ROOT__/oauth/login/qq" class="btn btn-outline-primary" style="min-width: 120px; border-radius: var(--glass-radius-full); padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--glass-primary); background: var(--glass-bg-input); border: 1.5px solid var(--glass-border); text-decoration: none; transition: all var(--glass-transition); display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
                                 <i class="fab fa-qq"></i>QQ登录
                             </a>
+                            {/if}
+                            <button type="button" id="qrLoginBtn" class="btn btn-outline-primary" style="min-width: 120px; border-radius: var(--glass-radius-full); padding: 10px 20px; font-size: 14px; font-weight: 500; color: var(--glass-primary); background: var(--glass-bg-input); border: 1.5px solid var(--glass-border); cursor: pointer; transition: all var(--glass-transition); display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+                                <i class="mdi mdi-qrcode-scan"></i>扫码登录
+                            </button>
                         </div>
                     </div>
-                    {/if}
                 </div>
             </div>
         </div>
     </div>
 
     {include file="default/captcha_assets" /}
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs2@0.0.2/qrcode.min.js"></script>
     <script>
         $(function($) {
+            // ===== 扫码登录（点击按钮弹出二维码） =====
+            var qrTimer = null;
+            var QR_LOGO = '{if isset($web.logo) && $web.logo}{$web.logo}{/if}';
+
+            function qrLayerTip(msg, color) {
+                $('#qrLayerTip').text(msg).css('color', color || '#64748b');
+            }
+            function qrOverlayLogo() {
+                if (!QR_LOGO) return;
+                $('#qrLayerCode').append('<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:10px;overflow:hidden;background:#fff;padding:3px;box-shadow:0 0 0 3px #fff;"><img src="' + QR_LOGO + '" style="width:100%;height:100%;object-fit:cover;border-radius:7px;"></div>');
+            }
+            function refreshQr() {
+                $('#qrLayerCode').empty();
+                qrLayerTip('正在生成二维码...');
+                if (qrTimer) { clearInterval(qrTimer); qrTimer = null; }
+                $.ajax({
+                    type: 'POST', url: '__ROOT__/qrlogin/create', dataType: 'json',
+                    success: function(res) {
+                        if (res.code != 1) { qrLayerTip('二维码生成失败，请重试', '#ef4444'); return; }
+                        try {
+                            new QRCode(document.getElementById('qrLayerCode'), {
+                                text: res.qrurl, width: 180, height: 180,
+                                correctLevel: QRCode.CorrectLevel.M
+                            });
+                            qrOverlayLogo();
+                        } catch (e) { qrLayerTip('二维码组件加载失败', '#ef4444'); return; }
+                        qrLayerTip('请使用手机扫码快速登录');
+                        qrTimer = setInterval(function() { pollQr(res.token); }, 2000);
+                    },
+                    error: function() { qrLayerTip('二维码加载失败', '#ef4444'); }
+                });
+            }
+            function pollQr(token) {
+                $.ajax({
+                    type: 'POST', url: '__ROOT__/qrlogin/status', data: { token: token }, dataType: 'json',
+                    success: function(res) {
+                        if (res.status === 'scanned') {
+                            qrLayerTip('已扫码，请在手机上确认登录', '#2563eb');
+                        } else if (res.status === 'confirmed') {
+                            if (qrTimer) { clearInterval(qrTimer); qrTimer = null; }
+                            qrLayerTip('登录成功，正在跳转...', '#059669');
+                            setTimeout(function() { location.href = res.url || '__ROOT__/user/index'; }, 800);
+                        } else if (res.status === 'expired') {
+                            if (qrTimer) { clearInterval(qrTimer); qrTimer = null; }
+                            qrLayerTip('二维码已失效，点击二维码刷新', '#ef4444');
+                            $('#qrLayerCode').css('cursor', 'pointer').off('click').on('click', refreshQr);
+                        }
+                    }
+                });
+            }
+            function closeQrModal() {
+                if (qrTimer) { clearInterval(qrTimer); qrTimer = null; }
+                $('#qrModalOverlay').remove();
+            }
+            function openQrModal() {
+                var html = '<div id="qrModalOverlay" style="position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;">'
+                    + '<div style="background:#fff;border-radius:16px;padding:26px 24px;text-align:center;max-width:320px;width:92%;position:relative;">'
+                    + '<button id="qrModalClose" type="button" style="position:absolute;top:10px;right:14px;border:none;background:none;font-size:24px;line-height:1;color:#94a3b8;cursor:pointer;">&times;</button>'
+                    + '<div style="font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:14px;">扫码登录</div>'
+                    + '<div id="qrLayerCode" style="position:relative;display:inline-block;background:#fff;padding:10px;border:1px solid #e2e8f0;border-radius:12px;line-height:0;"></div>'
+                    + '<div id="qrLayerTip" style="margin-top:14px;font-size:13px;color:#64748b;">加载二维码...</div>'
+                    + '</div></div>';
+                $('body').append(html);
+                $('#qrModalClose').on('click', closeQrModal);
+                $('#qrModalOverlay').on('click', function(e) { if (e.target === this) closeQrModal(); });
+                refreshQr();
+            }
+            $('#qrLoginBtn').on('click', openQrModal);
+
             // Tab 切换
             $('.auth-tab').on('click', function() {
                 var tab = $(this).data('tab');

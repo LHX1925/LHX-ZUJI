@@ -135,7 +135,7 @@ body.no-glass-theme {
   border: 1px solid rgba(236, 72, 153, 0.25) !important;
 }
 .hero h1 {
-  background: linear-gradient(135deg, #DB2777, #7C3AED);
+  background: linear-gradient(90deg, #EC4899 0%, #A855F7 50%, #3B82F6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -302,7 +302,7 @@ h1, h2, h3, h4,
 .page-title, .section-title, .card-title,
 .panel-title, .modal-title, .widget-title,
 .content-header h1, .content-header h2 {
-  background: linear-gradient(135deg, #DB2777, #7C3AED);
+  background: linear-gradient(90deg, #EC4899 0%, #A855F7 50%, #3B82F6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -316,7 +316,7 @@ h1, h2, h3, h4,
 
 /* 导航激活文字 */
 .navbar-brand, .brand-text, .brand-name {
-  background: linear-gradient(135deg, #EC4899, #8B5CF6);
+  background: linear-gradient(90deg, #EC4899 0%, #A855F7 50%, #3B82F6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -341,7 +341,7 @@ h1, h2, h3, h4,
 
 /* 强调文字 */
 .text-primary, .text-pink, .text-gradient {
-  background: linear-gradient(135deg, #DB2777, #7C3AED);
+  background: linear-gradient(90deg, #EC4899 0%, #A855F7 50%, #3B82F6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -359,8 +359,44 @@ h1, h2, h3, h4,
 
 /* Footer标题 */
 .footer-col h4, .footer-title, .footer-heading {
-  background: linear-gradient(135deg, #DB2777, #7C3AED);
+  background: linear-gradient(90deg, #EC4899 0%, #A855F7 50%, #3B82F6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* ========== 深色主题：标题/品牌名恢复实色，避免透明渐变文字不可读 ========== */
+body[data-theme='dark'] h1,
+body[data-theme='dark'] h2,
+body[data-theme='dark'] h3,
+body[data-theme='dark'] h4,
+body[data-theme='dark'] .page-title,
+body[data-theme='dark'] .section-title,
+body[data-theme='dark'] .card-title,
+body[data-theme='dark'] .panel-title,
+body[data-theme='dark'] .modal-title,
+body[data-theme='dark'] .widget-title,
+body[data-theme='dark'] .content-header h1,
+body[data-theme='dark'] .content-header h2,
+body[data-theme='dark'] .navbar-brand,
+body[data-theme='dark'] .brand-text,
+body[data-theme='dark'] .brand-name,
+body[data-theme='dark'] .footer-col h4,
+body[data-theme='dark'] .footer-title,
+body[data-theme='dark'] .footer-heading {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #F1F5F9 !important;
+  color: #F1F5F9 !important;
+}
+/* 强调文字保留粉系实色，深色下同样清晰可见 */
+body[data-theme='dark'] .text-primary,
+body[data-theme='dark'] .text-pink,
+body[data-theme='dark'] .text-gradient {
+  background: none !important;
+  -webkit-background-clip: border-box !important;
+  background-clip: border-box !important;
+  -webkit-text-fill-color: #F472B6 !important;
+  color: #F472B6 !important;
 }

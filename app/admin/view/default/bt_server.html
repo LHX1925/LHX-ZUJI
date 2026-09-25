@@ -1,0 +1,490 @@
+{include file="default/header" title="服务器状态 / 宝塔API"/}
+<style>
+.bt-tip {
+  background: linear-gradient(135deg, #deebff 0%, #f0f7ff 100%);
+  border: 1px solid #b3d4ff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  color: #0747a6;
+  line-height: 1.7;
+}
+.bt-tip strong { display:block; margin-bottom:6px; font-size:14px; color:#0052cc; }
+.bt-tip ul { margin:6px 0 0; padding-left:18px; }
+.bt-tip li { margin:2px 0; }
+.bt-table th { white-space:nowrap; font-size:13px; }
+.bt-table td { vertical-align:middle; font-size:13px; }
+.bt-mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:12px; word-break:break-all; }
+.bt-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+.bt-dot.on  { background:#10B981; box-shadow:0 0 0 3px rgba(16,185,129,.18); }
+.bt-dot.off { background:#EF4444; box-shadow:0 0 0 3px rgba(239,68,68,.18); }
+.bt-mini-bar { height:5px; border-radius:4px; background:rgba(100,116,139,.18); overflow:hidden; margin-top:4px; }
+.bt-mini-bar > i { display:block; height:100%; border-radius:4px; background:linear-gradient(90deg,#4F7CFF,#7AA2FF); }
+.bt-mini-bar.warn > i { background:linear-gradient(90deg,#F59E0B,#FBBF24); }
+.bt-mini-bar.danger > i { background:linear-gradient(90deg,#EF4444,#F87171); }
+.bt-metric { font-size:12px; color:#64748B; line-height:1.5; }
+.bt-metric b { color:#1E293B; font-weight:600; }
+.field-hint { display:block; margin-top:5px; font-size:12px; color:#6b778c; line-height:1.45; }
+
+/* 实时状态卡片 */
+.bt-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:16px; }
+.bt-card {
+  background: var(--glass-bg, rgba(255,255,255,.12));
+  border: 1px solid var(--glass-border, rgba(255,255,255,.25));
+  border-radius: 14px; padding: 16px;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.bt-card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:12px; }
+.bt-card-name { font-size:15px; font-weight:700; color:var(--glass-text,#1E293B); }
+.bt-card-sub { font-size:11px; color:#64748B; margin-top:3px; word-break:break-all; }
+.bt-card-tag { font-size:11px; padding:2px 8px; border-radius:999px; background:rgba(79,124,255,.12); color:#4F7CFF; white-space:nowrap; }
+.bt-kv { display:flex; justify-content:space-between; gap:10px; font-size:12px; color:#64748B; padding:2px 0; }
+.bt-kv b { color:var(--glass-text,#1E293B); text-align:right; word-break:break-all; }
+.bt-ring-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:10px 0; text-align:center; }
+.bt-ring { font-size:11px; color:#64748B; }
+.bt-ring .v { font-size:18px; font-weight:800; color:var(--glass-text,#1E293B); line-height:1.2; }
+.bt-sec-title { font-size:11px; font-weight:700; color:#64748B; margin:12px 0 6px; text-transform:uppercase; letter-spacing:.5px; }
+.bt-err { font-size:12px; color:#EF4444; background:rgba(239,68,68,.08); border-radius:8px; padding:8px 10px; word-break:break-all; line-height:1.6; }
+.bt-empty { text-align:center; padding:32px 0; color:#94A3B8; }
+.bt-detail-list { margin-top:8px; font-size:11px; color:#94A3B8; line-height:1.6; }
+</style>
+
+<main class="lyear-layout-content">
+  <div class="container-fluid glass-animate-in" style="max-width:1400px;margin:0 auto;">
+
+    <div class="bt-tip">
+      <strong>宝塔面板 API 对接说明</strong>
+      <ul>
+        <li>宝塔面板 → <b>设置 → API 接口</b> 开启接口，复制 <b>接口密钥（api_sk）</b>，并把本站服务器 IP 加入白名单。</li>
+        <li><b>面板地址</b>填写完整地址，如 <code>http://1.2.3.4:8888</code> 或 <code>https://bt.example.com</code>（结尾不要带斜杠）。</li>
+        <li>调用接口：<code>GetSystemTotal</code>、<code>GetNetWork</code>、<code>GetDiskInfo</code>、<code>GetCpuInfo</code>、<code>GetLoadAverage</code>、<code>GetMemInfo</code>（并发请求 + 本地缓存）。</li>
+        <li>接口文档：<a href="https://docs.bt.cn/api/system/" target="_blank" rel="noopener">https://docs.bt.cn/api/system/</a></li>
+      </ul>
+    </div>
+
+    <!-- 新增 / 编辑 -->
+    <div class="card admin-card" id="btEditCard" style="display:none;margin-bottom:18px;">
+      <header class="card-header"><div class="card-title" id="btEditTitle">添加服务器</div></header>
+      <div class="card-body">
+        <form id="btEditForm" novalidate>
+          <input type="hidden" name="id" id="f_id" value="0">
+          <div class="mb-3">
+            <label class="form-label">服务器名称 <span style="color:#de350b;">*</span></label>
+            <input class="form-control" type="text" name="name" id="f_name" placeholder="例如：香港 BGP 节点-01" autocomplete="off">
+            <span class="field-hint">前台展示名称，可随意命名（如「中国香港 · 高性能型」）</span>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">标签 / 地区</label>
+              <input class="form-control" type="text" name="tag" id="f_tag" placeholder="例如：中国香港" autocomplete="off">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">排序（越大越靠前）</label>
+              <input class="form-control" type="number" name="sort" id="f_sort" value="0" step="1">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">宝塔面板地址 <span style="color:#de350b;">*</span></label>
+            <input class="form-control" type="text" name="panel_url" id="f_panel_url" placeholder="http://1.2.3.4:8888" autocomplete="off">
+            <span class="field-hint">需带协议与端口；未填协议会自动补 http://</span>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">接口密钥 api_sk <span style="color:#de350b;">*</span></label>
+            <textarea class="form-control" name="api_sk" id="f_api_sk" style="height:78px;" placeholder="宝塔面板 → 设置 → API 接口 → 接口密钥"></textarea>
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label">采集模式</label>
+              <select class="form-select" name="detail" id="f_detail">
+                <option value="1">详细（6 个接口）</option>
+                <option value="0">基础（2 个接口）</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">缓存秒数</label>
+              <input class="form-control" type="number" name="cache_ttl" id="f_cache_ttl" value="15" min="3" max="3600" step="1">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">前台展示</label>
+              <select class="form-select" name="status" id="f_status">
+                <option value="1">显示</option>
+                <option value="0">停用</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">备注</label>
+            <input class="form-control" type="text" name="remark" id="f_remark" placeholder="可选，仅后台可见" autocomplete="off">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary" id="btSaveBtn">保存</button>
+            <button type="button" class="btn btn-info" id="btTestBtn">测试连接</button>
+            <button type="button" class="btn btn-secondary" id="btCancelBtn">取消</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card admin-card">
+      <header class="card-header">
+        <div class="card-title">服务器列表</div>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm btn-secondary" id="btnRefreshAll"><i class="mdi mdi-refresh"></i> 一键刷新</button>
+          <button type="button" class="btn btn-sm btn-primary" id="btnAdd"><i class="mdi mdi-plus"></i> 添加服务器</button>
+        </div>
+      </header>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover bt-table align-middle">
+            <thead>
+              <tr>
+                <th style="width:52px;">ID</th>
+                <th>服务器名称</th>
+                <th>标签</th>
+                <th>面板地址</th>
+                <th style="width:80px;">采集</th>
+                <th style="width:70px;">缓存</th>
+                <th style="width:64px;">排序</th>
+                <th style="width:64px;">展示</th>
+                <th style="width:160px;">最近状态</th>
+                <th style="width:200px;">操作</th>
+              </tr>
+            </thead>
+            <tbody id="btListBody">
+              {empty name="list"}
+              <tr><td colspan="10"><div class="bt-empty"><i class="mdi mdi-server-off" style="font-size:34px;display:block;margin-bottom:8px;"></i>还没有添加服务器，点击右上角「添加服务器」</div></td></tr>
+              {/empty}
+              {volist name="list" id="s"}
+              <tr data-id="{$s.id}"
+                  data-name="{$s.name}"
+                  data-tag="{$s.tag}"
+                  data-panel_url="{$s.panel_url}"
+                  data-api_sk="{$s.api_sk}"
+                  data-detail="{$s.detail}"
+                  data-cache_ttl="{$s.cache_ttl}"
+                  data-sort="{$s.sort}"
+                  data-status="{$s.status}"
+                  data-remark="{$s.remark}">
+                <td>{$s.id}</td>
+                <td><b>{$s.name}</b>{if $s.remark}<div style="font-size:11px;color:#94A3B8;">{$s.remark}</div>{/if}</td>
+                <td>{$s.tag|default='-'}</td>
+                <td class="bt-mono">{$s.panel_url}</td>
+                <td>{if $s.detail==1}<span class="badge bg-info">详细</span>{else}<span class="badge bg-secondary">基础</span>{/if}</td>
+                <td>{$s.cache_ttl}s</td>
+                <td>{$s.sort}</td>
+                <td>{if $s.status==1}<span class="badge bg-success">显示</span>{else}<span class="badge bg-danger">停用</span>{/if}</td>
+                <td class="js-live" data-id="{$s.id}"><span style="color:#94A3B8;">采集中…</span></td>
+                <td>
+                  <button type="button" class="btn btn-sm btn-secondary js-edit">编辑</button>
+                  <button type="button" class="btn btn-sm btn-info js-test">测试</button>
+                  <button type="button" class="btn btn-sm btn-warning js-refresh">刷新</button>
+                  <button type="button" class="btn btn-sm btn-danger js-del">删除</button>
+                </td>
+              </tr>
+              {/volist}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card admin-card" style="margin-top:18px;">
+      <header class="card-header">
+        <div class="card-title">实时状态总览</div>
+        <div style="margin-left:auto;font-size:12px;color:#64748B;">
+          每 <b>15</b> 秒自动刷新 · 最近更新：<span id="btLastUpdate">-</span>
+        </div>
+      </header>
+      <div class="card-body">
+        <div class="bt-grid" id="btStatusGrid">
+          <div class="bt-empty" style="grid-column:1/-1;">加载中…</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+{include file="default/footer" /}
+
+{literal}
+<script>
+(function () {
+  var TOKEN = '{/literal}{$csrf_token|default=''}{literal}';
+  var REFRESH_MS = 15000;
+
+  function fmtMB(mb) {
+    mb = parseFloat(mb) || 0;
+    if (mb >= 1024) return (mb / 1024).toFixed(2) + ' GB';
+    return Math.round(mb) + ' MB';
+  }
+  function fmtSpeed(kb) {
+    kb = parseFloat(kb) || 0;
+    if (kb >= 1024) return (kb / 1024).toFixed(2) + ' MB/s';
+    return kb.toFixed(1) + ' KB/s';
+  }
+  function fmtBytes(b) {
+    b = parseFloat(b) || 0;
+    var u = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'], i = 0;
+    while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+    return (i === 0 ? Math.round(b) : b.toFixed(2)) + ' ' + u[i];
+  }
+  function barCls(p) { return p >= 85 ? 'danger' : (p >= 65 ? 'warn' : ''); }
+  function bar(p) {
+    p = Math.max(0, Math.min(100, parseFloat(p) || 0));
+    return '<div class="bt-mini-bar ' + barCls(p) + '"><i style="width:' + p + '%"></i></div>';
+  }
+  function esc(s) {
+    return String(s === undefined || s === null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function $(id) { return document.getElementById(id); }
+
+  // ---------- 渲染单台服务器 ----------
+  function renderCard(s) {
+    if (!s.online) {
+      return '<div class="bt-card">' +
+        '<div class="bt-card-head"><div><span class="bt-card-name">' + esc(s.name) + '</span>' +
+        (s.tag ? ' <span class="bt-card-tag">' + esc(s.tag) + '</span>' : '') + '</div>' +
+        '<span style="font-size:12px;color:#EF4444;"><span class="bt-dot off"></span>离线</span></div>' +
+        '<div class="bt-err">' + esc(s.error || '无法连接面板') + '</div></div>';
+    }
+    var memPct = s.mem.percent || 0, cpuPct = s.cpu.used || 0, loadPct = (s.load && s.load.percent) || 0;
+
+    var html = '<div class="bt-card">';
+    html += '<div class="bt-card-head"><div><span class="bt-card-name">' + esc(s.name) + '</span>' +
+            (s.tag ? ' <span class="bt-card-tag">' + esc(s.tag) + '</span>' : '') +
+            '<div class="bt-card-sub">' + esc(s.system || '') + (s.version ? ' · 面板 v' + esc(s.version) : '') +
+            (s.uptime ? ' · 已运行 ' + esc(s.uptime) : '') + '</div></div>' +
+            '<span style="font-size:12px;color:#10B981;"><span class="bt-dot on"></span>在线</span></div>';
+
+    html += '<div class="bt-ring-row">' +
+      '<div class="bt-ring"><div class="v">' + cpuPct + '%</div><div>CPU 使用率' + bar(cpuPct) + '</div></div>' +
+      '<div class="bt-ring"><div class="v">' + memPct + '%</div><div>内存' + bar(memPct) + '</div></div>' +
+      '<div class="bt-ring"><div class="v">' + (s.load ? s.load.five : 0) + '</div><div>负载(5m)' + bar(loadPct) + '</div></div>' +
+      '</div>';
+
+    html += '<div class="bt-kv"><span>CPU 核心 / 型号</span><b>' + (s.cpu.num || '-') + ' 核' +
+            (s.cpu.model ? ' · ' + esc(s.cpu.model) : '') + '</b></div>';
+    html += '<div class="bt-kv"><span>系统负载 1 / 5 / 15</span><b>' +
+            (s.load ? s.load.one + ' / ' + s.load.five + ' / ' + s.load.fifteen : '-') + '</b></div>';
+
+    html += '<div class="bt-sec-title">内存详细信息</div>';
+    html += '<div class="bt-kv"><span>实际已用 / 总量</span><b>' + fmtMB(s.mem.real_used) + ' / ' + fmtMB(s.mem.total) + '</b></div>';
+    html += '<div class="bt-kv"><span>空闲 / 可用</span><b>' + fmtMB(s.mem.free) + ' / ' + fmtMB(s.mem.available) + '</b></div>';
+    html += '<div class="bt-kv"><span>缓存 / 缓冲</span><b>' + fmtMB(s.mem.cached) + ' / ' + fmtMB(s.mem.buffers) + '</b></div>';
+
+    html += '<div class="bt-sec-title">网络流量信息</div>';
+    html += '<div class="bt-kv"><span>实时上行 ↑</span><b style="color:#F59E0B;">' + fmtSpeed(s.net.up) + '</b></div>';
+    html += '<div class="bt-kv"><span>实时下行 ↓</span><b style="color:#10B981;">' + fmtSpeed(s.net.down) + '</b></div>';
+    html += '<div class="bt-kv"><span>累计 上行 / 下行</span><b>' + fmtBytes(s.net.up_total) + ' / ' + fmtBytes(s.net.down_total) + '</b></div>';
+    if (s.net.interfaces && s.net.interfaces.length) {
+      s.net.interfaces.slice(0, 4).forEach(function (i2) {
+        html += '<div class="bt-kv"><span>网卡 ' + esc(i2.name) + '</span><b>↑' + fmtSpeed(i2.up) + ' ↓' + fmtSpeed(i2.down) + '</b></div>';
+      });
+    }
+
+    html += '<div class="bt-sec-title">磁盘使用情况</div>';
+    if (s.disk && s.disk.length) {
+      s.disk.slice(0, 5).forEach(function (d) {
+        html += '<div class="bt-kv"><span>' + esc(d.path) + (d.type ? ' (' + esc(d.type) + ')' : '') + '</span>' +
+                '<b>' + esc(d.used) + ' / ' + esc(d.total) + ' · ' + (d.percent || 0) + '%</b></div>' + bar(d.percent);
+      });
+    } else {
+      html += '<div class="bt-kv"><span>暂无分区数据</span><b>-</b></div>';
+    }
+
+    html += '</div>';
+    return html;
+  }
+
+  function renderList(list) {
+    var box = $('btStatusGrid');
+    if (!box) return;
+    if (!list || !list.length) {
+      box.innerHTML = '<div class="bt-empty" style="grid-column:1/-1;">暂无服务器，请先添加</div>';
+      return;
+    }
+    box.innerHTML = list.map(renderCard).join('');
+
+    list.forEach(function (s) {
+      var cell = document.querySelector('.js-live[data-id="' + s.id + '"]');
+      if (!cell) return;
+      if (!s.online) { cell.innerHTML = '<span class="bt-dot off"></span>离线'; return; }
+      cell.innerHTML = '<span class="bt-dot on"></span>在线' +
+        '<div class="bt-metric">CPU <b>' + (s.cpu.used || 0) + '%</b> · 内存 <b>' + (s.mem.percent || 0) + '%</b></div>' +
+        '<div class="bt-metric">↑' + fmtSpeed(s.net.up) + ' ↓' + fmtSpeed(s.net.down) + '</div>';
+    });
+
+    var d = new Date(), p = function (n) { return n < 10 ? '0' + n : '' + n; };
+    var el = $('btLastUpdate');
+    if (el) el.textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+  }
+
+  function loadStatus(force) {
+    var url = '__ROOT__/admin/bt_server/status' + (force ? '?force=1&t=' + Date.now() : '?t=' + Date.now());
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) { if (j && j.code === 1) renderList(j.list || []); })
+      .catch(function () {});
+  }
+
+  // ---------- 表单 ----------
+  function openForm(row) {
+    $('btEditTitle').textContent = row ? '编辑服务器' : '添加服务器';
+    $('f_id').value         = row ? row.id : 0;
+    $('f_name').value       = row ? (row.name || '') : '';
+    $('f_tag').value        = row ? (row.tag || '') : '';
+    $('f_panel_url').value  = row ? (row.panel_url || '') : '';
+    $('f_api_sk').value     = row ? (row.api_sk || '') : '';
+    $('f_detail').value     = row ? String(row.detail || 0) : '1';
+    $('f_cache_ttl').value  = row ? (row.cache_ttl || 15) : 15;
+    $('f_sort').value       = row ? (row.sort || 0) : 0;
+    $('f_status').value     = row ? String(row.status || 0) : '1';
+    $('f_remark').value     = row ? (row.remark || '') : '';
+    $('btEditCard').style.display = '';
+    $('btEditCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function closeForm() {
+    $('btEditCard').style.display = 'none';
+    $('btEditForm').reset();
+    $('f_id').value = 0;
+  }
+
+  function collectForm() {
+    var fd = new FormData($('btEditForm'));
+    fd.append('__token__', TOKEN);
+    return fd;
+  }
+
+  function post(url, fd) {
+    return fetch(url, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function (r) { return r.json(); });
+  }
+
+  $('btnAdd').addEventListener('click', function () { openForm(null); });
+  $('btCancelBtn').addEventListener('click', closeForm);
+
+  $('btSaveBtn').addEventListener('click', function () {
+    var name = $('f_name').value.trim();
+    var url  = $('f_panel_url').value.trim();
+    var sk   = $('f_api_sk').value.trim();
+    if (!name) { layer.msg('请填写服务器名称', { icon: 2 }); return; }
+    if (!url)  { layer.msg('请填写宝塔面板地址', { icon: 2 }); return; }
+    if (!sk)   { layer.msg('请填写接口密钥 api_sk', { icon: 2 }); return; }
+    var load = layer.msg('保存中…', { icon: 16, shade: 0.6, time: 0 });
+    post('__ROOT__/admin/bt_server/save', collectForm())
+      .then(function (j) {
+        layer.close(load);
+        if (j && j.code === 1) {
+          layer.msg(j.msg || '保存成功', { icon: 1, time: 900 }, function () { location.reload(); });
+        } else {
+          layer.msg((j && j.msg) || '保存失败', { icon: 2, time: 2600 });
+        }
+      }).catch(function () { layer.close(load); layer.msg('网络错误', { icon: 2 }); });
+  });
+
+  $('btTestBtn').addEventListener('click', function () {
+    var url = $('f_panel_url').value.trim();
+    var sk  = $('f_api_sk').value.trim();
+    if (!url || !sk) { layer.msg('请先填写面板地址与接口密钥', { icon: 2 }); return; }
+    var load = layer.msg('正在连接宝塔面板…', { icon: 16, shade: 0.6, time: 0 });
+    post('__ROOT__/admin/bt_server/test', collectForm())
+      .then(function (j) {
+        layer.close(load);
+        var ok = j && j.code === 1;
+        var msg = (j && j.msg) || '无响应';
+        if (j && j.preview && j.preview.system) {
+          msg += '<div class="bt-detail-list">' +
+            esc(j.preview.system) + '<br>面板 v' + esc(j.preview.version) + ' · ' +
+            esc(j.preview.cpu_num) + ' 核 · CPU ' + esc(j.preview.cpu_used) + '% · 内存 ' +
+            esc(j.preview.mem_used) + '/' + esc(j.preview.mem_total) + ' MB · 已运行 ' + esc(j.preview.uptime) + '</div>';
+        }
+        layer.alert(msg, { icon: ok ? 1 : 2, title: '连通性测试' + (j && j.ms ? '（' + j.ms + 'ms）' : '') });
+      }).catch(function () { layer.close(load); layer.msg('网络错误', { icon: 2 }); });
+  });
+
+  $('btnRefreshAll').addEventListener('click', function () {
+    var fd = new FormData();
+    fd.append('__token__', TOKEN);
+    var load = layer.msg('正在刷新全部服务器…', { icon: 16, shade: 0.6, time: 0 });
+    post('__ROOT__/admin/bt_server/refresh', fd)
+      .then(function (j) {
+        layer.close(load);
+        layer.msg((j && j.msg) || '完成', { icon: (j && j.code === 1) ? 1 : 2, time: 1800 });
+        loadStatus(true);
+      }).catch(function () { layer.close(load); layer.msg('网络错误', { icon: 2 }); });
+  });
+
+  // ---------- 列表操作 ----------
+  function rowData(tr) {
+    var d = {};
+    ['id', 'name', 'tag', 'panel_url', 'api_sk', 'detail', 'cache_ttl', 'sort', 'status', 'remark'].forEach(function (k) {
+      d[k] = tr.getAttribute('data-' + k);
+    });
+    return d;
+  }
+
+  $('btListBody').addEventListener('click', function (e) {
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    var tr = btn.closest('tr');
+    if (!tr || !tr.getAttribute('data-id')) return;
+    var d = rowData(tr);
+
+    if (btn.classList.contains('js-edit')) { openForm(d); return; }
+
+    if (btn.classList.contains('js-test')) {
+      var fd = new FormData();
+      fd.append('__token__', TOKEN);
+      fd.append('id', d.id);
+      var load = layer.msg('正在连接 ' + d.name + ' …', { icon: 16, shade: 0.6, time: 0 });
+      post('__ROOT__/admin/bt_server/test', fd).then(function (j) {
+        layer.close(load);
+        var ok = j && j.code === 1;
+        var msg = (j && j.msg) || '无响应';
+        if (j && j.preview && j.preview.system) {
+          msg += '<div class="bt-detail-list">' + esc(j.preview.system) + ' · 面板 v' + esc(j.preview.version) + '</div>';
+        }
+        layer.alert(msg, { icon: ok ? 1 : 2, title: '连通性测试' + (j && j.ms ? '（' + j.ms + 'ms）' : '') });
+      }).catch(function () { layer.close(load); layer.msg('网络错误', { icon: 2 }); });
+      return;
+    }
+
+    if (btn.classList.contains('js-refresh')) {
+      var fd2 = new FormData();
+      fd2.append('__token__', TOKEN);
+      fd2.append('id', d.id);
+      var load2 = layer.msg('刷新中…', { icon: 16, shade: 0.6, time: 0 });
+      post('__ROOT__/admin/bt_server/refresh', fd2).then(function (j) {
+        layer.close(load2);
+        layer.msg((j && j.msg) || '完成', { icon: (j && j.code === 1) ? 1 : 2, time: 1800 });
+        loadStatus(false);
+      }).catch(function () { layer.close(load2); layer.msg('网络错误', { icon: 2 }); });
+      return;
+    }
+
+    if (btn.classList.contains('js-del')) {
+      layer.confirm('确定删除服务器「' + d.name + '」？该操作不可恢复。', { title: '删除确认', icon: 3 }, function (idx) {
+        var fd3 = new FormData();
+        fd3.append('__token__', TOKEN);
+        fd3.append('id', d.id);
+        post('__ROOT__/admin/bt_server/del', fd3).then(function (j) {
+          layer.msg((j && j.msg) || '完成', { icon: (j && j.code === 1) ? 1 : 2, time: 1200 }, function () {
+            if (j && j.code === 1) location.reload();
+          });
+        });
+        layer.close(idx);
+      });
+    }
+  });
+
+  // ---------- 启动 ----------
+  loadStatus(false);
+  setInterval(function () { loadStatus(false); }, REFRESH_MS);
+})();
+</script>
+{/literal}

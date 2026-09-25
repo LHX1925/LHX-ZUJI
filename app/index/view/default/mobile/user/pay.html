@@ -1,0 +1,78 @@
+{php}$title = '账户充值'; $tab_active = 'order';{/php}
+{include file="default/mobile/header" /}
+{if isset($isBanned) && $isBanned}
+<div class="app-card" style="border-left:4px solid #F59E0B;background:rgba(245,158,11,0.08);padding:14px 16px;margin-bottom:12px;font-size:13px;color:#92400E;">
+    <strong><i class="fas fa-exclamation-triangle"></i> 您的账号已被封禁，无法充值</strong><br>
+    封禁至：<strong>{:date('Y-m-d H:i:s', $banEndTime)}</strong><br>
+    封禁原因：{$banReason|default:'管理员未填写原因'}
+</div>
+{else}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:24px 16px;">
+    <div style="font-size:13px;color:var(--glass-text-secondary);margin-bottom:4px;">当前余额</div>
+    <div style="font-size:40px;font-weight:800;color:var(--glass-primary);">¥{$user.money|default='0.00'}</div>
+</div>
+<form method="POST">
+    {if isset($cartAmount) && $cartAmount}
+    <div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);">
+        <div style="font-size:13px;color:var(--glass-text-secondary);margin-bottom:6px;">购物车待支付金额</div>
+        <div style="font-size:32px;font-weight:800;color:var(--glass-primary);">¥{$cartAmount}</div>
+        <div style="font-size:12px;color:var(--glass-text-muted);margin-top:4px;">支付成功后自动开通产品</div>
+    </div>
+    <input type="hidden" name="money" value="{$cartAmount}">
+    {else}
+    <div class="app-card" style="margin-bottom:12px;padding:16px;">
+        <div style="font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:12px;">充值金额</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;">
+            {php}$amounts = [50, 100, 200, 500];{/php}
+            {foreach $amounts as $amt}
+            <label style="display:flex;align-items:center;justify-content:center;padding:12px 8px;border:1.5px solid var(--glass-border);border-radius:10px;font-size:14px;font-weight:600;color:var(--glass-text);cursor:pointer;text-align:center;" onclick="setAmount({$amt})">
+                <input type="radio" name="preset_amount" value="{$amt}" style="display:none;">¥{$amt}
+            </label>
+            {/foreach}
+        </div>
+        <input type="number" name="money" id="moneyInput" class="app-input" step="0.01" min="0.01" placeholder="输入其他金额">
+    </div>
+    {/if}
+    <div class="app-card" style="margin-bottom:12px;padding:16px;">
+        <div style="font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:12px;">支付方式</div>
+        {if isset($pay)}
+        {foreach $pay as $k=>$p}
+        <label class="app-list-item" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 0;">
+            <input type="radio" name="payid" value="{$p.id}" {if $k==0}checked{/if} style="accent-color:var(--glass-primary);width:18px;height:18px;">
+            <span style="font-size:14px;font-weight:500;color:var(--glass-text);">{$p.name}</span>
+        </label>
+        {/foreach}
+        {/if}
+    </div>
+    <button type="submit" class="app-btn" style="width:100%;">{if isset($cartAmount) && $cartAmount}立即支付 ¥{$cartAmount} 并开通产品{else}立即充值{/if}</button>
+</form>
+<div class="app-card" style="margin-top:12px;padding:16px;">
+    <div style="font-size:14px;font-weight:700;color:var(--glass-text);margin-bottom:10px;">充值说明</div>
+    <ul style="list-style:none;padding:0;margin:0;font-size:13px;color:var(--glass-text-secondary);line-height:1.8;">
+        <li><i class="fas fa-circle" style="font-size:6px;color:var(--glass-primary);margin-right:6px;vertical-align:middle;"></i> 充值余额可用于购买主机、续费服务、购买流量包</li>
+        <li><i class="fas fa-circle" style="font-size:6px;color:var(--glass-primary);margin-right:6px;vertical-align:middle;"></i> 支付成功后余额实时到账</li>
+        <li><i class="fas fa-circle" style="font-size:6px;color:var(--glass-primary);margin-right:6px;vertical-align:middle;"></i> {$paycron|default='30'}分钟未支付会自动删除订单</li>
+    </ul>
+</div>
+<script>
+function setAmount(val) {
+    document.getElementById('moneyInput').value = val;
+}
+document.querySelector('form').addEventListener('submit', function(e) {
+    {if isset($realnameRequired) && $realnameRequired}
+    e.preventDefault();
+    appToast('{$realnameMsg|default="请先完成实名认证"}', 'warning');
+    return false;
+    {/if}
+    var inp = document.getElementById('moneyInput');
+    if (!inp) return;
+    var money = inp.value;
+    if (!money || parseFloat(money) <= 0) {
+        e.preventDefault();
+        appToast('请输入充值金额', 'warning');
+        return false;
+    }
+});
+</script>
+{/if}
+{include file="default/mobile/footer" /}

@@ -11,6 +11,9 @@ try {
     $siteRoot = '';
 }
 $aiEnabled = isset($web['live2d_ai_enabled']) ? intval($web['live2d_ai_enabled']) : 1;
+$musicEnabled = isset($web['live2d_music_enabled']) ? intval($web['live2d_music_enabled']) : 1;
+// 登录状态：点歌与背景音乐仅对已登录用户开放
+$isLogged = session('userid') ? 1 : 0;
 
 $modelConfigs = [
     'shufulei'       => ['path' => $siteRoot . '/static/live2d/models/舒芙蕾/舒芙蕾.model3.json', 'scale' => 0.015],
@@ -25,6 +28,9 @@ $modelConfigs = [
 $modelCfg = isset($modelConfigs[$live2dModel]) ? $modelConfigs[$live2dModel] : $modelConfigs['shufulei'];
 // 尊重后台"缩放比例"设置；未设置时使用模型推荐值
 $live2dScale = $live2dScale > 0 ? $live2dScale : $modelCfg['scale'];
+// 是否为本地模型（路径不以 http 开头）：本地模型手机端走服务端重写+纹理压缩端点
+// 必须转成 0/1，否则 false 会输出为空字符串，导致 JS 报 isLocalModel: }; 语法错误
+$isLocalModel = (strpos($modelCfg['path'], 'http') !== 0) ? 1 : 0;
 {/php}
 {if $live2dEnabled}
 <script>
@@ -35,7 +41,10 @@ window.__live2dCfg = {
     primaryColor: '{$live2dPrimaryColor}',
     siteName: '{$siteName}',
     siteRoot: '{$siteRoot}',
-    aiEnabled: {$aiEnabled}
+    aiEnabled: {$aiEnabled},
+    musicEnabled: {$musicEnabled},
+    logged: {$isLogged},
+    isLocalModel: {$isLocalModel}
 };
 </script>
 {literal}
@@ -76,6 +85,49 @@ window.__live2dCfg = {
 #l2d-send{width:36px;height:36px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--l2d-primary,#FF69B4),var(--l2d-primary-2,#FF85C0));color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s}
 #l2d-send:hover{transform:scale(1.08);box-shadow:0 2px 12px rgba(255,105,180,.4)}
 #l2d-send:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+/* ===== 音乐播放器 ===== */
+#l2d-player{display:none;border-top:1px solid #f0f0f0;background:linear-gradient(180deg,#fafbff,#f4f6fb);padding:8px 10px}
+#l2d-player.on{display:block}
+.l2d-pl-main{display:flex;align-items:center;gap:8px}
+.l2d-pl-cover{width:38px;height:38px;border-radius:8px;flex:none;object-fit:cover;background:#e8ecf3;box-shadow:0 1px 6px rgba(0,0,0,.12)}
+.l2d-pl-info{flex:1;min-width:0}
+.l2d-pl-name{font-size:12px;font-weight:600;color:#2b3445;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.l2d-pl-artist{font-size:10.5px;color:#8b95a7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.l2d-pl-ctrl{display:flex;align-items:center;gap:3px;flex:none}
+.l2d-pl-btn{width:26px;height:26px;border-radius:50%;border:none;background:rgba(0,0,0,.05);color:#5a6478;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;padding:0}
+.l2d-pl-btn:hover{background:var(--l2d-primary,#FF69B4);color:#fff}
+.l2d-pl-btn.play{width:30px;height:30px;background:linear-gradient(135deg,var(--l2d-primary,#FF69B4),var(--l2d-primary-2,#FF85C0));color:#fff;font-size:13px}
+.l2d-pl-btn.fav.on{color:#ff4d6d}
+.l2d-pl-bar{display:flex;align-items:center;gap:6px;margin-top:6px}
+.l2d-pl-seek{flex:1;height:4px;border-radius:3px;background:#e3e8f0;position:relative;cursor:pointer;overflow:hidden}
+.l2d-pl-seek > i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:3px;background:linear-gradient(90deg,var(--l2d-primary,#FF69B4),var(--l2d-primary-2,#FF85C0));transition:width .25s linear}
+.l2d-pl-time{font-size:9.5px;color:#9aa4b5;flex:none;font-variant-numeric:tabular-nums}
+.l2d-pl-extra{display:none;margin-top:6px;padding-top:6px;border-top:1px dashed #e6eaf2}
+.l2d-pl-extra.on{display:block}
+.l2d-pl-row{display:flex;align-items:center;gap:6px;font-size:10.5px;color:#7b869b;margin-top:5px}
+.l2d-pl-row input[type=range]{flex:1;height:3px;accent-color:var(--l2d-primary,#FF69B4)}
+.l2d-pl-tag{font-size:9.5px;padding:2px 7px;border-radius:9px;background:rgba(79,124,255,.12);color:#4F7CFF;cursor:pointer;white-space:nowrap;border:none}
+.l2d-pl-tag.on{background:linear-gradient(135deg,var(--l2d-primary,#FF69B4),var(--l2d-primary-2,#FF85C0));color:#fff}
+.l2d-pl-lyric{margin-top:6px;max-height:86px;overflow-y:auto;font-size:11px;line-height:1.7;color:#8b95a7;text-align:center;padding:4px 2px}
+.l2d-pl-lyric::-webkit-scrollbar{width:3px}
+.l2d-pl-lyric::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
+.l2d-pl-lyric .cur{color:var(--l2d-primary,#FF69B4);font-weight:700}
+.l2d-pl-lyric-text{display:block;transition:color .3s,font-weight .3s,transform .3s}
+/* 重新打开播放器按钮（位于面板头部，关闭播放器后仍可再次唤起） */
+#l2d-panel .l2d-pl-open{width:24px;height:24px;border-radius:50%;border:none;background:rgba(255,255,255,.22);color:#fff;font-size:14px;line-height:1;cursor:pointer;margin-right:6px}
+#l2d-panel .l2d-pl-open:hover{background:rgba(255,255,255,.4)}
+#l2d-panel .l2d-pl-open.active{background:#fff;color:var(--l2d-primary,#FF69B4)}
+/* 搜索结果 / 歌单条目 */
+.l2d-song-cover{flex:none;width:34px;height:34px;border-radius:7px;object-fit:cover;background:#e8ecf3;box-shadow:0 1px 5px rgba(0,0,0,.12)}
+.l2d-song-list{width:100%;display:flex;flex-direction:column;gap:4px}
+.l2d-song{display:flex;align-items:center;gap:7px;padding:5px 7px;border-radius:9px;background:#f6f8fb;cursor:pointer;transition:background .18s;border:1px solid transparent}
+.l2d-song:hover{background:#eef2ff;border-color:#dbe3ff}
+.l2d-song.playing{background:linear-gradient(135deg,rgba(255,105,180,.12),rgba(255,133,192,.12));border-color:#ffc7e0}
+.l2d-song-no{flex:none;width:19px;height:19px;line-height:19px;text-align:center;border-radius:50%;background:var(--l2d-primary,#FF69B4);color:#fff;font-size:10px;font-weight:700}
+.l2d-song-info{flex:1;min-width:0}
+.l2d-song-name{font-size:11.5px;color:#2b3445;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.l2d-song-sub{font-size:10px;color:#96a0b2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.l2d-msg.wide{max-width:100%;align-self:stretch}
 @media (max-width:768px){#l2d-panel{width:calc(100vw - 70px);max-width:300px;right:10px}#l2d-bubble{max-width:calc(100vw - 80px);min-width:130px;font-size:12px;right:10px}}
 </style>
 <script>
@@ -86,222 +138,9 @@ window.__live2dCfg = {
     var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
     var modelKey = cfg.modelKey || '';
-    // 统一使用后台"缩放比例"：手机端在此基础上放大 1.5 倍保证可见，后台修改立即生效
+    // 统一使用后台"缩放比例"：手机端进一步缩至 0.35 倍，避免看板娘过大遮挡内容
     var scale = cfg.modelScale > 0 ? cfg.modelScale : 0.12;
-    if (isMobile) scale = scale * 1.5;
-
-    // ---------- 手机端纹理降采样：解决高分辨率纹理超过 WebGL MAX_TEXTURE_SIZE 导致模型纯黑 ----------
-    function resolveUrl(path, baseAbs) {
-        if (!path) return path;
-        if (/^(https?:|blob:|data:)/i.test(path)) return path;
-        try { return new URL(path, baseAbs).href; } catch (e) { return baseAbs + path; }
-    }
-
-    // ---------- 手机端纹理处理 ----------
-    // 探测设备 WebGL 最大纹理尺寸，用于决定目标压缩尺寸
-    function probeMaxTextureSize() {
-        try {
-            var c = document.createElement('canvas');
-            var gl = c.getContext('webgl') || c.getContext('experimental-webgl');
-            if (gl) {
-                var m = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-                if (m && m > 0) return m;
-            }
-        } catch (e) {}
-        return 4096;
-    }
-
-    // 从 PNG 文件头读取宽高（只需前 24 字节，不做整图解码，省内存）
-    function readPngSize(blob) {
-        return blob.slice(0, 24).arrayBuffer().then(function (buf) {
-            if (buf.byteLength < 24) return null;
-            var dv = new DataView(buf);
-            return { w: dv.getUint32(16, false), h: dv.getUint32(20, false) };
-        }).catch(function () { return null; });
-    }
-
-    // 把绝对纹理 URL 转成服务器压缩接口地址（服务器端一次性压缩并缓存，手机端下载量小）
-    function toEndpointUrl(absUrl, size) {
-        try {
-            var root = cfg.siteRoot || '';
-            var rel = absUrl;
-            if (root && rel.indexOf(root) === 0) rel = rel.substring(root.length);
-            // 去掉协议和域名，只保留站点相对路径
-            var m = rel.match(/^https?:\/\/[^\/]+(\/.*)$/);
-            if (m) rel = m[1];
-            rel = rel.replace(/^\//, '');
-            return (root || '') + '/live2d/texture?f=' + encodeURIComponent(rel) + '&s=' + size;
-        } catch (e) { return absUrl; }
-    }
-
-    // 把已下载的图片（原尺寸）缩到 nw*nh 输出为 blob/dataURL
-    function imgToBlob(img, nw, nh, done, url) {
-        try {
-            var canvas = document.createElement('canvas');
-            canvas.width = nw;
-            canvas.height = nh;
-            var ctx = canvas.getContext('2d');
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 0, 0, nw, nh);
-            canvas.toBlob(function (b) {
-                if (b) { done(URL.createObjectURL(b)); }
-                else { try { done(canvas.toDataURL('image/png')); } catch (e) { done(url); } }
-            }, 'image/png');
-        } catch (e) { done(url); }
-    }
-
-    // 客户端降采样：读 PNG 头 → createImageBitmap 直接按目标尺寸解码（低内存）→ 不行再走 Image+canvas
-    function clientDownscale(absUrl, maxSize, done) {
-        fetch(absUrl)
-            .then(function (r) { if (!r.ok) throw new Error('bad'); return r.blob(); })
-            .then(function (blob) {
-                return readPngSize(blob).then(function (size) {
-                    if (!size) { done(absUrl); return; }
-                    var longest = Math.max(size.w, size.h);
-                    if (longest <= maxSize) { done(absUrl); return; }
-                    var ratio = maxSize / longest;
-                    var nw = Math.max(1, Math.round(size.w * ratio));
-                    var nh = Math.max(1, Math.round(size.h * ratio));
-                    if (window.createImageBitmap) {
-                        createImageBitmap(blob, { resizeWidth: nw, resizeHeight: nh, resizeQuality: 'high' })
-                            .then(function (bmp) {
-                                var canvas = document.createElement('canvas');
-                                canvas.width = nw;
-                                canvas.height = nh;
-                                canvas.getContext('2d').drawImage(bmp, 0, 0);
-                                if (bmp.close) { try { bmp.close(); } catch (e) {} }
-                                canvas.toBlob(function (b) {
-                                    if (b) { done(URL.createObjectURL(b)); }
-                                    else { try { done(canvas.toDataURL('image/png')); } catch (e2) { done(absUrl); } }
-                                }, 'image/png');
-                            })
-                            .catch(function () {
-                                var img = new Image();
-                                img.onload = function () { imgToBlob(img, nw, nh, done, absUrl); };
-                                img.onerror = function () { done(absUrl); };
-                                img.src = URL.createObjectURL(blob);
-                            });
-                    } else {
-                        var img = new Image();
-                        img.onload = function () { imgToBlob(img, nw, nh, done, absUrl); };
-                        img.onerror = function () { done(absUrl); };
-                        img.src = URL.createObjectURL(blob);
-                    }
-                });
-            })
-            .catch(function () { done(absUrl); });
-    }
-
-    // 处理单张纹理：优先服务器压缩接口，失败再客户端降采样，再失败用原图
-    function prepareTexture(absUrl, maxSize) {
-        return new Promise(function (resolve) {
-            var settled = false;
-            function done(u) { if (!settled) { settled = true; resolve(u); } }
-            var epUrl = toEndpointUrl(absUrl, maxSize);
-            fetch(epUrl)
-                .then(function (r) {
-                    if (!r.ok) throw new Error('ep');
-                    var ct = r.headers.get('content-type') || '';
-                    if (ct.indexOf('image/') !== 0) throw new Error('ep-ct');
-                    return r.blob();
-                })
-                .then(function (blob) { done(URL.createObjectURL(blob)); })
-                .catch(function () { clientDownscale(absUrl, maxSize, done); });
-        });
-    }
-
-    function prepareMobileModel(modelUrl, callback) {
-        // 手机端目标纹理边长：按设备上限折半，留足余量（4096→2048，2048→1024）
-        var texTarget = 2048;
-        try {
-            var devMax = probeMaxTextureSize();
-            texTarget = devMax >= 4096 ? 2048 : 1024;
-        } catch (e) {}
-        var absModelUrl;
-        try { absModelUrl = new URL(modelUrl, location.href).href; } catch (e) { absModelUrl = modelUrl; }
-        var baseAbs = absModelUrl.substring(0, absModelUrl.lastIndexOf('/') + 1);
-
-        function fallback() { done(modelUrl); }
-
-        var called = false;
-        function done(url) {
-            if (called) return;
-            called = true;
-            clearTimeout(overallTimer);
-            callback(url);
-        }
-
-        // 整体兜底：60s 内未完成（网络慢/压缩接口异常），直接加载原始模型，避免一直不显示
-        var overallTimer = setTimeout(function () { fallback(); }, 60000);
-
-        fetch(absModelUrl)
-            .then(function (r) { if (!r.ok) throw new Error('bad status'); return r.json(); })
-            .then(function (model) {
-                var fr = model && model.FileReferences;
-                var isV2 = !fr && model && Array.isArray(model.textures) && model.textures.length;
-                if (!fr && !isV2) { fallback(); return; }
-
-                if (isV2) {
-                    // Cubism 2 模型（shizuku/pio/hk416/黑猫）：字段为小写，位于顶层
-                    model.textures = model.textures.map(function (t) { return resolveUrl(t, baseAbs); });
-                    if (model.pose) model.pose = resolveUrl(model.pose, baseAbs);
-                    if (model.physics) model.physics = resolveUrl(model.physics, baseAbs);
-                    if (model.motions) {
-                        Object.keys(model.motions).forEach(function (group) {
-                            var arr = model.motions[group];
-                            if (Array.isArray(arr)) {
-                                arr.forEach(function (m) { if (m && m.file) m.file = resolveUrl(m.file, baseAbs); });
-                            }
-                        });
-                    }
-                    if (model.expressions) {
-                        model.expressions.forEach(function (e) { if (e && e.file) e.file = resolveUrl(e.file, baseAbs); });
-                    }
-                    var texUrls = model.textures.slice();
-                } else {
-                    // 把 model3.json 里所有相对引用改成绝对 URL，保证作为 blob URL 加载时仍能取到资源
-                    fr.Moc = resolveUrl(fr.Moc, baseAbs);
-                    if (fr.Physics) fr.Physics = resolveUrl(fr.Physics, baseAbs);
-                    if (fr.Pose) fr.Pose = resolveUrl(fr.Pose, baseAbs);
-                    if (fr.DisplayInfo) fr.DisplayInfo = resolveUrl(fr.DisplayInfo, baseAbs);
-                    if (Array.isArray(fr.Expressions)) {
-                        fr.Expressions.forEach(function (e) { e.File = resolveUrl(e.File, baseAbs); });
-                    }
-                    if (fr.Motions) {
-                        Object.keys(fr.Motions).forEach(function (group) {
-                            var arr = fr.Motions[group];
-                            if (Array.isArray(arr)) {
-                                arr.forEach(function (m) { if (m && m.File) m.File = resolveUrl(m.File, baseAbs); });
-                            }
-                        });
-                    }
-                    var texUrls = fr.Textures.map(function (t) {
-                        return resolveUrl(t, baseAbs);
-                    });
-                }
-
-                // 顺序处理纹理：优先服务器压缩，失败再客户端降采样，避免同时解码多张大图导致内存爆掉
-                var texResults = [];
-                var chain = Promise.resolve();
-                texUrls.forEach(function (u) {
-                    chain = chain.then(function () {
-                        return prepareTexture(u, texTarget).then(function (result) {
-                            texResults.push(result);
-                        });
-                    });
-                });
-
-                chain.then(function () {
-                    if (isV2) { model.textures = texResults; }
-                    else { fr.Textures = texResults; }
-                    var blob = new Blob([JSON.stringify(model)], { type: 'application/json' });
-                    console.log('[Live2D] 手机端纹理已处理至 ' + texTarget + 'px，修复纯黑问题');
-                    done(URL.createObjectURL(blob));
-                }).catch(fallback);
-            })
-            .catch(fallback);
-    }
+    if (isMobile) scale = scale * 0.35;
 
     var oml = null; // OML2D 实例，用于表情/动作/拖放
 
@@ -411,8 +250,14 @@ window.__live2dCfg = {
             }
         }
 
-        if (isMobile) {
-            prepareMobileModel(cfg.modelPath, doLoad);
+        if (isMobile && cfg.isLocalModel) {
+            // 手机端：本地模型走服务端重写端点（纹理自动压缩），用普通 URL 而非 blob:，
+            // 避免引擎 Live2DModel.fromSync() 的同步 XHR 读不了 blob: 导致看板娘不显示
+            var rel = cfg.modelPath;
+            var root = cfg.siteRoot || '';
+            if (root && rel.indexOf(root) === 0) rel = rel.substring(root.length);
+            rel = rel.replace(/^\//, '');
+            doLoad((root || '') + '/live2d/model?f=' + encodeURIComponent(rel) + '&s=2048');
         } else {
             doLoad(cfg.modelPath);
         }
@@ -470,6 +315,7 @@ window.__live2dCfg = {
         panel.innerHTML =
             '<div class="l2d-head">' +
                 '<div class="l2d-title"><span>\u2728 ' + modelName + '</span><span class="l2d-badge">AI</span></div>' +
+                '<button class="l2d-pl-open" id="l2dPlOpen" title="\u6253\u5f00\u64ad\u653e\u5668">\u266B</button>' +
                 '<button class="l2d-close" title="\u5173\u95ed">\u00d7</button>' +
             '</div>' +
             '<div id="l2d-msgs"></div>' +
@@ -478,6 +324,43 @@ window.__live2dCfg = {
                 '<button class="l2d-quick-btn" data-q="\u600e\u4e48\u8d2d\u4e70\u4e3b\u673a\uff1f">\uD83D\uDED2 \u8d2d\u4e70\u6d41\u7a0b</button>' +
                 '<button class="l2d-quick-btn" data-q="\u4ef7\u683c\u662f\u591a\u5c11\uff1f">\uD83D\uDCB0 \u4ef7\u683c\u67e5\u8be2</button>' +
                 '<button class="l2d-quick-btn" data-q="\u652f\u6301\u54ea\u4e9b\u652f\u4ed8\u65b9\u5f0f\uff1f">\uD83D\uDCF1 \u652f\u4ed8\u65b9\u5f0f</button>' +
+                '<button class="l2d-quick-btn" data-music="order">\uD83C\uDFB5 \u70b9\u6b4c</button>' +
+                '<button class="l2d-quick-btn" data-music="playlist">\uD83D\uDCC2 \u6211\u7684\u6b4c\u5355</button>' +
+                '<button class="l2d-quick-btn" data-music="now">\uD83C\uDFA7 \u6b63\u5728\u64ad\u653e</button>' +
+                '<button class="l2d-quick-btn" data-music="help">\u2753 \u70b9\u6b4c\u5e2e\u52a9</button>' +
+            '</div>' +
+            '<div id="l2d-player">' +
+                '<div class="l2d-pl-main">' +
+                    '<img class="l2d-pl-cover" id="l2dPlCover" alt="cover" src="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'38\' height=\'38\'%3E%3Crect width=\'38\' height=\'38\' fill=\'%23e8ecf3\'/%3E%3C/svg%3E">' +
+                    '<div class="l2d-pl-info">' +
+                        '<div class="l2d-pl-name" id="l2dPlName">\u6682\u672a\u64ad\u653e</div>' +
+                        '<div class="l2d-pl-artist" id="l2dPlArtist">-</div>' +
+                    '</div>' +
+                    '<div class="l2d-pl-ctrl">' +
+                        '<button class="l2d-pl-btn" id="l2dPlPrev" title="\u4e0a\u4e00\u9996">\u23EE</button>' +
+                        '<button class="l2d-pl-btn play" id="l2dPlToggle" title="\u64ad\u653e/\u6682\u505c">\u25B6</button>' +
+                        '<button class="l2d-pl-btn" id="l2dPlNext" title="\u4e0b\u4e00\u9996">\u23ED</button>' +
+                        '<button class="l2d-pl-btn fav" id="l2dPlFav" title="\u6536\u85cf">\u2661</button>' +
+                        '<button class="l2d-pl-btn" id="l2dPlMore" title="\u66f4\u591a">\u2630</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="l2d-pl-bar">' +
+                    '<div class="l2d-pl-seek" id="l2dPlSeek"><i id="l2dPlFill"></i></div>' +
+                    '<span class="l2d-pl-time" id="l2dPlTime">00:00 / 00:00</span>' +
+                '</div>' +
+                '<div class="l2d-pl-extra" id="l2dPlExtra">' +
+                    '<div class="l2d-pl-row">' +
+                        '<span>\u97f3\u91cf</span>' +
+                        '<input type="range" id="l2dPlVol" min="0" max="100" value="60">' +
+                        '<button class="l2d-pl-tag" id="l2dPlLoop">\u5217\u8868\u5faa\u73af</button>' +
+                    '</div>' +
+                    '<div class="l2d-pl-row">' +
+                        '<button class="l2d-pl-tag" id="l2dPlBg">\u8bbe\u4e3a\u80cc\u666f\u97f3\u4e50</button>' +
+                        '<button class="l2d-pl-tag" id="l2dPlLyricBtn">\u8bcd\u8bcd</button>' +
+                        '<button class="l2d-pl-tag" id="l2dPlClose">\u5173\u95ed\u64ad\u653e\u5668</button>' +
+                    '</div>' +
+                    '<div class="l2d-pl-lyric" id="l2dPlLyric" style="display:none;"></div>' +
+                '</div>' +
             '</div>' +
             '<div id="l2d-input-area">' +
                 '<input type="text" id="l2d-input" placeholder="\u8f93\u5165\u4f60\u7684\u95ee\u9898..." maxlength="500">' +
@@ -625,6 +508,7 @@ window.__live2dCfg = {
             var msg = input.value.trim();
             if (!msg || isAiLoading) return;
             input.value = '';
+            if (handleMusicCommand(msg)) return;
             sendToAI(msg);
         }
         sendBtn.addEventListener('click', function (e) { e.stopPropagation(); doSend(); });
@@ -636,6 +520,8 @@ window.__live2dCfg = {
             (function (btn) {
                 btn.addEventListener('click', function (e) {
                     e.stopPropagation();
+                    var m = btn.getAttribute('data-music');
+                    if (m) { musicHandleQuick(m); return; }
                     var q = btn.getAttribute('data-q');
                     if (q && !isAiLoading) sendToAI(q);
                 });
@@ -685,8 +571,12 @@ window.__live2dCfg = {
                 if (cfg.aiEnabled) togglePanel();
                 else showBubble(tips[Math.floor(Math.random() * tips.length)], 4000);
             } else {
-                var t = tips[Math.floor(Math.random() * tips.length)];
-                showBubble(t, 4000);
+                if (cfg.logged && cfg.musicEnabled) {
+                    togglePanel();
+                } else {
+                    var t = tips[Math.floor(Math.random() * tips.length)];
+                    showBubble(t, 4000);
+                }
             }
         }
         stage.addEventListener('click', onStageClick);
@@ -699,10 +589,572 @@ window.__live2dCfg = {
 
         // 欢迎气泡（手机端提示单击，桌面端提示双击）
         setTimeout(function () {
-            var hint = isMobile ? '\u5355\u51fb' : '\u53cc\u51fb';
-            var hint2 = isMobile ? '\u5355\u51fb' : '\u70b9\u51fb';
+            var clickOpen = isMobile || (cfg.logged && cfg.musicEnabled);
+            var hint = clickOpen ? '\u5355\u51fb' : '\u53cc\u51fb';
+            var hint2 = clickOpen ? '\u5355\u51fb' : '\u70b9\u51fb';
             showBubble('\u4f60\u597d\uff01\u6211\u662f' + cfg.siteName + '\u7684AI\u52a9\u624b' + modelName + '~ <strong>' + hint + '</strong>\u5f00\u542fAI\u804a\u5929\uff0c<strong>' + hint2 + '</strong>\u53ef\u4ee5\u4e92\u52a8\u3001\u62d6\u62fd\u53ef\u4ee5\u79fb\u52a8\u4f4d\u7f6e\u54e6\uff01', 6000);
         }, 2500);
+
+        // ===================== 音乐模块：点歌 / 专属背景音乐 =====================
+        function addAiMsgHtml(html) {
+            var div = document.createElement('div');
+            div.className = 'l2d-msg ai';
+            div.innerHTML = html;
+            msgs.appendChild(div);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+        function esc(t) {
+            if (t == null) return '';
+            return String(t).replace(/[&<>"']/g, function (c) {
+                return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+            });
+        }
+        function fmtTime(s) {
+            s = Math.max(0, Math.floor(s || 0));
+            var m = Math.floor(s / 60), ss = s % 60;
+            return (m < 10 ? '0' : '') + m + ':' + (ss < 10 ? '0' : '') + ss;
+        }
+        function setToggleIcon(p) { if (plToggle) plToggle.textContent = p ? '\u23F8' : '\u25B6'; }
+
+        // 系统媒体会话：换页后系统/浏览器媒体控件仍显示当前歌曲，避免"中断"感
+        function updateMediaSession(sp) {
+            try {
+                if (!sp || !('mediaSession' in navigator) || !window.MediaMetadata) return;
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: sp.name || '', artist: sp.artist || '', album: sp.album || '',
+                    artwork: sp.pic_url ? [{ src: sp.pic_url, sizes: '300x300', type: 'image/jpeg' }] : []
+                });
+            } catch (e) {}
+        }
+        if ('mediaSession' in navigator) {
+            try {
+                navigator.mediaSession.setActionHandler('play', function () { audio.play().catch(function () {}); });
+                navigator.mediaSession.setActionHandler('pause', function () { audio.pause(); });
+                navigator.mediaSession.setActionHandler('previoustrack', function () { navigate(-1); });
+                navigator.mediaSession.setActionHandler('nexttrack', function () { navigate(1); });
+            } catch (e) {}
+        }
+
+        var plCover = document.getElementById('l2dPlCover');
+        var plName = document.getElementById('l2dPlName');
+        var plArtist = document.getElementById('l2dPlArtist');
+        var plPrev = document.getElementById('l2dPlPrev');
+        var plToggle = document.getElementById('l2dPlToggle');
+        var plNext = document.getElementById('l2dPlNext');
+        var plFav = document.getElementById('l2dPlFav');
+        var plMore = document.getElementById('l2dPlMore');
+        var plSeek = document.getElementById('l2dPlSeek');
+        var plFill = document.getElementById('l2dPlFill');
+        var plTime = document.getElementById('l2dPlTime');
+        var plExtra = document.getElementById('l2dPlExtra');
+        var plVol = document.getElementById('l2dPlVol');
+        var plLoop = document.getElementById('l2dPlLoop');
+        var plBg = document.getElementById('l2dPlBg');
+        var plLyricBtn = document.getElementById('l2dPlLyricBtn');
+        var plClose = document.getElementById('l2dPlClose');
+        var plOpen = document.getElementById('l2dPlOpen');
+        var plLyric = document.getElementById('l2dPlLyric');
+
+        // 复用 header 预热阶段创建的音频元素（已提前开始缓冲），避免切页后重新拉流卡顿
+        var audio = window.__l2dPreAudio || new Audio();
+        audio.preload = 'auto';
+        if (!window.__l2dPreAudio) audio.volume = 0.6;
+
+        var M = {
+            mode: 'idle',
+            list: [],
+            cur: null,
+            bg: null,
+            enabled: false,
+            loop: 0,
+            fav: [],
+            lyrics: [],
+            lyricNodes: null,
+            lyricIdx: -1,
+            wantBgPlay: false,
+            posTimer: null
+        };
+
+        // 归一化音乐接口路径：apiGet/apiPost 内部已带 /music 前缀，
+        // 若调用处又传了 '/music/xxx' 会拼成 /music/music/xxx（404），这里统一去掉重复前缀。
+        function musicApiUrl(path) {
+            path = String(path == null ? '' : path).replace(/^\/+/, '');
+            if (path === 'music') path = '';
+            else if (path.indexOf('music/') === 0) path = path.slice(6);
+            return cfg.siteRoot + '/music' + (path ? '/' + path : '');
+        }
+        function apiGet(path, params, cb) {
+            var url = musicApiUrl(path);
+            if (params) url += '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState !== 4) return;
+                if (xhr.status === 200) { try { cb(null, JSON.parse(xhr.responseText)); } catch (e) { cb('parse'); } }
+                else cb('http');
+            };
+            xhr.onerror = function () { cb('net'); };
+            xhr.send();
+        }
+        function apiPost(path, params, cb) {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', musicApiUrl(path), true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            var body = Object.keys(params || {}).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState !== 4) return;
+                if (xhr.status === 200) { try { cb(null, JSON.parse(xhr.responseText)); } catch (e) { cb('parse'); } }
+                else cb('http');
+            };
+            xhr.onerror = function () { cb('net'); };
+            xhr.send(body);
+        }
+
+        function showPlayer() { var p = document.getElementById('l2d-player'); if (p) p.classList.add('on'); syncPlOpen(); }
+        function syncPlOpen() { var b = document.getElementById('l2dPlOpen'); if (b) { var p = document.getElementById('l2d-player'); b.classList.toggle('active', !!(p && p.classList.contains('on'))); } }
+
+        // 跨页面续播：把"正在播放"的歌曲、已解析的音频直链与进度写入缓存，
+        // 刷新 / 切换功能页后立即续播（sessionStorage 优先，省掉等待接口的空窗 → 消除切页卡顿）
+        var LSK_NP = 'l2d_now_playing';   // localStorage：跨会话（背景音乐自动续播）
+        var SSK_NP = 'l2d_np_live';       // sessionStorage：本次会话（换页快速续播）
+        var PLACEHOLDER_COVER = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'38\' height=\'38\'%3E%3Crect width=\'38\' height=\'38\' fill=\'%23e8ecf3\'/%3E%3C/svg%3E';
+
+        function nowPlayingObj(sp, playing) {
+            if (!sp || !sp.id) return null;
+            return {
+                id: sp.id, source: sp.source, br: sp.br || '320',
+                name: sp.name, artist: sp.artist || '', album: sp.album || '',
+                pic_id: sp.pic_id || '', pic_url: sp.pic_url || '', lyric_id: sp.lyric_id || '',
+                // 已解析的音频直链：下次换页可直接开播，无需再请求 /music/url
+                src: (audio && audio.src && audio.src.indexOf('blob:') !== 0) ? audio.src : '',
+                position: Math.floor(audio.currentTime || 0),
+                playing: !!playing,
+                bg: !!M.enabled,
+                volume: audio ? audio.volume : 0.6,
+                t: Date.now()
+            };
+        }
+        function saveNowPlaying(sp, playing) {
+            try {
+                var o = nowPlayingObj(sp, playing);
+                if (!o) {
+                    localStorage.removeItem(LSK_NP);
+                    try { sessionStorage.removeItem(SSK_NP); } catch (_) {}
+                    return;
+                }
+                localStorage.setItem(LSK_NP, JSON.stringify(o));
+                try { sessionStorage.setItem(SSK_NP, JSON.stringify(o)); } catch (_) {}
+            } catch (e) {}
+        }
+        function loadNowPlaying(useSession) {
+            try {
+                if (useSession) {
+                    var s = sessionStorage.getItem(SSK_NP);
+                    if (s) return JSON.parse(s);
+                }
+                var r = localStorage.getItem(LSK_NP);
+                return r ? JSON.parse(r) : null;
+            } catch (e) { return null; }
+        }
+
+        // 跳到指定进度：元数据已就绪则立即 seek，否则等 loadedmetadata
+        function seekTo(pos) {
+            if (!(pos > 0)) return;
+            function apply() { try { var d = audio.duration || 0; if (d === 0 || pos < d - 2) audio.currentTime = pos; } catch (_) {} }
+            if (audio.readyState >= 1) apply();
+            else audio.addEventListener('loadedmetadata', apply, { once: true });
+        }
+
+        // 用缓存的直链立即开播（不等待任何接口），把换页空窗压到最低
+        function fastResume(item) {
+            if (!item || !item.id || !item.src) return false;
+            M.cur = item;
+            M.bg = item.bg ? item : null;
+            M.wantBgPlay = !!item.bg; // 若被浏览器拦截自动播放，首次交互时可继续
+            if (item.volume > 0) { audio.volume = item.volume; if (plVol) plVol.value = Math.round(item.volume * 100); }
+            showPlayer();
+            plName.textContent = item.name || '未知歌曲';
+            plArtist.textContent = item.artist || '';
+            plCover.src = item.pic_url || PLACEHOLDER_COVER;
+            plFav.classList.toggle('on', favHas(item));
+            updateMediaSession(item);
+            // header 预热阶段已用同一 src 开始缓冲时，不再重复设置（避免丢弃已缓冲数据）
+            if (audio.src !== item.src) audio.src = item.src;
+            seekTo(item.position);
+            setToggleIcon(true);
+            startPosSave();
+            var p = audio.play();
+            if (p && p.then) p.catch(function () { setToggleIcon(false); M.wantBgPlay = true; bindFirstGesture(); });
+            return true;
+        }
+
+        function resumeNowPlaying() {
+            if (!cfg.logged || !cfg.musicEnabled) return;
+            if (M.cur || audio.src) return; // 已有歌曲在播，避免重复
+            var item = loadNowPlaying(true) || loadNowPlaying(false);
+            if (!item || !item.id || !item.playing) return;
+            if (fastResume(item)) return; // 有缓存直链：立即续播
+            M.cur = item; M.wantBgPlay = false;
+            showPlayer();
+            plName.textContent = item.name || '未知歌曲';
+            plArtist.textContent = item.artist || '';
+            plCover.src = item.pic_url || PLACEHOLDER_COVER;
+            plFav.classList.toggle('on', favHas(item));
+            setToggleIcon(true);
+            updateMediaSession(item);
+            apiGet('/url', { id: item.id, source: item.source, br: item.br || '320' }, function (e, r) {
+                if (e || !r || r.code !== 0 || !r.data.url) { setToggleIcon(false); return; }
+                audio.src = r.data.url;
+                audio.addEventListener('loadedmetadata', function once() {
+                    try { var d = audio.duration || 0; if (item.position > 0 && item.position < d - 2) audio.currentTime = item.position; } catch (_) {}
+                    audio.removeEventListener('loadedmetadata', once);
+                }, { once: true });
+                var p = audio.play();
+                if (p && p.then) p.catch(function () { setToggleIcon(false); M.wantBgPlay = true; bindFirstGesture(); });
+            });
+        }
+        function favHas(s) { if (!s) return false; for (var i = 0; i < M.fav.length; i++) { if (M.fav[i].id === s.id) return true; } return false; }
+
+        function addSongList(list) {
+            var wrap = document.createElement('div');
+            wrap.className = 'l2d-msg ai wide';
+            var box = document.createElement('div');
+            box.className = 'l2d-song-list';
+            list.forEach(function (s) {
+                var row = document.createElement('div');
+                row.className = 'l2d-song';
+                var no = document.createElement('div');
+                no.className = 'l2d-song-no';
+                no.textContent = (s.no || 0);
+                var cover = document.createElement('img');
+                cover.className = 'l2d-song-cover';
+                cover.alt = 'cover';
+                cover.src = s.pic_url || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'34\' height=\'34\'%3E%3Crect width=\'34\' height=\'34\' fill=\'%23e8ecf3\'/%3E%3C/svg%3E';
+                // 列表未带封面时，用 pic_id 异步补齐
+                if (!s.pic_url && s.pic_id) {
+                    apiGet('/pic', { id: s.pic_id, source: s.source, size: 300 }, function (e, r) {
+                        if (!e && r && r.code === 0 && r.data.url) { cover.src = r.data.url; s.pic_url = r.data.url; }
+                    });
+                }
+                var info = document.createElement('div');
+                info.className = 'l2d-song-info';
+                info.innerHTML = '<div class="l2d-song-name">' + esc(s.name) + '</div>' +
+                    '<div class="l2d-song-sub">' + esc(s.artist) + (s.album ? ' · ' + esc(s.album) : '') + '</div>';
+                row.appendChild(no);
+                row.appendChild(cover);
+                row.appendChild(info);
+                row.addEventListener('click', function () { playSong(s); });
+                box.appendChild(row);
+            });
+            wrap.appendChild(box);
+            msgs.appendChild(wrap);
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+
+        function doSearch(kw) {
+            kw = (kw || '').trim();
+            if (!kw) { addAiMsgHtml('请输入要搜索的歌名或歌手~'); return; }
+            M.mode = 'search';
+            addUserMsg('搜索：' + kw);
+            addAiMsgHtml('\uD83D\uDD0E 正在搜索「' + esc(kw) + '」...');
+            apiGet('/search', { name: kw, count: 20, source: 'netease' }, function (err, resp) {
+                if (err || !resp) { addAiMsgHtml('搜索失败，请稍后再试~'); return; }
+                if (resp.need_login) { addAiMsgHtml('点歌需要<a href="' + cfg.siteRoot + '/login" style="color:#38B0DE">登录</a>哦~'); return; }
+                if (resp.code !== 0 || !resp.data.list.length) { addAiMsgHtml('没有找到相关歌曲，换个关键词试试~'); M.mode = 'idle'; return; }
+                M.list = resp.data.list;
+                addAiMsgHtml('找到 ' + resp.data.list.length + ' 首，发送<b>编号</b>即可播放（如「1」）：');
+                addSongList(resp.data.list);
+                M.mode = 'pick';
+                input.placeholder = '输入编号播放，或输入新歌名继续搜索';
+                input.focus();
+            });
+        }
+
+        function playSong(s) {
+            if (!s || !s.id) return;
+            M.cur = s;
+            M.wantBgPlay = false;
+            showPlayer();
+            plName.textContent = s.name || '未知歌曲';
+            plArtist.textContent = s.artist || '';
+            plCover.src = s.pic_url || PLACEHOLDER_COVER;
+            plFav.classList.toggle('on', favHas(s));
+            setToggleIcon(true);
+            updateMediaSession(s);
+            apiGet('/pic', { id: s.pic_id, source: s.source, size: 300 }, function (e, r) {
+                if (!e && r && r.code === 0 && r.data.url) { plCover.src = r.data.url; s.pic_url = r.data.url; updateMediaSession(s); }
+            });
+            apiGet('/url', { id: s.id, source: s.source, br: s.br || '320' }, function (e, r) {
+                if (e || !r || r.code !== 0 || !r.data.url) {
+                    addAiMsgHtml('\u26D4 「' + esc(s.name) + '」暂时无法播放，换一首试试~');
+                    setToggleIcon(false);
+                    return;
+                }
+                audio.src = r.data.url;
+                var pr = audio.play();
+                if (pr && pr.then) pr.catch(function () { setToggleIcon(false); addAiMsgHtml('\uD83D\uDD10 浏览器限制了自动播放，点一下播放器上的 \u25B6 即可'); });
+                addAiMsgHtml('\u25B6 正在播放：<b>' + esc(s.name) + '</b> - ' + esc(s.artist || ''));
+                loadLyric(s);
+                saveSongInfo();
+                startPosSave();
+            });
+        }
+
+        function loadLyric(s) {
+            plLyric.innerHTML = '';
+            M.lyrics = []; M.lyricNodes = null; M.lyricIdx = -1;
+            if (!s.lyric_id) return;
+            apiGet('/lyric', { id: s.lyric_id, source: s.source }, function (e, r) {
+                if (e || !r || r.code !== 0 || !r.data.lyric) return;
+                parseLyric(r.data.lyric);
+            });
+        }
+        function parseLyric(text) {
+            M.lyrics = [];
+            var re = /\[(\d+):(\d+(?:\.\d+)?)\]/g, lines = String(text).split('\n');
+            lines.forEach(function (line) {
+                var m, t, txt;
+                re.lastIndex = 0;
+                while ((m = re.exec(line))) {
+                    t = parseInt(m[1], 10) * 60 + parseFloat(m[2]);
+                    txt = line.replace(/\[(\d+):(\d+(?:\.\d+)?)\]/g, '').trim();
+                    if (txt) M.lyrics.push({ t: t, text: txt });
+                }
+            });
+            M.lyrics.sort(function (a, b) { return a.t - b.t; });
+            plLyric.innerHTML = M.lyrics.map(function (l) { return '<span class="l2d-pl-lyric-text">' + esc(l.text) + '</span>'; }).join('<br>');
+            M.lyricNodes = plLyric.querySelectorAll('.l2d-pl-lyric-text');
+        }
+        function updateLyric(cur) {
+            if (!M.lyrics.length || !M.lyricNodes) return;
+            var idx = 0;
+            for (var i = 0; i < M.lyrics.length; i++) { if (M.lyrics[i].t <= cur) idx = i; else break; }
+            if (idx === M.lyricIdx) return;
+            M.lyricIdx = idx;
+            for (var j = 0; j < M.lyricNodes.length; j++) M.lyricNodes[j].classList.toggle('cur', j === idx);
+            if (M.lyricNodes[idx]) M.lyricNodes[idx].scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+
+        function navigate(dir) {
+            var arr = (M.list && M.list.length) ? M.list : M.fav;
+            if (!arr.length) { if (audio.duration) audio.currentTime = 0; return; }
+            if (!M.cur) { playSong(arr[0]); return; }
+            var idx = -1;
+            for (var i = 0; i < arr.length; i++) { if (arr[i].id === M.cur.id) { idx = i; break; } }
+            if (idx < 0) { playSong(arr[0]); return; }
+            playSong(arr[(idx + dir + arr.length) % arr.length]);
+        }
+
+        function onFav() {
+            if (!M.cur) return;
+            var s = M.cur;
+            apiPost('/playlist', { act: 'add', id: s.id, source: s.source, name: s.name, artist: s.artist || '', album: s.album || '', pic_id: s.pic_id || '', pic_url: s.pic_url || '', lyric_id: s.lyric_id || '' }, function (e, r) {
+                if (!e && r && r.code === 0) { M.fav = r.data.list || []; plFav.classList.add('on'); addAiMsgHtml('\u2764\uFE0F 已收藏「' + esc(s.name) + '」到你的歌单'); }
+                else addAiMsgHtml('\u2764 收藏失败，请稍后再试~');
+            });
+        }
+
+        function onBg() {
+            if (!cfg.logged) { addAiMsgHtml('请先<a href="' + cfg.siteRoot + '/login" style="color:#38B0DE">登录</a>'); return; }
+            M.enabled = !M.enabled;
+            plBg.classList.toggle('on', M.enabled);
+            var payload = { enabled: M.enabled ? 1 : 0 };
+            if (M.cur) {
+                payload.song_id = M.cur.id; payload.source = M.cur.source; payload.name = M.cur.name;
+                payload.artist = M.cur.artist || ''; payload.album = M.cur.album || '';
+                payload.pic_id = M.cur.pic_id || ''; payload.pic_url = M.cur.pic_url || '';
+                payload.lyric_id = M.cur.lyric_id || ''; payload.br = M.cur.br || '320';
+            }
+            apiPost('/save', payload, function (e, r) {
+                if (!e && r && r.code === 0) addAiMsgHtml(M.enabled ? '\u2705 已开启专属背景音乐，登录后自动续播♪' : '\uD83D\uDEAB 已关闭背景音乐自动播放');
+                else addAiMsgHtml('设置失败，请稍后再试~');
+            });
+        }
+
+        function musicShowPlaylist() {
+            if (!cfg.logged) { addAiMsgHtml('请先<a href="' + cfg.siteRoot + '/login" style="color:#38B0DE">登录</a>'); return; }
+            addAiMsgHtml('\uD83D\uDCC2 正在读取你的歌单...');
+            apiGet('/playlist', null, function (e, r) {
+                if (e || !r || r.code !== 0) { addAiMsgHtml('读取歌单失败~'); return; }
+                M.fav = r.data.list || [];
+                if (!M.fav.length) { addAiMsgHtml('你的歌单还是空的，播放时点 \u2661 就能收藏歌曲哦~'); return; }
+                addAiMsgHtml('\uD83D\uDCC2 你的歌单（共 ' + M.fav.length + ' 首），发送<b>编号</b>播放：');
+                var list = M.fav.map(function (s, i) { return { no: i + 1, id: s.id, name: s.name, artist: s.artist, album: s.album, pic_id: s.pic_id, pic_url: s.pic_url, lyric_id: s.lyric_id, source: s.source, br: s.br }; });
+                addSongList(list);
+                M.list = list; M.mode = 'pick';
+                input.placeholder = '输入编号播放，或输入歌名搜索';
+            });
+        }
+
+        function musicHandleQuick(m) {
+            if (!cfg.musicEnabled) { addAiMsgHtml('音乐功能未开启'); return; }
+            if (!cfg.logged) { addAiMsgHtml('点歌与背景音乐需要<a href="' + cfg.siteRoot + '/login" style="color:#38B0DE">登录</a>后使用哦~ \uD83D\uDD12'); return; }
+            showPanel();
+            if (m === 'order') {
+                M.mode = 'search';
+                addAiMsgHtml('\uD83C\uDFB5 请输入歌名或歌手，我来帮你搜索~（也可以直接发「点歌 周杰伦」）');
+                input.value = ''; input.focus();
+                input.placeholder = '输入歌名 / 歌手后发送，例如：晴天';
+            } else if (m === 'playlist') { musicShowPlaylist(); }
+            else if (m === 'now') {
+                if (M.cur) addAiMsgHtml('\u25B6 正在播放：<b>' + esc(M.cur.name) + '</b> - ' + esc(M.cur.artist || '') + (audio.paused ? '（已暂停）' : ''));
+                else addAiMsgHtml('当前没有正在播放的歌曲，点「点歌」试试吧~');
+            } else if (m === 'help') {
+                addAiMsgHtml('\uD83C\uDFB5 <b>点歌帮助</b><br>\u2022 点「点歌」后输入歌名搜索<br>\u2022 发送歌曲<b>编号</b>即可播放<br>\u2022 播放时点 \u2661 收藏到歌单<br>\u2022 「更多」里可设为<b>专属背景音乐</b>，登录后自动续播');
+            }
+        }
+
+        function handleMusicCommand(msg) {
+            if (!cfg.musicEnabled) return false;
+            if (M.mode === 'pick') {
+                if (/^\d{1,3}$/.test(msg)) {
+                    var n = parseInt(msg, 10), found = null;
+                    for (var i = 0; i < M.list.length; i++) { if (M.list[i].no === n) { found = M.list[i]; break; } }
+                    if (found) playSong(found);
+                    else addAiMsgHtml('没有编号为 ' + n + ' 的歌曲，请重新输入~');
+                    return true;
+                }
+                doSearch(msg); return true;
+            }
+            var m = msg.match(/^(点歌|听歌|搜歌|搜一下|来一首|播放|我想听|点一首)\s*(.+)$/);
+            if (m) { doSearch(m[2]); return true; }
+            if (msg === '点歌' || msg === '点首歌' || msg === '点歌帮助' || msg === '帮助') { musicHandleQuick('help'); return true; }
+            if (msg === '我的歌单' || msg === '歌单') { musicShowPlaylist(); return true; }
+            if (msg === '背景音乐') { onBg(); return true; }
+            return false;
+        }
+
+        function saveSongInfo() {
+            if (!M.cur || !cfg.logged) return;
+            var s = M.cur;
+            apiPost('/save', {
+                enabled: M.enabled ? 1 : 0,
+                song_id: s.id, source: s.source, name: s.name, artist: s.artist || '', album: s.album || '',
+                pic_id: s.pic_id || '', pic_url: s.pic_url || '', lyric_id: s.lyric_id || '', br: s.br || '320',
+                position: Math.floor(audio.currentTime || 0), duration: Math.floor(audio.duration || 0)
+            }, null);
+        }
+        function startPosSave() {
+            clearInterval(M.posTimer);
+            M.posTimer = setInterval(function () {
+                if (!audio.paused && M.cur && cfg.logged) saveSongInfo();
+            }, 5000);
+        }
+
+        function prepareBg(song, pos) {
+            M.bg = song; M.wantBgPlay = true; M.cur = song;
+            showPlayer();
+            plName.textContent = song.name || '未知';
+            plArtist.textContent = song.artist || '';
+            if (song.pic_url) plCover.src = song.pic_url;
+            else if (song.pic_id) apiGet('/pic', { id: song.pic_id, source: song.source }, function (e, r) { if (!e && r && r.code === 0 && r.data.url) { plCover.src = r.data.url; song.pic_url = r.data.url; updateMediaSession(song); } });
+            plFav.classList.toggle('on', favHas(song));
+            updateMediaSession(song);
+            apiGet('/url', { id: song.id, source: song.source, br: song.br || '320' }, function (e, r) {
+                if (e || !r || r.code !== 0 || !r.data.url) { M.wantBgPlay = false; return; }
+                audio.src = r.data.url;
+                audio.addEventListener('loadedmetadata', function once() {
+                    try { var d = audio.duration || 0; if (pos > 0 && pos < d - 2) audio.currentTime = pos; } catch (_) {}
+                    audio.removeEventListener('loadedmetadata', once);
+                }, { once: true });
+                var p = audio.play();
+                if (p && p.then) {
+                    p.then(function () { setToggleIcon(true); addAiMsgHtml('\uD83C\uDFB6 已为你续播背景音乐「' + esc(song.name) + '」'); startPosSave(); })
+                     .catch(function () { setToggleIcon(false); bindFirstGesture(); addAiMsgHtml('\uD83C\uDFB6 你的背景音乐已就绪，点一下页面即可继续播放~'); });
+                }
+            });
+        }
+        var _gestureBound = false;
+        function bindFirstGesture() {
+            if (_gestureBound) return; _gestureBound = true;
+            function go() {
+                if (M.wantBgPlay && audio.paused && audio.src) {
+                    audio.play().then(function () { M.cur = M.bg; setToggleIcon(true); addAiMsgHtml('\uD83C\uDFB6 已为你续播背景音乐~'); startPosSave(); }).catch(function () {});
+                }
+                document.removeEventListener('click', go); document.removeEventListener('keydown', go); document.removeEventListener('touchstart', go);
+            }
+            document.addEventListener('click', go); document.addEventListener('keydown', go); document.addEventListener('touchstart', go);
+        }
+
+        if (plToggle) plToggle.addEventListener('click', function (e) { e.stopPropagation(); if (!audio.src && M.cur) { playSong(M.cur); return; } if (audio.paused) audio.play().catch(function () {}); else audio.pause(); });
+        if (plPrev) plPrev.addEventListener('click', function (e) { e.stopPropagation(); navigate(-1); });
+        if (plNext) plNext.addEventListener('click', function (e) { e.stopPropagation(); navigate(1); });
+        if (plFav) plFav.addEventListener('click', function (e) { e.stopPropagation(); onFav(); });
+        if (plMore) plMore.addEventListener('click', function (e) { e.stopPropagation(); plExtra.classList.toggle('on'); });
+        if (plVol) plVol.addEventListener('input', function (e) { e.stopPropagation(); audio.volume = plVol.value / 100; });
+        if (plVol) plVol.addEventListener('change', function (e) { apiPost('/save', { volume: audio.volume }, null); });
+        if (plLoop) plLoop.addEventListener('click', function (e) { e.stopPropagation(); M.loop = (M.loop + 1) % 3; plLoop.classList.toggle('on', M.loop === 1); plLoop.textContent = M.loop === 0 ? '列表循环' : (M.loop === 1 ? '单曲循环' : '随机播放'); apiPost('/save', { loop_mode: M.loop }, null); });
+        if (plBg) plBg.addEventListener('click', function (e) { e.stopPropagation(); onBg(); });
+        if (plLyricBtn) plLyricBtn.addEventListener('click', function (e) { e.stopPropagation(); plLyric.style.display = plLyric.style.display !== 'none' ? 'none' : 'block'; });
+        if (plClose) plClose.addEventListener('click', function (e) { e.stopPropagation(); var p = document.getElementById('l2d-player'); if (p) p.classList.remove('on'); syncPlOpen(); });
+        if (plOpen) plOpen.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var p = document.getElementById('l2d-player');
+            if (p && p.classList.contains('on')) { p.classList.remove('on'); syncPlOpen(); }
+            else { showPlayer(); }
+        });
+        if (plSeek) plSeek.addEventListener('click', function (e) { e.stopPropagation(); var r = plSeek.getBoundingClientRect(); audio.currentTime = (audio.duration || 0) * ((e.clientX - r.left) / r.width); });
+
+        if (audio) {
+            audio.addEventListener('play', function () { setToggleIcon(true); M.__urlRetry = false; saveNowPlaying(M.cur, true); });
+            audio.addEventListener('pause', function () { setToggleIcon(false); saveNowPlaying(M.cur, false); if (cfg.logged) saveSongInfo(); });
+            audio.addEventListener('ended', function () { setToggleIcon(false); if (M.loop === 1) { audio.currentTime = 0; audio.play().catch(function () {}); } else navigate(1); });
+            audio.addEventListener('timeupdate', function () {
+                var cur = audio.currentTime || 0, dur = audio.duration || 0;
+                plFill.style.width = (dur > 0 ? (cur / dur * 100) : 0) + '%';
+                plTime.textContent = fmtTime(cur) + ' / ' + fmtTime(dur);
+                updateLyric(cur);
+                // 节流写入播放位置，供跨页面续播使用（1s 一次，换页续播更贴合原进度）
+                var _n = Date.now();
+                if (!window.__l2dNpT || _n - window.__l2dNpT > 1000) { window.__l2dNpT = _n; if (M.cur) saveNowPlaying(M.cur, audio.paused ? false : true); }
+            });
+            audio.addEventListener('error', function () {
+                setToggleIcon(false);
+                // 缓存下来的音频直链可能已过期：回源重新解析一次播放地址
+                if (M.cur && M.cur.id && !M.__urlRetry) {
+                    M.__urlRetry = true;
+                    var pos = 0; try { pos = audio.currentTime || 0; } catch (_) {}
+                    var sp = M.cur;
+                    apiGet('/url', { id: sp.id, source: sp.source, br: sp.br || '320' }, function (e, r) {
+                        if (e || !r || r.code !== 0 || !r.data.url) { M.__urlRetry = false; return; }
+                        audio.src = r.data.url;
+                        audio.addEventListener('loadedmetadata', function once() {
+                            try { if (pos > 0) audio.currentTime = pos; } catch (_) {}
+                            audio.removeEventListener('loadedmetadata', once);
+                        }, { once: true });
+                        audio.play().catch(function () { setToggleIcon(false); });
+                    });
+                }
+            });
+        }
+
+        // 登录后读取个人音乐设置，自动续播背景音乐
+        if (cfg.logged && cfg.musicEnabled) {
+            // ① 先用本次会话缓存（含已解析音频直链）立即续播，避免等待接口造成换页音乐空窗
+            var _live = loadNowPlaying(true);
+            if (_live && _live.id && _live.playing && _live.src) fastResume(_live);
+            // ② 再异步拉取个人设置（背景音乐/音量/歌单/循环）；已在播放则不打断
+            apiGet('/setting', null, function (e, resp) {
+                if (e || !resp || resp.code !== 0) { resumeNowPlaying(); return; }
+                var d = resp.data;
+                M.enabled = d.enabled === 1;
+                M.loop = d.loop_mode || 0;
+                M.fav = d.playlist || [];
+                if (d.volume) audio.volume = d.volume;
+                plVol.value = Math.round(audio.volume * 100);
+                plLoop.classList.toggle('on', M.loop === 1);
+                plLoop.textContent = M.loop === 0 ? '列表循环' : (M.loop === 1 ? '单曲循环' : '随机播放');
+                plBg.classList.toggle('on', M.enabled);
+                if (audio.src && !audio.paused) {
+                    // 已通过缓存续播：只同步背景音乐标记，不重新加载音频
+                    if (M.enabled && d.song && d.song.id) M.bg = d.song;
+                } else if (M.enabled && d.song && d.song.id) {
+                    prepareBg(d.song, parseFloat(d.song.position) || 0);
+                } else {
+                    resumeNowPlaying(); // 非背景音乐模式：尝试恢复上一次正在播放的歌曲
+                }
+            });
+        }
     }
 })();
 </script>

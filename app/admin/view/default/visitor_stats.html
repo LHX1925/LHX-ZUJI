@@ -310,15 +310,17 @@
 })();
 
 function resetStats() {
-  if (!confirm('确定要清理30天前的访问记录吗？此操作无法撤销。')) return;
-  fetch(location.href, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'act=reset'
-  }).then(function(r){ return r.json(); }).then(function(d){
-    if (d.code == '1') { alert(d.msg); location.reload(); }
-    else { alert(d.msg); }
-  }).catch(function(){ alert('操作失败'); });
+  layer.confirm('确定要清理30天前的访问记录吗？此操作无法撤销。', {icon: 3, skin: 'glass-layer-skin', title: '清理确认'}, function(idx) {
+    layer.close(idx);
+    fetch(location.href, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'act=reset'
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d.code == '1') { GlassTip.success(d.msg || '清理成功'); setTimeout(function(){ location.reload(); }, 800); }
+      else { GlassTip.error(d.msg || '操作失败'); }
+    }).catch(function(){ GlassTip.error('操作失败'); });
+  });
 }
 </script>
 {include file="default/footer" /}

@@ -1,0 +1,15 @@
+{php}$title = '404'; $tab_active = 'home';{/php}
+{include file="default/mobile/header" /}
+
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 24px;min-height:60vh;">
+    <div style="font-size:80px;font-weight:800;background:linear-gradient(135deg,var(--glass-primary),var(--glass-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:12px;">404</div>
+    <div style="font-size:48px;color:var(--glass-primary);margin-bottom:16px;opacity:0.8;"><i class="fas fa-exclamation-triangle"></i></div>
+    <h2 style="font-size:20px;font-weight:700;color:var(--text);margin:0 0 8px;">页面未找到</h2>
+    <p style="font-size:14px;color:var(--text-secondary);line-height:1.7;margin:0 0 24px;max-width:280px;">你访问的页面可能已被移除、链接失效或地址输入错误。</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+        <a href="__ROOT__/" class="app-btn app-btn-primary"><i class="fas fa-home"></i> 返回首页</a>
+        <a href="javascript:history.back()" class="app-btn app-btn-outline"><i class="fas fa-arrow-left"></i> 返回上页</a>
+    </div>
+</div>
+
+{include file="default/mobile/footer" /}

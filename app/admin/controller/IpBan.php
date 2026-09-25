@@ -16,23 +16,11 @@ class IpBan extends Controller
         $this->web = web_config();
 
         $this->hasFullAccess = ($this->user['is_super'] == 1 || $this->user['role_id'] == 1);
-        $adminPermissions = $this->hasFullAccess ? ['all'] : [];
-        if (!$this->hasFullAccess && $this->user['role_id']) {
-            try {
-                $role = Db::name('admin_role')->where('id', $this->user['role_id'])->find();
-                if ($role) {
-                    $adminPermissions = json_decode($role['permissions'], true) ?: [];
-                }
-            } catch (\Exception $e) {
-                $adminPermissions = [];
-            }
-        }
-        if ($this->hasFullAccess && in_array('all', $adminPermissions)) {
-            $adminPermissions = ['all', 'user', 'product', 'classification', 'server', 'order', 'ticket', 'announcement', 'pay', 'pays', 'aff', 'set', 'admin_manager', 'sq', 'transaction', 'transferrecord', 'op_log'];
-        }
+        $adminPermissions = get_admin_permissions($this->user);
 
         $this->assign([
             'webname'  => $this->web['name'],
+            'web'     => $this->web,
             'user'     => $this->user,
             'adminPermissions' => $adminPermissions,
             'csrf_token'=> csrf_token(),
@@ -42,14 +30,8 @@ class IpBan extends Controller
 
     protected function checkPermission($permission) {
         if ($this->hasFullAccess) return true;
-        try {
-            $role = Db::name('admin_role')->where('id', $this->user['role_id'])->find();
-            if (!$role) return false;
-            $permissions = json_decode($role['permissions'], true);
-            return in_array($permission, $permissions) || in_array('all', $permissions);
-        } catch (\Exception $e) {
-            return false;
-        }
+        $permissions = get_admin_permissions($this->user);
+        return in_array($permission, $permissions) || in_array('all', $permissions);
     }
 
     // IP封禁列表
@@ -88,9 +70,11 @@ class IpBan extends Controller
             }
             $vQuery = Db::name('visitor_log');
             if ($tab === 'normal') {
-                $vQuery->where('user_id', '>', 0);
+                // 正常用户区：真实访客（含未登录游客），按疑似机器人标识过滤
+                $vQuery->where('is_bot', 0);
             } else {
-                $vQuery->where('user_id', 0);
+                // 非正常用户区：疑似机器人/脚本
+                $vQuery->where('is_bot', 1);
             }
             if ($search) {
                 $vQuery->where('ip', 'like', '%'.$search.'%');
@@ -102,8 +86,7 @@ class IpBan extends Controller
                 ->paginate(15, false, ['query' => request()->param()]);
 
             if ($visitors && $visitors->count() > 0) {
-                $items = $visitors->items();
-                foreach ($items as &$v) {
+                $visitors->each(function ($v) {
                     $v['paths'] = array_slice(array_filter(array_map('trim', explode("\n", $v['uris'] ?? ''))), 0, 5);
                     $last = Db::name('visitor_log')->where('ip', $v['ip'])->order('visit_time desc')->find();
                     $v['last_ua'] = $last ? mb_substr((string)$last['user_agent'], 0, 100) : '-';
@@ -117,9 +100,8 @@ class IpBan extends Controller
                     $ban = Db::name('ip_ban')->where('ip', $v['ip'])->where('status', 1)->find();
                     $v['is_banned'] = !empty($ban);
                     $v['ban_id'] = $ban['id'] ?? 0;
-                }
-                unset($v);
-                $visitors = $visitors->items() ? $visitors : null;
+                    return $v;
+                });
             }
         } catch (\Throwable $e) {
             $visitors = null;

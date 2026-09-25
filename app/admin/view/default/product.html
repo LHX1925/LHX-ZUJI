@@ -241,13 +241,14 @@ layer.open({
   });
 }
 function add1(){
-             var load = layer.msg('添加中，请稍后...',{icon:16,time:false});
+             var load = layer.msg('添加中，请稍后...', {icon:16, shade:0.8, time:false});
           var form = $('#myform').serializeArray();
     $.ajax({
             type:'POST',
             url:'',
             data:form,
             dataType:'json',
+            timeout: 15000,
             success:function (data){
                 layer.close(load)
                 if(data.code == 1){
@@ -256,8 +257,16 @@ function add1(){
                     },1000);
                     layer.alert(data.msg,{icon:1});
                 }else{
-                    layer.msg(data.msg,{icon:2});
+                    GlassTip.error(data.msg);
                 }
+            },
+            error:function (xhr, status, error){
+                layer.close(load);
+                var msg = '提交失败';
+                if(status === 'timeout'){ msg = '请求超时，请稍后重试'; }
+                else if(xhr.status){ msg += '（HTTP ' + xhr.status + '）'; }
+                if(xhr.responseText && xhr.responseText.length < 300){ msg += '：' + xhr.responseText; }
+                GlassTip.error(msg);
             }
         });
     }
@@ -285,6 +294,7 @@ layer.alert("未选择产品!",{icon:2,shade:0.8});
                 cid:id
             },
             dataType:'json',
+            timeout: 15000,
             success:function (data){
                 layer.close(load);
                 if(data.code == 1){
@@ -294,6 +304,14 @@ layer.alert(data.msg,{icon:1},function(){
                 }else{
                     layer.alert(data.msg,{icon:2});
                 }
+            },
+            error:function (xhr, status, error){
+                layer.close(load);
+                var msg = '操作失败';
+                if(status === 'timeout'){ msg = '请求超时，请稍后重试'; }
+                else if(xhr.status){ msg += '（HTTP ' + xhr.status + '）'; }
+                if(xhr.responseText && xhr.responseText.length < 300){ msg += '：' + xhr.responseText; }
+                GlassTip.error(msg);
             }
         });
     }
@@ -311,6 +329,7 @@ function qbdel(){
                 act:'qbdelete',
             },
             dataType:'json',
+            timeout: 15000,
             success:function (data){
                 layer.close(load);
                 if(data.code == 1){
@@ -320,6 +339,14 @@ layer.alert(data.msg,{icon:1},function(){
                 }else{
                     layer.alert(data.msg,{icon:2});
                 }
+            },
+            error:function (xhr, status, error){
+                layer.close(load);
+                var msg = '操作失败';
+                if(status === 'timeout'){ msg = '请求超时，请稍后重试'; }
+                else if(xhr.status){ msg += '（HTTP ' + xhr.status + '）'; }
+                if(xhr.responseText && xhr.responseText.length < 300){ msg += '：' + xhr.responseText; }
+                GlassTip.error(msg);
             }
         });
     }

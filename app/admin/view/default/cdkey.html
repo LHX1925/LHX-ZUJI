@@ -20,6 +20,7 @@
               <label class="flbl">卡密类型</label>
               <select name="type" id="cdkey-type" class="finp">
                 <option value="balance">余额充值</option>
+                <option value="points">积分卡密</option>
                 <option value="host">主机购买</option>
               </select>
               <small class="text-muted" style="font-size:11px;">选择卡密兑换类型</small>
@@ -33,6 +34,11 @@
               <label class="flbl">充值金额（元）</label>
               <input type="text" name="money" class="finp" value="" placeholder="例如：50">
               <small class="text-muted" style="font-size:11px;">余额充值卡的面额</small>
+            </div>
+            <div class="col-md-3 mb-3" id="points-group" style="display:none;">
+              <label class="flbl">积分数额</label>
+              <input type="number" name="points" class="finp" value="" min="1" placeholder="例如：1000">
+              <small class="text-muted" style="font-size:11px;">兑换后用户获得的积分</small>
             </div>
             <div class="col-md-3 mb-3" id="product-group" style="display:none;">
               <label class="flbl">选择产品</label>
@@ -68,10 +74,22 @@
               </select>
               <small class="text-muted" style="font-size:11px;">控制哪些用户可以兑换</small>
             </div>
-            <div class="col-md-5 mb-3" id="restrict-users-group" style="display:none;">
+            <div class="col-md-3 mb-3" id="restrict-users-group" style="display:none;">
               <label class="flbl">限制用户ID</label>
-              <textarea name="restrict_users" id="cdkey-restrict-users" class="finp" rows="2" placeholder="请输入用户ID，多个用逗号分隔"></textarea>
+              <input type="text" name="restrict_users" id="cdkey-restrict-users" class="finp" placeholder="多个ID用逗号分隔">
               <small class="text-muted" style="font-size:11px;">逗号分隔的用户ID列表</small>
+            </div>
+            <div class="col-md-3 mb-3" id="max-uses-group" style="display:none;">
+              <label class="flbl">兑换人数上限</label>
+              <input type="number" name="max_uses" class="finp" value="0" min="0" placeholder="0">
+              <small class="text-muted" style="font-size:11px;">0=不限，前 N 名用户可兑换</small>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="flbl">排除用户ID（禁止使用此卡密）</label>
+              <textarea name="exclude_users" class="finp" rows="2" placeholder="请输入禁止使用此卡密的用户ID，多个用逗号分隔"></textarea>
+              <small class="text-muted" style="font-size:11px;">逗号分隔的用户ID列表，这些用户兑换时将被拒绝</small>
             </div>
           </div>
           <button type="submit" class="nbtn pri"><i class="mdi mdi-key-plus"></i> 生成卡密</button>
@@ -90,6 +108,7 @@
               <select name="type" class="finp">
                 <option value="">全部类型</option>
                 <option value="balance" {if $type=='balance'}selected{/if}>余额充值</option>
+                <option value="points" {if $type=='points'}selected{/if}>积分卡密</option>
                 <option value="host" {if $type=='host'}selected{/if}>主机购买</option>
               </select>
             </div>
@@ -116,6 +135,7 @@
           <button onclick="batchDisable()" class="nbtn dan"><i class="mdi mdi-block-helper"></i> 追缴选中</button>
           <button onclick="batchEnable()" class="nbtn suc"><i class="mdi mdi-check-circle"></i> 回收选中</button>
           <button onclick="batchDelete()" class="nbtn warn"><i class="mdi mdi-delete"></i> 删除选中</button>
+          <button onclick="exportSelected()" class="nbtn suc"><i class="mdi mdi-file-check"></i> 导出选中</button>
           <button onclick="exportCdkeys()" class="nbtn out"><i class="mdi mdi-file-export"></i> 导出全部</button>
         </div>
 
@@ -159,6 +179,8 @@
                 <td data-label="类型">
                   {if $item.type=='balance'}
                   <span class="nbadge b">余额充值</span>
+                  {elseif $item.type=='points'}
+                  <span class="nbadge p">积分卡密</span>
                   {elseif $item.type=='host'}
                   <span class="nbadge b">主机购买</span>
                   {else}
@@ -168,6 +190,8 @@
                 <td data-label="金额/产品">
                   {if $item.type=='balance'}
                   ¥{$item.money}
+                  {elseif $item.type=='points'}
+                  {$item.points|default=0} 积分
                   {else}
                   {$item.product_name|default='—'}
                   {/if}
@@ -186,9 +210,41 @@
                   {if $item.restrict_type=='all'}通用
                   {elseif $item.restrict_type=='single'}单用户
                   {elseif $item.restrict_type=='multi'}多用户
-                  {elseif $item.restrict_type=='once_per_user'}全站通用(每人一次) {if isset($item.usage_count)}<span class="nbadge b">已用{$item.usage_count}次</span>{/if}
+                  {elseif $item.restrict_type=='once_per_user'}
+                  <div class="cdk-rt">全站通用(每人一次)</div>
+                  <div class="cdk-rt-badges">
+                    <span class="nbadge b">已兑换 {$item.usage_count|default=0} 人</span>
+                    {if isset($item.max_uses) && $item.max_uses > 0}
+                    <span class="nbadge y">上限 {$item.max_uses} 人</span>
+                    {if $item.usage_count >= $item.max_uses}<span class="nbadge r">已满</span>{/if}
+                    {else}
+                    <span class="nbadge y">人数不限</span>
+                    {/if}
+                  </div>
+                  {if !empty($item.used_users)}
+                  <div class="cdk-avatars">
+                    {foreach $item.used_users as $uk}
+                    <img class="cdk-av" src="{$uk.avatar}" alt="" title="ID {$uk.id} · {$uk.name}" loading="lazy">
+                    {/foreach}
+                    <button type="button" class="cdk-more" data-target="cdk-users-{$item.id}"><i class="mdi mdi-account-multiple"></i> 用户ID</button>
+                  </div>
+                  <div class="cdk-user-list" id="cdk-users-{$item.id}" style="display:none;">
+                    {foreach $item.used_users as $uk}
+                    <div class="cdk-user-row">
+                      <img src="{$uk.avatar}" alt="" loading="lazy">
+                      <b>ID {$uk.id}</b>
+                      <span class="cdk-uname">{$uk.name}</span>
+                      {if $uk.account}<span class="cdk-uacc">{$uk.account}</span>{/if}
+                      <span class="cdk-utime">{if $uk.used_at}{$uk.used_at|date="Y-m-d H:i",###}{/if}</span>
+                    </div>
+                    {/foreach}
+                  </div>
+                  {else}
+                  <div class="cdk-rt-badges"><span class="nbadge y">暂无人兑换</span></div>
+                  {/if}
                   {else}{$item.restrict_type|default='通用'}
                   {/if}
+                  {if isset($item.exclude_users) && $item.exclude_users}<div style="font-size:10px;color:#dc2626;margin-top:2px;">排除: {$item.exclude_users}</div>{/if}
                 </td>
                 <td data-label="创建时间">{$item.created_at|date="Y-m-d H:i",###}</td>
                 <td data-label="使用时间">{if $item.used_at}{$item.used_at|date="Y-m-d H:i",###}{else}—{/if}</td>
@@ -243,6 +299,21 @@
 .nbadge.y { background:#fffbeb; color:#d97706; }
 .nbadge.r { background:#fef2f2; color:#dc2626; }
 .nbadge.b { background:#eff6ff; color:#2563eb; }
+.nbadge.p { background:#f5f3ff; color:#7c3aed; }
+/* 全站通用卡密：已兑换用户列表 */
+.cdk-rt { font-weight:600; color:#334155; }
+.cdk-rt-badges { display:flex; gap:5px; flex-wrap:wrap; margin-top:4px; }
+.cdk-avatars { display:flex; align-items:center; gap:4px; margin-top:6px; max-width:210px; overflow:hidden; }
+.cdk-av { width:26px; height:26px; border-radius:50%; object-fit:cover; border:2px solid #fff; box-shadow:0 0 0 1px #e2e8f0; flex-shrink:0; background:#f1f5f9; }
+.cdk-more { flex-shrink:0; margin-left:2px; padding:3px 9px; border-radius:8px; border:1px solid #ddd6fe; background:#f5f3ff; color:#7c3aed; font-size:11px; font-weight:600; cursor:pointer; white-space:nowrap; }
+.cdk-more:hover { background:#ede9fe; }
+.cdk-user-list { margin-top:6px; max-height:200px; overflow:auto; border:1px solid #eef2f7; border-radius:10px; background:#fafbff; padding:6px; }
+.cdk-user-row { display:flex; align-items:center; gap:6px; padding:3px 4px; font-size:11px; color:#475569; white-space:nowrap; }
+.cdk-user-row img { width:20px; height:20px; border-radius:50%; object-fit:cover; background:#f1f5f9; flex-shrink:0; }
+.cdk-user-row b { color:#2563eb; font-weight:600; }
+.cdk-uname { color:#334155; }
+.cdk-uacc { color:#94a3b8; }
+.cdk-utime { margin-left:auto; color:#94a3b8; }
 .finp { width:100%; padding:9px 13px; border:2px solid #e2e8f0; border-radius:10px; font-size:13px; transition:.2s; color:#334155; box-sizing:border-box; }
 .finp:focus { border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,.1); outline:none; }
 .finp[type="checkbox"] { width:auto; }
@@ -276,27 +347,40 @@ $(function(){
   // 类型切换：显示对应字段
   function toggleTypeFields() {
     var val = $('#cdkey-type').val();
+    $('#money-group, #points-group, #product-group').hide();
     if (val === 'balance') {
       $('#money-group').show();
-      $('#product-group').hide();
-      $('#product-group').find('select').val('');
+    } else if (val === 'points') {
+      $('#points-group').show();
     } else if (val === 'host') {
-      $('#money-group').hide();
       $('#product-group').show();
-      $('#money-group').find('input').val('');
     }
   }
   toggleTypeFields();
   $('#cdkey-type').on('change', toggleTypeFields);
 
   // 使用限制切换
-  $('#cdkey-restrict-type').on('change', function(){
-    var val = $(this).val();
+  function toggleRestrictFields() {
+    var val = $('#cdkey-restrict-type').val();
     if (val === 'single' || val === 'multi') {
       $('#restrict-users-group').slideDown();
     } else {
       $('#restrict-users-group').slideUp();
     }
+    // 兑换人数上限仅在全站通用（每人一次）时才有意义
+    if (val === 'once_per_user') {
+      $('#max-uses-group').slideDown();
+    } else {
+      $('#max-uses-group').slideUp();
+    }
+  }
+  toggleRestrictFields();
+  $('#cdkey-restrict-type').on('change', toggleRestrictFields);
+
+  // 全站通用卡密：展开/收起已兑换用户列表
+  $(document).on('click', '.cdk-more', function(){
+    var id = $(this).data('target');
+    $('#' + id).slideToggle(140);
   });
 
   // 复制卡密
@@ -329,7 +413,7 @@ $(function(){
       btn.html('<i class="mdi mdi-check"></i> 已复制');
       setTimeout(function(){ btn.html(origHtml); }, 1500);
     } catch(e) {
-      layer.msg('复制失败，请手动复制', {icon:2});
+      GlassTip.error('复制失败，请手动复制');
     }
     document.body.removeChild(ta);
   }
@@ -350,12 +434,12 @@ $(function(){
             window.location.href = '';
           });
         } else {
-          layer.msg(data.msg, {icon: 2});
+          GlassTip.error(data.msg);
         }
       },
       error: function(){
         layer.close(load);
-        layer.msg('网络错误，请重试', {icon: 2});
+        GlassTip.error('网络错误，请重试');
       }
     });
   });
@@ -416,21 +500,21 @@ $(function(){
             window.location.href = '';
           });
         } else {
-          layer.msg(data.msg, {icon: 2});
+          GlassTip.error(data.msg);
         }
       },
       error: function(){
         layer.close(load);
-        layer.msg('网络错误，请重试', {icon: 2});
+        GlassTip.error('网络错误，请重试');
       }
     });
   }
 
-  window.exportCdkeys = function(){
-    layer.confirm('确定要导出当前筛选列表中的所有卡密吗？', function(){
+  function doExport(postData, tipText){
+    layer.confirm(tipText, function(){
       var load = layer.load(1, {time: false});
       $.ajax({
-        type: 'POST', url: '', data: { act: 'export', type: $('select[name="type"]').last().val(), status: $('select[name="status"]').val(), keyword: $('input[name="keyword"]').val() },
+        type: 'POST', url: '', data: postData,
         dataType: 'json',
         success: function(data){
           layer.close(load);
@@ -442,14 +526,34 @@ $(function(){
             a.download = 'cdkeys_export_' + new Date().toISOString().slice(0,10) + '.txt';
             a.click();
             URL.revokeObjectURL(a.href);
-            layer.msg('导出成功', {icon: 1});
+            GlassTip.success('已导出 ' + data.cdkeys.length + ' 个卡密');
           } else {
-            layer.msg(data.msg || '导出失败', {icon: 2});
+            GlassTip.error(data.msg || '导出失败');
           }
         },
-        error: function(){ layer.close(load); layer.msg('导出失败', {icon: 2}); }
+        error: function(){ layer.close(load); GlassTip.error('导出失败'); }
       });
     });
+  }
+
+  // 导出选中
+  window.exportSelected = function(){
+    var ids = getSelectedIds();
+    if (!ids) {
+      layer.alert('请先勾选需要导出的卡密！', {icon: 2});
+      return;
+    }
+    doExport({ act: 'export', ids: ids }, '确定要导出选中的卡密吗？');
+  };
+
+  // 导出全部（按当前筛选）
+  window.exportCdkeys = function(){
+    doExport({
+      act: 'export',
+      type: $('select[name="type"]').last().val(),
+      status: $('select[name="status"]').val(),
+      keyword: $('input[name="keyword"]').val()
+    }, '确定要导出当前筛选列表中的所有卡密吗？');
   };
 });
 </script>

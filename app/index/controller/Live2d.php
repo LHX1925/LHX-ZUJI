@@ -204,6 +204,117 @@ class Live2d extends Controller {
     }
 
     /**
+     * 手机端模型重写接口：/live2d/model?f=<模型JSON相对路径>&s=<最大纹理边长>
+     * 将模型 JSON 里的相对资源路径改写为绝对 URL，纹理改走 /live2d/texture 压缩端点。
+     * 目的：手机端直接以普通 URL 加载（而非 blob:），避免 Live2DModel.fromSync()
+     * 使用同步 XHR 无法读取 blob: 地址导致模型加载失败、看板娘不显示。
+     */
+    public function model() {
+        $f = isset($_GET['f']) ? trim($_GET['f']) : '';
+        $s = isset($_GET['s']) ? intval($_GET['s']) : 2048;
+        if ($s < 128) $s = 2048;
+        if ($s > 4096) $s = 4096;
+
+        // 安全校验：仅允许访问 live2d 模型目录下的 JSON 模型描述文件，禁止目录穿越
+        $f = str_replace('\\', '/', $f);
+        $f = ltrim($f, '/');
+        if ($f === '' || strpos($f, '..') !== false || !preg_match('#^static/live2d/models/.+\.json$#i', $f)) {
+            http_response_code(404);
+            exit('Not Found');
+        }
+
+        $src = PATH . 'public/' . $f;
+        if (!is_file($src)) {
+            http_response_code(404);
+            exit('Not Found');
+        }
+
+        $model = json_decode(@file_get_contents($src), true);
+        if (!is_array($model)) {
+            http_response_code(500);
+            exit('bad json');
+        }
+
+        $root = \think\Request::instance()->root();
+        $modelDir = dirname($f); // 例：static/live2d/models/舒芙蕾
+
+        // 相对路径 -> 站点根相对绝对 URL（路径分片 rawurlencode，保留 '/' 分隔）
+        $absUrl = function ($rel) use ($root, $modelDir) {
+            $rel = str_replace('\\', '/', $rel);
+            if (preg_match('#^(https?:)?//#i', $rel)) return $rel; // 已是绝对 URL
+            $path = $modelDir . '/' . ltrim($rel, '/');
+            $parts = explode('/', $path);
+            $parts = array_map('rawurlencode', $parts);
+            return $root . '/' . implode('/', $parts);
+        };
+
+        // 纹理相对路径 -> 压缩端点 URL
+        $texUrl = function ($rel) use ($root, $modelDir, $s) {
+            $rel = str_replace('\\', '/', $rel);
+            if (preg_match('#^(https?:)?//#i', $rel)) return $rel;
+            $path = $modelDir . '/' . ltrim($rel, '/');
+            return $root . '/live2d/texture?f=' . rawurlencode($path) . '&s=' . $s;
+        };
+
+        if (isset($model['FileReferences']) && is_array($model['FileReferences'])) {
+            // Cubism 3 (model3.json)
+            $fr = &$model['FileReferences'];
+            if (!empty($fr['Moc'])) $fr['Moc'] = $absUrl($fr['Moc']);
+            if (!empty($fr['Physics'])) $fr['Physics'] = $absUrl($fr['Physics']);
+            if (!empty($fr['Pose'])) $fr['Pose'] = $absUrl($fr['Pose']);
+            if (!empty($fr['DisplayInfo'])) $fr['DisplayInfo'] = $absUrl($fr['DisplayInfo']);
+            if (isset($fr['Textures']) && is_array($fr['Textures'])) {
+                foreach ($fr['Textures'] as $i => $t) {
+                    $fr['Textures'][$i] = $texUrl($t);
+                }
+            }
+            if (isset($fr['Expressions']) && is_array($fr['Expressions'])) {
+                foreach ($fr['Expressions'] as $i => $e) {
+                    if (isset($e['File']) && $e['File'] !== '') $fr['Expressions'][$i]['File'] = $absUrl($e['File']);
+                }
+            }
+            if (isset($fr['Motions']) && is_array($fr['Motions'])) {
+                foreach ($fr['Motions'] as $g => $arr) {
+                    if (is_array($arr)) {
+                        foreach ($arr as $i => $m) {
+                            if (isset($m['File']) && $m['File'] !== '') $fr['Motions'][$g][$i]['File'] = $absUrl($m['File']);
+                        }
+                    }
+                }
+            }
+        } else {
+            // Cubism 2 (model.json)
+            if (!empty($model['model'])) $model['model'] = $absUrl($model['model']);
+            if (!empty($model['pose'])) $model['pose'] = $absUrl($model['pose']);
+            if (!empty($model['physics'])) $model['physics'] = $absUrl($model['physics']);
+            if (isset($model['textures']) && is_array($model['textures'])) {
+                foreach ($model['textures'] as $i => $t) {
+                    $model['textures'][$i] = $texUrl($t);
+                }
+            }
+            if (isset($model['expressions']) && is_array($model['expressions'])) {
+                foreach ($model['expressions'] as $i => $e) {
+                    if (isset($e['file']) && $e['file'] !== '') $model['expressions'][$i]['file'] = $absUrl($e['file']);
+                }
+            }
+            if (isset($model['motions']) && is_array($model['motions'])) {
+                foreach ($model['motions'] as $g => $arr) {
+                    if (is_array($arr)) {
+                        foreach ($arr as $i => $m) {
+                            if (isset($m['file']) && $m['file'] !== '') $model['motions'][$g][$i]['file'] = $absUrl($m['file']);
+                        }
+                    }
+                }
+            }
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-cache');
+        echo json_encode($model, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    /**
      * 调用AI API（支持DeepSeek/OpenAI兼容格式）
      * @return array ['reply' => string, 'debug' => array]
      */
@@ -259,6 +370,10 @@ class Live2d extends Controller {
                 'stream' => false
             ];
 
+            // 归一化接口地址：支持只填 Base URL（官方直连或 OpenAI 兼容中转站）
+            if (function_exists('live2d_ai_endpoint')) {
+                $apiUrl = live2d_ai_endpoint($apiUrl);
+            }
             // 如果API地址为空，默认使用DeepSeek
             if (empty($apiUrl)) {
                 $apiUrl = 'https://api.deepseek.com/chat/completions';

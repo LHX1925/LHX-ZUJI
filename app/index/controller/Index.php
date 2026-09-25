@@ -5,7 +5,7 @@ use think\Db;
 use think\Request;
 use PHPMailer\PHPMailer\PHPMailer;
 
-class Index extends Controller {
+class Index extends Base {
 	public function _initialize() {
 		// 确保用户表包含最后登录相关字段
 		ensure_user_columns();
@@ -222,23 +222,46 @@ exit("<title>出错啦!</title>没有此支付通道!");
 process_pending_host_orders();
 // 记录访客访问（同一会话仅记录一次）
 if(function_exists('log_visitor')) log_visitor();
+// 确保公告表存在（兼容全新安装后未访问过后台）
+ensure_announcements_table();
 $data=Db::name('announcements')->where('status',1)->order('id desc')->paginate(5);
 $countserver=Db::name('server')->count();
 $countuser=Db::name('user')->count();
 $countorder=Db::name('order')->count();
 $sumpay=Db::name('pay')->where("state",1)->sum("money");
 // 获取首页展示的产品
-$class=Db::name('product')->where("hide","0")->order("sort","DESC")->find();
-if($class){
-	$cart=Db::name('cart')->where(["product"=>$class['id'],"hide"=>"0"])->order("sort","DESC")->select();
-	foreach($cart as &$c){
-		// 首页套餐容量统一使用 data2（空间大小，单位M）
-		$c['capacity_show'] = $this->formatSizeM($c['data2'] ?? '');
+	$class=Db::name('product')->where("hide","0")->order("sort","DESC")->find();
+	if($class){
+		$cart=Db::name('cart')->where(["product"=>$class['id'],"hide"=>"0"])->order("sort","DESC")->select();
+		foreach($cart as &$c){
+			// 首页套餐容量统一使用 data2（空间大小，单位M）
+			$c['capacity_show'] = $this->formatSizeM($c['data2'] ?? '');
+		}
+		unset($c);
+	}else{
+		$cart=[];
 	}
-	unset($c);
-}else{
-	$cart=[];
-}
+	// 服务器状态（宝塔 API）：仅取列表用于首屏骨架渲染，指标由前端异步拉取，避免阻塞页面
+	$bt_servers = [];
+	$bt_interval = 15;
+	try {
+		if (function_exists('ensure_bt_servers_table')) {
+			ensure_bt_servers_table();
+			$rows = Db::name('bt_servers')->where('status', 1)->order('sort', 'DESC')->order('id', 'ASC')->select();
+			foreach ($rows as $r) {
+				$bt_servers[] = [
+					'id'     => intval($r['id']),
+					'name'   => $r['name'],
+					'tag'    => isset($r['tag']) ? $r['tag'] : '',
+					'remark' => isset($r['remark']) ? $r['remark'] : '',
+				];
+				$bt_interval = max(5, min(60, intval($r['cache_ttl'] ?: 15)));
+			}
+		}
+	} catch (\Exception $e) {
+		$bt_servers = [];
+	}
+
 		return $this->fetch('/'.$this->web["template"].'/index/index',[
 				"announcement"=>$data,
 				"countserver"=>$countserver,
@@ -247,12 +270,27 @@ if($class){
 				"sumpay"=>$sumpay,
 				"cart"=>$cart,
 				"class"=>$class,
+				"bt_servers"=>$bt_servers,
+				"bt_servers_json"=>json_encode($bt_servers, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+				"bt_interval"=>$bt_interval,
 			]);
 	}
 
 	// ── 用户登录安全防护辅助方法 ──
 
 	private function logUserLogin($userId, $username, $status, $msg) {
+		// ── 精简写入原则 ──
+		// 1) 登录失败属于安全事件，必须记录（用于 IP 封锁 / 爆破拦截）
+		// 2) 登录成功默认不写库（用户的登录 IP、设备属于无关数据），
+		//    仅当后台「记录设置」开启时才写入
+		$failed = intval($status) === 0;
+		if (!$failed) {
+			$on = function_exists('sys_record_opt') ? sys_record_opt('rec_user_login') : null;
+			if ($on === null) $on = '0'; // 默认关闭
+			if (!intval($on)) {
+				return;
+			}
+		}
 		try {
 			$tableName = \think\Db::name('user_login_log')->getTable();
 			\think\Db::execute("CREATE TABLE IF NOT EXISTS `{$tableName}` (
@@ -262,6 +300,7 @@ if($class){
 				`ip` varchar(50) DEFAULT '' COMMENT '登录IP',
 				`status` tinyint(1) DEFAULT 0 COMMENT '1=成功 0=失败',
 				`msg` varchar(255) DEFAULT '' COMMENT '备注',
+				`user_agent` varchar(500) DEFAULT '' COMMENT '登录UA',
 				`create_time` int(11) DEFAULT 0,
 				PRIMARY KEY (`id`),
 				KEY `idx_user_id` (`user_id`),
@@ -269,12 +308,22 @@ if($class){
 				KEY `idx_ip_status` (`ip`, `status`, `create_time`),
 				KEY `idx_username_status` (`username`, `status`, `create_time`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			// 兼容旧表：补齐 user_agent 字段
+			try {
+				$cols = array_column(\think\Db::query("SHOW COLUMNS FROM `{$tableName}`"), 'Field');
+				if (!in_array('user_agent', $cols, true)) {
+					\think\Db::execute("ALTER TABLE `{$tableName}` ADD COLUMN `user_agent` varchar(500) DEFAULT '' COMMENT '登录UA'");
+				}
+			} catch (\Exception $e) {}
+			// UA / 设备信息默认不再采集（无关数据），可在后台「记录设置」中开启
+			$uaOn = function_exists('sys_record_opt') ? intval(sys_record_opt('rec_ua')) : 0;
 			\think\Db::name('user_login_log')->insert([
 				'user_id'     => $userId,
 				'username'    => $username,
 				'ip'          => request()->ip(),
 				'status'      => $status,
 				'msg'         => $msg,
+				'user_agent'  => $uaOn ? (isset($_SERVER['HTTP_USER_AGENT']) ? mb_substr($_SERVER['HTTP_USER_AGENT'], 0, 500) : '') : '',
 				'create_time' => time(),
 			]);
 		} catch (\Exception $e) {}
@@ -623,6 +672,13 @@ if($class){
 							$array["code"] = "-1";
 							$array["msg"] = "两次输入的密码不一样!";
 						} else {
+							// 密码复杂度：必须同时包含大写字母、小写字母和数字（账号不做限制）
+							$credErr = validate_user_credential($user, $password);
+							if($credErr !== '') {
+								$array["code"] = "-1";
+								$array["msg"] = $credErr;
+								return json($array);
+							}
 							// 仅允许国内邮箱注册
 							$mail = input("mail");
 							if(!empty($mail) && !is_allowed_email($mail)) {
@@ -656,6 +712,25 @@ if($class){
 									"state" => "1",
 								]);
 								if($data1) {
+									// ── 写入「系统重要记录」：新用户注册 ──
+									try {
+										if (function_exists('sys_record')) {
+											sys_record('user', '新用户注册：' . $user, [
+												'账号'   => $user,
+												'昵称'   => $name,
+												'QQ'     => $qq,
+												'时间'   => date('Y-m-d H:i:s'),
+											], [
+												'operator_type' => 'user',
+												'operator_id'   => intval($data1),
+												'operator_name' => $user,
+												'target_type'   => 'user',
+												'target_id'     => intval($data1),
+												'level'         => 1,
+												'summary'       => '账号：' . $user . ' · 昵称：' . $name,
+											]);
+										}
+									} catch (\Exception $e) {}
 									$array["code"] = "1";
 									$array["msg"] = "注册成功!";
 								} else {
@@ -706,6 +781,13 @@ if($class){
 							$array["code"] = "-1";
 							$array["msg"] = "两次输入的密码不一样!";
 						} else {
+							// 密码复杂度：必须同时包含大写字母、小写字母和数字（账号不做限制）
+							$credErr = validate_user_credential($user, $password);
+							if($credErr !== '') {
+								$array["code"] = "-1";
+								$array["msg"] = $credErr;
+								return json($array);
+							}
 							$data3 = is_valid_email($mail);
 							if($data3) {
 								if(!is_allowed_email($mail)) {
@@ -743,10 +825,29 @@ if($class){
 											"upperid" => $upperid,
 											"state" => "1",
 										]);
-										if($data1) {
-											Db::name('email_verify')->where('mail', $mail)->delete();
-											$array["code"] = "1";
-											$array["msg"] = "注册成功!";
+									if($data1) {
+										// ── 写入「系统重要记录」：新用户注册（邮箱）──
+										try {
+											if (function_exists('sys_record')) {
+												sys_record('user', '新用户注册：' . $user, [
+													'账号' => $user,
+													'昵称' => $name,
+													'邮箱' => $mail,
+													'时间' => date('Y-m-d H:i:s'),
+												], [
+													'operator_type' => 'user',
+													'operator_id'   => intval($data1),
+													'operator_name' => $user,
+													'target_type'   => 'user',
+													'target_id'     => intval($data1),
+													'level'         => 1,
+													'summary'       => '账号：' . $user . ' · 邮箱：' . $mail,
+												]);
+											}
+										} catch (\Exception $e) {}
+										Db::name('email_verify')->where('mail', $mail)->delete();
+										$array["code"] = "1";
+										$array["msg"] = "注册成功!";
 											if($this->web["email"] == "1") {
 												if($mail) {
 													$mailbox = $this->email($mail, "注册成功通知", "时间:" . date("Y-m-d H:i:s") . "<br/>恭喜你在本站注册成功!<br/>ID:" . $data1 . "<br/>账号:" . $name . "<br/><br/>");
@@ -884,46 +985,98 @@ if($class){
 
 
 	public function cart($id = null) {
-		// 获取所有可见分类
-		$data = Db::name('product')->where("hide", "0")->order("sort", "DESC")->select();
-
 		if ($id) {
-			$data3 = Db::name('product')->where("id", $id)->find();
-			if (!$data3) {
-				return $this->redirect('/cart');
+			// 旧分类链接统一跳转到新购买页
+			return $this->redirect('/cart');
+		}
+		ensure_cart_table();
+		if (function_exists('ensure_shopping_cart_config_columns')) { ensure_shopping_cart_config_columns(); }
+		// 全部可见套餐
+		$cartRows = Db::name('cart')->where("hide", "0")->order("sort", "DESC")->select();
+		// 线路 = 后台添加的全部服务器中「插件为 mnbt」的（有多少个服务器就显示多少条线路，
+		// 不再要求该服务器下必须已经挂套餐，因为套餐可以自由选线路）
+		$servers = [];
+		$serverRows = Db::name('server')->select();
+		foreach ($serverRows as $s) {
+			$plugin = strtolower(trim((string) ($s['serverplugins'] ?? '')));
+			if ($plugin !== 'mnbt') { continue; }
+			// 统计默认挂在该线路下的套餐数（仅用于展示）
+			$planCount = 0;
+			foreach ($cartRows as $c) {
+				if ((string) $c['serverid'] === (string) $s['id']) { $planCount++; }
 			}
-			$productid = $id;
-		} else {
-			// 优先选择有可见产品的分类作为默认展示
-			$productid = "";
-			$data3 = null;
-			foreach ($data as $p) {
-				$hasCart = Db::name('cart')->where(["product" => $p['id'], "hide" => "0"])->find();
-				if ($hasCart) {
-					$data3 = $p;
-					$productid = $p['id'];
-					break;
-				}
+			$servers[] = [
+				'id' => $s['id'],
+				'name' => $s['name'],
+				'ip' => isset($s['ip']) ? $s['ip'] : '',
+				'plan_count' => $planCount,
+				'plan_total' => count($cartRows),
+				// Docker 容器开通依赖 mnbt 面板插件（_DockerOpen），只有插件支持时才允许勾选
+				'docker_supported' => function_exists('docker_plugin_supported') ? docker_plugin_supported($s) : false,
+			];
+		}
+		// 套餐数据（前台 JS 渲染用）
+		$planJson = [];
+		foreach ($cartRows as $c) {
+			$planJson[] = [
+				'id' => $c['id'],
+				'serverid' => $c['serverid'],
+				'name' => $c['name'],
+				'content' => (string) ($c['content'] ?? ''),
+				'money' => $c['money'],
+				'cycle' => $c['cycle'],
+				'firstmo' => $c['firstmo'],
+				'inventory' => $c['inventory'],
+				'space' => intval($c['data2'] ?? 0),      // 空间 MB
+				'db' => intval($c['data3'] ?? 0),         // 数据库 MB
+				'traffic' => round(floatval($c['data4'] ?? 0) * 1024), // 流量 GB→MB（兼容旧逻辑）
+				'traffic_gb' => floatval($c['data4'] ?? 0),            // 月流量默认值（GB，前台按 G 展示与输入）
+				'domain' => intval($c['data5'] ?? 0),
+				'price_space_mb' => floatval($c['price_space_mb'] ?? 0),
+				'price_db_mb' => floatval($c['price_db_mb'] ?? 0),
+				'price_traffic_mb' => floatval($c['price_traffic_mb'] ?? 0),
+				'price_traffic_gb' => function_exists('cart_traffic_price_per_gb')
+					? cart_traffic_price_per_gb($c) : floatval($c['price_traffic_mb'] ?? 0),
+				'price_domain' => floatval($c['price_domain'] ?? 0),
+				'points_price' => intval($c['points_price'] ?? 0),
+				'cycle_prices' => function_exists('cart_cycle_prices') ? cart_cycle_prices($c) : [],
+				// 该产品是否开放 Docker 容器开通（价格取全局统一价，这里只放开关）
+				'docker_enabled' => !empty($c['docker_enabled']) && (string) $c['docker_enabled'] === '1',
+			];
+		}
+		// 支付方式（供购买页直接下单付款）
+		$pays = [];
+		$balance = 0;
+		$points = 0;
+		$logged = session("userid") ? 1 : 0;
+		if ($logged) {
+			$pays = Db::name("pays")->where("state", "1")->select();
+			foreach ($pays as $k => $p) {
+				unset($pays[$k]["plugins"]);
+				unset($pays[$k]["data"]);
 			}
-			// 若没有分类下存在产品，则回退到排序第一个分类
-			if (!$data3 && count($data) > 0) {
-				$data3 = $data[0];
-				$productid = $data3['id'];
-			}
+			$me = Db::name('user')->where('id', session("userid"))->find();
+			$balance = $me ? floatval($me['money']) : 0;
+			$points  = $me ? intval($me['points'] ?? 0) : 0;
 		}
 
-		// 查询当前分类下的可见产品
-		if ($productid !== "") {
-			$data1 = Db::name('cart')->where(["product" => $productid, "hide" => "0"])->order("sort", "DESC")->select();
-		} else {
-			$data1 = [];
-		}
+		// Docker 容器开通（购买页可勾选的附加项）：全局统一价 + 全局开关 + 开通方式
+		$dockerCfg = [
+			'enabled'  => !empty($this->web['docker_enabled']) && (string) $this->web['docker_enabled'] === '1',
+			'price'    => function_exists('docker_price') ? docker_price($this->web) : 0,
+			'mode'     => function_exists('docker_mode') ? docker_mode($this->web) : 'manual',
+			'pay_ways' => function_exists('docker_pay_ways') ? docker_pay_ways($this->web) : ['balance'],
+			'intro'    => isset($this->web['docker_intro']) ? $this->web['docker_intro'] : '',
+		];
 
 		return $this->fetch('/' . $this->web["template"] . '/index/cart', [
-			"product" => $data,
-			"cart" => $data1,
-			"class" => $data3,
-			"productid" => $productid,
+			"servers" => $servers,
+			"plans" => $planJson,
+			"pays" => $pays,
+			"balance" => $balance,
+			"points" => $points,
+			"logged" => $logged,
+			"docker" => $dockerCfg,
 		]);
 	}
 
@@ -931,23 +1084,8 @@ if($class){
 		if(!$id){
 			$this->redirect('/cart');
 		}
-		$data=Db::name('cart')->where("id",$id)->find();
-		if(!$data){
-			$this->redirect('/cart');
-		}
-		if(Request::instance()->isPost()) {
-			return json(["code"=>"-1","msg"=>"请通过购物车购买该产品"]);
-		}
-		// 产品规格展示：不显示 CPU / 内存，读取 data2~data5 真实配置
-		// data2=空间大小(M) data3=数据库大小(M) data4=月流量大小(G) data5=绑定域名数(个)
-		$data['capacity_show'] = $this->formatSizeM($data['data2'] ?? '');
-		$data['db_size_show'] = $this->formatSizeM($data['data3'] ?? '');
-		$data['traffic_show'] = $this->formatTraffic($data['data4'] ?? '');
-		$data['domain_count_show'] = $this->formatCount($data['data5'] ?? '');
-
-		return $this->fetch('/'.$this->web["template"].'/index/product',[
-			"product"=>$data,
-		]);
+		// 购买页已合并为新购买页，旧详情页跳转过去并预选该套餐
+		$this->redirect('/cart?plan='.$id);
 	}
 
 
@@ -1088,6 +1226,11 @@ public function cron(){
 $time=time();
 $sendEmail=($this->web["email"]=="1");
 $userEmails=[];
+
+// === 0. Docker 在线支付订单结算（兜底：用户支付后未回到站点时也要到账并开通）===
+if(function_exists('docker_settle_pending')){
+	try { docker_settle_pending(0); } catch (\Throwable $e) {}
+}
 
 // === 1. 订单过期处理 ===
 // 优化: 只查询已过期订单 (ztime < time), 避免加载全部订单再 PHP 过滤
@@ -1314,12 +1457,35 @@ if(!empty($pendingOrders)){
 	}
 }
 
+// === 6. 处理邮件发送队列（重试之前发送失败的邮件） ===
+if (function_exists('process_email_queue')) {
+	try {
+		process_email_queue(20);
+	} catch (\Throwable $e) {}
+}
+
+// === 6-1. 处理到期的定时邮件推送任务（后台「邮件推送」） ===
+if (function_exists('process_email_tasks')) {
+	try {
+		process_email_tasks(3);
+	} catch (\Throwable $e) {}
+}
+
+// === 7. 补全用户详细地理位置（省/市/经纬度，供数据大屏使用） ===
+if (function_exists('refresh_user_geo')) {
+	try {
+		refresh_user_geo(20);
+	} catch (\Throwable $e) {}
+}
+
 return "任务执行完毕!";
 }
 
 
 
 	//发送邮箱
+	// 修复：移除 register_shutdown_function 异步发送（导致延迟过高、信件丢失需二次发送）。
+	// 改为统一「同步发送」，失败时写入邮件队列，由 /cron 定时重试，保证邮件不丢失。
 	public static function email($email, $name, $body, $sync = false)
 	{
 		if (!rate_limit('email_send_' . $email, 3, 60)) { 
@@ -1338,77 +1504,76 @@ return "任务执行完毕!";
 			'webname' => $web['name'] ?? '',
 		];
 
-		// 同步发送模式：直接发送并返回真实结果（用于验证码等关键邮件）
-		if ($sync) {
-			try {
-				$mail = new PHPMailer();
-				$mail->IsSMTP();
-				$mail->CharSet = $webData['emailchar'];
-				$mail->SMTPAuth = $webData['emailauth'];
-				$mail->Timeout = 15;
-				if ($webData['emailsecure']) {
-					$mail->SMTPSecure = $webData['emailsecure'];
+		// 实际发送逻辑（显式加载 PHPMailer，避免自动加载失败导致静默发不出）
+		$doSend = function() use ($email, $name, $body, $webData) {
+			if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+				$pmDir = PATH . 'extend/PHPMailer/PHPMailer/';
+				if (file_exists($pmDir . 'PHPMailer.php')) {
+					require_once $pmDir . 'Exception.php';
+					require_once $pmDir . 'PHPMailer.php';
+					require_once $pmDir . 'SMTP.php';
 				}
-				$mail->Port = $webData['emailport'];
-				$mail->Host = $webData['emailhost'];
-				$mail->Username = $webData['emailname'];
-				$mail->Password = $webData['emailpass'];
-				$mail->From = $webData['emailname'];
-				$mail->FromName = $webData['webname'];
-				$mail->AddAddress($email);
-				$mail->Subject = $name;
-				$mail->Body = build_email_html($name, $body);
-				$mail->WordWrap = 80;
-				$mail->isHTML(true);
-				if ($mail->Send()) {
-					return ['code' => '1', 'msg' => '邮箱发送成功'];
-				} else {
-					$errMsg = $mail->ErrorInfo ?: '未知错误';
-					$logDir = defined('LOG_PATH') ? LOG_PATH : (PATH . '/runtime/log/');
-					if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
-					@file_put_contents($logDir . 'email_error.log', date('Y-m-d H:i:s') . " To:{$email} Subject:{$name} Error:{$errMsg}" . "\n", FILE_APPEND);
-					return ['code' => '-1', 'msg' => '邮件发送失败，请检查邮箱配置'];
-				}
-			} catch (\Throwable $e) {
-				$logDir = defined('LOG_PATH') ? LOG_PATH : (PATH . '/runtime/log/');
-				if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
-				@file_put_contents($logDir . 'email_error.log', date('Y-m-d H:i:s') . " To:{$email} Subject:{$name} Error:" . $e->getMessage() . "\n", FILE_APPEND);
+			}
+			if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+				throw new \Exception('PHPMailer 类加载失败');
+			}
+			$mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+			$mail->IsSMTP();
+			$mail->CharSet = $webData['emailchar'];
+			$mail->SMTPAuth = true;
+			$mail->Timeout = 20;
+			$mail->SMTPDebug = 0;
+			$mail->Port = intval($webData['emailport']) ?: 465;
+			if ($mail->Port == 465) {
+				$mail->SMTPSecure = 'ssl';
+			} elseif ($webData['emailsecure'] && $webData['emailsecure'] != 'none') {
+				$mail->SMTPSecure = $webData['emailsecure'];
+			}
+			$mail->SMTPOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]];
+			$mail->Host = $webData['emailhost'];
+			$mail->Username = $webData['emailname'];
+			$mail->Password = $webData['emailpass'];
+			$mail->setFrom($webData['emailname'], $webData['webname']);
+			$mail->addAddress($email);
+			$mail->Subject = $name;
+			$mail->Body = build_email_html($name, $body);
+			$mail->WordWrap = 80;
+			$mail->isHTML(true);
+			if ($mail->Send()) {
+				return true;
+			}
+			return $mail->ErrorInfo ?: '未知错误';
+		};
+
+		try {
+			$sendResult = $doSend();
+			if ($sendResult === true) {
+				return ['code' => '1', 'msg' => '邮箱发送成功'];
+			}
+			// 发送失败 → 写入队列待重试
+			$errMsg = $sendResult;
+			$logDir = defined('LOG_PATH') ? LOG_PATH : (PATH . '/runtime/log/');
+			if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
+			@file_put_contents($logDir . 'email_error.log', date('Y-m-d H:i:s') . " To:{$email} Subject:{$name} Error:{$errMsg}" . "\n", FILE_APPEND);
+			enqueue_email($email, $name, $body);
+			if ($sync) {
 				return ['code' => '-1', 'msg' => '邮件发送失败，请检查邮箱配置'];
 			}
-		}
-
-		// 异步发送模式（原有逻辑，用于通知类邮件）
-		register_shutdown_function(function() use ($email, $name, $body, $webData) {
-			try {
-				$mail = new PHPMailer();
-				$mail->IsSMTP();
-				$mail->CharSet = $webData['emailchar'];
-				$mail->SMTPAuth = $webData['emailauth'];
-				$mail->Timeout = 10;
-				if ($webData['emailsecure']) {
-					$mail->SMTPSecure = $webData['emailsecure'];
-				}
-				$mail->Port = $webData['emailport'];
-				$mail->Host = $webData['emailhost'];
-				$mail->Username = $webData['emailname'];
-				$mail->Password = $webData['emailpass'];
-				$mail->From = $webData['emailname'];
-				$mail->FromName = $webData['webname'];
-				$mail->AddAddress($email);
-				$mail->Subject = $name;
-				$mail->Body = build_email_html($name, $body);
-				$mail->WordWrap = 80;
-				$mail->isHTML(true);
-				$mail->Send();
-			} catch (\Exception $e) {
-				$logDir = defined('LOG_PATH') ? LOG_PATH : (PATH . '/runtime/log/');
-				if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
-				@file_put_contents($logDir . 'email_error.log', date('Y-m-d H:i:s') . " To:{$email} Subject:{$name} Error:" . $e->getMessage() . "\n", FILE_APPEND);
+			$array["code"] = "1";
+			$array["msg"] = "邮箱发送成功";
+			return json($array);
+		} catch (\Throwable $e) {
+			$logDir = defined('LOG_PATH') ? LOG_PATH : (PATH . '/runtime/log/');
+			if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
+			@file_put_contents($logDir . 'email_error.log', date('Y-m-d H:i:s') . " To:{$email} Subject:{$name} Error:" . $e->getMessage() . "\n", FILE_APPEND);
+			enqueue_email($email, $name, $body);
+			if ($sync) {
+				return ['code' => '-1', 'msg' => '邮件发送失败，请检查邮箱配置'];
 			}
-		});
-		$array["code"] = "1";
-		$array["msg"] = "邮箱发送成功";
-		return json($array);
+			$array["code"] = "1";
+			$array["msg"] = "邮箱发送成功";
+			return json($array);
+		}
 	}
 
 	/**
@@ -1488,6 +1653,127 @@ return "任务执行完毕!";
 			return '<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>审核成功</title><style>body{font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f8fafc;}.box{text-align:center;background:#fff;padding:48px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.08);}.icon{font-size:48px;color:#f59e0b;margin-bottom:16px;}h2{color:#0f172a;}</style></head><body><div class="box"><div class="icon">✕</div><h2>已驳回实名认证</h2><p>用户 '.htmlspecialchars($user['realname'] ?: $user['name']).' 的实名认证已驳回</p></div></body></html>';
 		}
 		return '<html><head><meta charset="utf-8"><title>错误</title></head><body><h2>未知操作</h2></body></html>';
+	}
+
+	// ==================== 扫码登录 ====================
+
+	/**
+	 * 生成扫码登录二维码 token（电脑端登录页调用）
+	 */
+	public function qrloginCreate() {
+		ensure_qr_login_table();
+		// 清理过期凭证
+		try { Db::name('qr_login')->where('expired_at', '<', time())->delete(); } catch (\Exception $e) {}
+
+		$token = bin2hex(function_exists('random_bytes') ? random_bytes(16) : md5(uniqid(mt_rand(), true) . microtime(true)));
+		$now = time();
+		try {
+			Db::name('qr_login')->insert([
+				'token'      => $token,
+				'userid'     => 0,
+				'status'     => 'pending',
+				'created_at' => $now,
+				'expired_at' => $now + 300,
+			]);
+		} catch (\Exception $e) {
+			return json(['code' => -1, 'msg' => '生成二维码失败，请重试']);
+		}
+		$confirmUrl = (isHTTPS() ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? '') . '/qrlogin/confirm?token=' . $token;
+		return json(['code' => 1, 'token' => $token, 'qrurl' => $confirmUrl]);
+	}
+
+	/**
+	 * 电脑端轮询扫码状态；已确认则自动登录
+	 */
+	public function qrloginStatus() {
+		ensure_qr_login_table();
+		$token = trim(input('token', ''));
+		if ($token === '') {
+			return json(['code' => -1, 'status' => 'error', 'msg' => '参数错误']);
+		}
+		$row = Db::name('qr_login')->where('token', $token)->find();
+		if (!$row) {
+			return json(['code' => -1, 'status' => 'expired', 'msg' => '二维码已失效']);
+		}
+		if (intval($row['expired_at']) < time()) {
+			return json(['code' => -1, 'status' => 'expired', 'msg' => '二维码已过期，请刷新']);
+		}
+		if ($row['status'] === 'confirmed') {
+			$user = Db::name('user')->where('id', intval($row['userid']))->find();
+			if (!$user || $user['state'] == '0') {
+				return json(['code' => -1, 'status' => 'expired', 'msg' => '账号异常或已被禁用']);
+			}
+			session_regenerate_id(true);
+			session('userid', $user['id']);
+			$loginIp = function_exists('get_client_ip') ? get_client_ip() : ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+			try {
+				Db::name('user')->where('id', $user['id'])->update([
+					'last_login_time'   => time(),
+					'last_login_ip'     => $loginIp,
+					'last_login_region' => get_ip_region($loginIp),
+				]);
+			} catch (\Exception $e) {}
+			Db::name('qr_login')->where('id', $row['id'])->update(['status' => 'used']);
+			return json(['code' => 1, 'status' => 'confirmed', 'msg' => '登录成功', 'url' => '/user/index']);
+		}
+		return json(['code' => 1, 'status' => $row['status'], 'msg' => '']);
+	}
+
+	/**
+	 * 手机端扫码后打开的确认页；已登录用户点击确认即登录电脑端
+	 */
+	public function qrloginConfirm() {
+		ensure_qr_login_table();
+		$token = trim(input('token', ''));
+		$web  = web_config();
+		$logo = isset($web['logo']) ? $web['logo'] : '';
+		$siteName = isset($web['name']) ? $web['name'] : '';
+
+		$fail = function($msg) use ($siteName) {
+			return '<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>扫码登录</title><style>body{font-family:-apple-system,sans-serif;background:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}.box{background:#fff;padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);text-align:center;max-width:320px;width:90%;}.ic{font-size:44px;margin-bottom:12px;}h2{color:#0f172a;font-size:18px;margin:0 0 8px;}p{color:#64748b;font-size:14px;margin:0 0 16px;}.btn{display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:10px 24px;border-radius:10px;font-size:14px;}</style></head><body><div class="box"><div class="ic">⚠️</div><h2>'.htmlspecialchars($siteName).'</h2><p>'.htmlspecialchars($msg).'</p><a class="btn" href="/login">去登录</a></div></body></html>';
+		};
+
+		if ($token === '') return $fail('参数错误');
+		$row = Db::name('qr_login')->where('token', $token)->find();
+		if (!$row || intval($row['expired_at']) < time()) {
+			return $fail('二维码已失效，请刷新电脑端二维码');
+		}
+
+		$userId = session('userid');
+		if (!$userId) {
+			return $fail('请先登录后再扫码登录');
+		}
+
+		// 标记已扫码
+		if ($row['status'] === 'pending') {
+			Db::name('qr_login')->where('id', $row['id'])->update(['status' => 'scanned']);
+		}
+
+		if (Request::instance()->isPost()) {
+			$act = input('act', '');
+			if ($act === 'confirm') {
+				Db::name('qr_login')->where('id', $row['id'])->update(['status' => 'confirmed', 'userid' => intval($userId)]);
+				return '<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>登录成功</title><style>body{font-family:-apple-system,sans-serif;background:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}.box{background:#fff;padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);text-align:center;max-width:320px;width:90%;}.ic{font-size:52px;color:#059669;margin-bottom:12px;}h2{color:#0f172a;font-size:18px;margin:0 0 8px;}p{color:#64748b;font-size:14px;margin:0;}</style></head><body><div class="box"><div class="ic">✓</div><h2>已确认登录</h2><p>电脑端将自动登录，请返回电脑查看</p></div></body></html>';
+			}
+			if ($act === 'cancel') {
+				Db::name('qr_login')->where('id', $row['id'])->update(['status' => 'expired']);
+				return '<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>已取消</title><style>body{font-family:-apple-system,sans-serif;background:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}.box{background:#fff;padding:40px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);text-align:center;max-width:320px;width:90%;}.ic{font-size:52px;color:#f59e0b;margin-bottom:12px;}h2{color:#0f172a;font-size:18px;margin:0;}</style></head><body><div class="box"><div class="ic">✕</div><h2>已取消登录</h2></div></body></html>';
+			}
+		}
+
+		$user = Db::name('user')->where('id', intval($userId))->find();
+		$displayName = $user ? (($user['name'] ?: $user['user'])) : '当前用户';
+		$avatar = $user && !empty($user['avatar']) ? $user['avatar'] : '';
+
+		$logoHtml = '';
+		if ($logo !== '') {
+			$logoUrl = (strpos($logo, 'http') === 0) ? $logo : '/' . ltrim($logo, '/');
+			$logoHtml = '<img src="' . htmlspecialchars($logoUrl) . '" alt="logo" style="width:56px;height:56px;border-radius:50%;object-fit:cover;">';
+		} else {
+			$logoHtml = '<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;">' . htmlspecialchars(mb_substr($siteName, 0, 1)) . '</div>';
+		}
+
+		return '<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>扫码登录确认</title><style>body{font-family:-apple-system,sans-serif;background:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}.box{background:#fff;padding:36px 28px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);text-align:center;max-width:340px;width:90%;}.ttl{font-size:16px;font-weight:700;color:#0f172a;margin:14px 0 4px;} .sub{font-size:13px;color:#64748b;margin:0 0 20px;}.user{display:flex;align-items:center;gap:12px;background:#f8fafc;border-radius:12px;padding:12px;margin-bottom:20px;text-align:left;}.uname{font-weight:600;color:#0f172a;font-size:15px;}.udesc{font-size:12px;color:#94a3b8;}.btn{display:block;width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;}.btn-confirm{background:#2563eb;color:#fff;}.btn-cancel{background:#fff;color:#64748b;border:1px solid #e2e8f0;}</style></head><body><div class="box">' . $logoHtml . '<div class="ttl">确认登录</div><div class="sub">' . htmlspecialchars($siteName) . ' · 扫码登录确认</div><div class="user">' . ($avatar ? '<img src="' . htmlspecialchars($avatar) . '" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">' : '<div style="width:40px;height:40px;border-radius:50%;background:#e2e8f0;color:#64748b;display:flex;align-items:center;justify-content:center;font-weight:700;">' . htmlspecialchars(mb_substr($displayName, 0, 1)) . '</div>') . '<div><div class="uname">' . htmlspecialchars($displayName) . '</div><div class="udesc">确认在电脑端登录此账号？</div></div></div><button class="btn btn-confirm" onclick="doConfirm()">确认登录</button><button class="btn btn-cancel" onclick="doCancel()">取消</button></div><script>function post(act){var f=document.createElement("form");f.method="POST";f.style.display="none";var i=document.createElement("input");i.name="act";i.value=act;f.appendChild(i);document.body.appendChild(f);f.submit();}function doConfirm(){post("confirm");}function doCancel(){post("cancel");}</script></body></html>';
 	}
 
 }

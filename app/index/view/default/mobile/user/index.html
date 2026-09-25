@@ -1,0 +1,109 @@
+{php}$title = '控制台'; $tab_active = 'host';{/php}
+{include file="default/mobile/header" /}
+
+<!-- 用户信息区 -->
+<div class="app-card" style="padding:20px;display:flex;align-items:center;gap:14px;">
+    <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--glass-bg-strong);">
+        {if isset($user.qq) && $user.qq}
+        <img src="https://q1.qlogo.cn/g?b=qq&nk={$user.qq}&s=100" style="width:100%;height:100%;object-fit:cover;" alt="avatar">
+        {else}
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--glass-primary);font-size:24px;"><i class="fas fa-user"></i></div>
+        {/if}
+    </div>
+    <div style="flex:1;min-width:0;">
+        <div style="font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;">
+            {$user.user|default=$user.name|default='用户'}
+            {if $membershipInfo}
+            <span class="app-tag app-tag-warning"><i class="fas fa-crown"></i> {$membershipInfo.name}</span>
+            {/if}
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">余额：&yen;{$user.money|default='0.00'}</div>
+    </div>
+    <a href="__ROOT__/user/information" class="app-action" style="width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--glass-bg);color:var(--text);"><i class="fas fa-cog"></i></a>
+</div>
+
+<!-- 余额主机状态 -->
+<div class="app-grid-2" style="margin-bottom:12px;">
+    <div class="app-card" style="text-align:center;padding:18px;">
+        <div style="font-size:13px;color:var(--text-muted);">账户余额</div>
+        <div style="font-size:22px;font-weight:800;color:var(--glass-primary);margin-top:4px;">&yen;{$user.money|default='0.00'}</div>
+    </div>
+    <div class="app-card" style="text-align:center;padding:18px;">
+        <div style="font-size:13px;color:var(--text-muted);">运行中主机</div>
+        <div style="font-size:22px;font-weight:800;color:var(--glass-success);margin-top:4px;">{$counthost|default='0'}</div>
+    </div>
+</div>
+
+<!-- 快捷入口 -->
+<div class="app-card" style="padding:20px 10px;">
+    <div class="app-grid-2" style="gap:16px 8px;">
+        <a href="__ROOT__/cart" style="display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;color:var(--text);">
+            <div style="width:48px;height:48px;border-radius:14px;background:rgba(79,124,255,0.12);color:var(--glass-primary);display:flex;align-items:center;justify-content:center;font-size:22px;"><i class="fas fa-shopping-cart"></i></div>
+            <span style="font-size:13px;font-weight:500;">购买产品</span>
+        </a>
+        <a href="__ROOT__/user/pay" style="display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;color:var(--text);">
+            <div style="width:48px;height:48px;border-radius:14px;background:rgba(16,185,129,0.12);color:var(--glass-success);display:flex;align-items:center;justify-content:center;font-size:22px;"><i class="fas fa-wallet"></i></div>
+            <span style="font-size:13px;font-weight:500;">充值余额</span>
+        </a>
+        <a href="__ROOT__/user/order" style="display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;color:var(--text);">
+            <div style="width:48px;height:48px;border-radius:14px;background:rgba(245,158,11,0.12);color:var(--glass-warning);display:flex;align-items:center;justify-content:center;font-size:22px;"><i class="fas fa-server"></i></div>
+            <span style="font-size:13px;font-weight:500;">主机管理</span>
+        </a>
+        <a href="__ROOT__/user/submitticket" style="display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;color:var(--text);">
+            <div style="width:48px;height:48px;border-radius:14px;background:rgba(14,165,233,0.12);color:var(--glass-info);display:flex;align-items:center;justify-content:center;font-size:22px;"><i class="fas fa-headset"></i></div>
+            <span style="font-size:13px;font-weight:500;">提交工单</span>
+        </a>
+    </div>
+</div>
+
+<!-- 主机列表 -->
+<div class="app-card">
+    <div class="app-card-title">
+        <span><i class="fas fa-server" style="color:var(--glass-primary);margin-right:6px;"></i> 我的主机</span>
+        <a href="__ROOT__/user/order" class="app-card-more">全部 <i class="fas fa-chevron-right"></i></a>
+    </div>
+    {if !empty($order)}
+    {foreach $order as $o}
+    {if $o.state != '3'}
+    <a href="__ROOT__/user/order/{$o.id}" class="app-list-item">
+        <div class="app-list-icon blue"><i class="fas fa-server"></i></div>
+        <div class="app-list-body">
+            <div class="app-list-title">{$o.cartid}</div>
+            <div class="app-list-sub">到期：{php}echo $o['ztime'] ? date('Y-m-d',$o['ztime']) : '未知';{/php}</div>
+        </div>
+        <div class="app-list-right">
+            {if $o.state==1}<span class="app-tag app-tag-success">运行中</span>
+            {elseif $o.state==0}<span class="app-tag app-tag-warning">待开通</span>
+            {elseif $o.state==2}<span class="app-tag app-tag-danger">已停用</span>
+            {else}<span class="app-tag">未知</span>{/if}
+        </div>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+    {/if}
+    {/foreach}
+    {else}
+    <div class="app-empty" style="padding:20px 0;">
+        <i class="fas fa-server"></i>
+        <h3>暂无主机</h3>
+        <p>前往购买你的第一台主机</p>
+    </div>
+    {/if}
+</div>
+
+<!-- 公告 -->
+{if !empty($announcement)}
+<div class="app-card">
+    <div class="app-card-title">
+        <span><i class="fas fa-bullhorn" style="color:var(--glass-primary);margin-right:6px;"></i> 最新公告</span>
+        <a href="__ROOT__/announcements" class="app-card-more">全部 <i class="fas fa-chevron-right"></i></a>
+    </div>
+    {foreach $announcement as $an}
+    <a href="__ROOT__/announcement/{$an.id}" class="app-notice-item">
+        <div class="app-notice-title">{$an.title}</div>
+        <div class="app-notice-time">{:date('Y-m-d', $an.created_at)}</div>
+    </a>
+    {/foreach}
+</div>
+{/if}
+
+{include file="default/mobile/footer" /}

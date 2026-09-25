@@ -121,6 +121,14 @@ $data1=password_verify($password,$data["password"]);
 	return $this->fetch('/'.$web["admintemplate"]."/login",[
             'webname'  => $web['name'],
 			'admintemplate' => $web['admintemplate'],
+			// 真实站点信息（LOGO 用 web 表 logo 字段，留空回退 logo_icon 图标）
+			'web'       => $web,
+			// ?out=1 表示从后台安全退出跳转而来，视图顶部显示「您已安全退出登录」提示
+			'loggedOut' => input('param.out') == '1',
+			// 登录成功后进入后台首页的地址（自动适配「后台登录入口自定义」）
+			'adminHomeUrl' => function_exists('admin_index_url')
+				? admin_index_url()
+				: ((isHTTPS() ? 'https://' : 'http://') . ($_SERVER['HTTP_HOST'] ?? '') . '/admin/index'),
 ]);
     }
 
@@ -152,6 +160,24 @@ $data1=password_verify($password,$data["password"]);
 				'msg'         => $msg,
 				'create_time' => time(),
 			]);
+		} catch (\Exception $e) {}
+
+		// ── 同步写入「系统重要记录」中心（后台登录记录）──
+		try {
+			if (function_exists('sys_record')) {
+				sys_record('admin_login', ($status ? '管理员登录成功' : '管理员登录失败') . '：' . $username, [
+					'账号'   => $username,
+					'结果'   => $status ? '成功' : '失败',
+					'原因'   => $msg,
+					'时间'   => date('Y-m-d H:i:s'),
+				], [
+					'operator_type' => 'admin',
+					'operator_id'   => intval($adminId),
+					'operator_name' => $username,
+					'level'         => $status ? 1 : 3,
+					'summary'       => ($status ? '登录成功' : '登录失败') . ' · ' . $msg,
+				]);
+			}
 		} catch (\Exception $e) {}
 	}
 

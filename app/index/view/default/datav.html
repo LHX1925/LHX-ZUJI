@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据大屏 - {$web.name|default='站点'}</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: radial-gradient(ellipse at 50% 0%, #0d1b3d 0%, #060a1f 60%, #04070f 100%);
+        overflow: hidden;
+    }
+    .datav-page { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+
+    /* 顶部标题 */
+    .datav-header {
+        position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+        text-align: center; padding: 16px 0 6px; pointer-events: none;
+        background: linear-gradient(180deg, rgba(6,10,31,0.9) 0%, rgba(6,10,31,0) 100%);
+    }
+    .datav-header h2 {
+        font-size: 26px; font-weight: 800; margin: 0; letter-spacing: 3px;
+        background: linear-gradient(90deg, #4facfe, #00f2fe);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 30px rgba(79,172,254,0.5);
+    }
+    .datav-header .sub { font-size: 12px; color: #7f95bd; margin-top: 4px; letter-spacing: 1px; }
+
+    /* 统计卡片 */
+    .datav-stats {
+        position: absolute; top: 88px; left: 18px; z-index: 10;
+        display: flex; flex-direction: column; gap: 10px;
+    }
+    .stat-card {
+        background: linear-gradient(135deg, rgba(20,40,90,0.75), rgba(10,20,50,0.7));
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(79,172,254,0.25); border-radius: 14px;
+        padding: 12px 20px; color: #fff; min-width: 158px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    }
+    .stat-card .num { font-size: 28px; font-weight: 800; color: #4facfe; line-height: 1.1; }
+    .stat-card .label { font-size: 12px; color: #8ea4c8; margin-top: 3px; letter-spacing: 0.5px; }
+
+    /* 右侧省份排行面板 */
+    .datav-panel {
+        position: absolute; top: 88px; right: 18px; z-index: 10;
+        background: linear-gradient(135deg, rgba(20,40,90,0.75), rgba(10,20,50,0.7));
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(79,172,254,0.25); border-radius: 14px;
+        padding: 14px 16px; color: #fff; max-height: 56vh; overflow-y: auto;
+        min-width: 188px; box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+    }
+    .datav-panel h4 { font-size: 13px; margin: 0 0 10px; color: #4facfe; font-weight: 700; letter-spacing: 1px; }
+    .panel-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 2px; font-size: 12px; border-bottom: 1px solid rgba(79,172,254,0.12); cursor: pointer; transition: all .15s; border-radius: 6px; }
+    .panel-row:hover { background: rgba(79,172,254,0.12); padding-left: 6px; padding-right: 6px; }
+    .panel-row .pname { color: #cbd5e1; }
+    .panel-row .pcount { color: #ff5b5b; font-weight: 700; }
+    .datav-panel::-webkit-scrollbar { width: 4px; }
+    .datav-panel::-webkit-scrollbar-thumb { background: rgba(79,172,254,0.3); border-radius: 4px; }
+
+    /* 底部提示 */
+    .datav-tip {
+        position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+        z-index: 10; color: #7f95bd; font-size: 12px; text-align: center;
+        background: rgba(10,20,50,0.6); padding: 6px 18px; border-radius: 20px;
+        border: 1px solid rgba(79,172,254,0.15); pointer-events: none;
+        white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .btn-back {
+        position: absolute; top: 18px; right: 18px; z-index: 30;
+        color: #fff; text-decoration: none;
+        background: rgba(20,40,90,0.7); padding: 8px 18px; border-radius: 20px;
+        border: 1px solid rgba(79,172,254,0.3); font-size: 13px;
+        transition: all .2s;
+    }
+    .btn-back:hover { background: rgba(79,172,254,0.25); }
+
+    /* 用户详情浮层卡片 */
+    .user-popup {
+        position: absolute; z-index: 40; display: none;
+        width: 210px; background: rgba(15,25,55,0.95);
+        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(79,172,254,0.35); border-radius: 16px;
+        color: #fff; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        overflow: hidden;
+    }
+    .user-popup .up-head { display: flex; align-items: center; gap: 10px; padding: 14px 14px 10px; }
+    .user-popup .up-avatar {
+        width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+        border: 2px solid #ff5b5b; background: #1e3a6a;
+        object-fit: cover; box-shadow: 0 0 0 2px rgba(255,91,91,0.3);
+    }
+    .user-popup .up-avatar.placeholder { display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; }
+    .user-popup .up-name { font-size: 15px; font-weight: 700; }
+    .user-popup .up-meta { font-size: 11px; color: #8ea4c8; margin-top: 2px; }
+    .user-popup .up-loc {
+        padding: 0 14px 14px; font-size: 12px; color: #cbd5e1;
+        border-top: 1px solid rgba(79,172,254,0.15); padding-top: 10px; line-height: 1.5;
+    }
+    .user-popup .up-close {
+        position: absolute; top: 8px; right: 10px; width: 22px; height: 22px;
+        border-radius: 50%; border: none; background: rgba(255,255,255,0.08);
+        color: #8ea4c8; cursor: pointer; font-size: 13px; line-height: 1;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .user-popup .up-close:hover { background: rgba(255,91,91,0.3); color: #fff; }
+
+    #datavChart { position: absolute; inset: 0; }
+</style>
+</head>
+<body>
+<div class="datav-page">
+    <a href="__ROOT__/" class="btn-back">← 返回官网</a>
+
+    <div class="datav-header">
+        <h2>全球用户分布实时大屏</h2>
+        <div class="sub" id="viewHint">中国视图 · 点击省份查看该省用户 · 点击光点查看用户详情</div>
+    </div>
+
+    <div class="datav-stats">
+        <div class="stat-card"><div class="num" id="statTotal">0</div><div class="label">注册用户总数</div></div>
+        <div class="stat-card"><div class="num" id="statChina" style="color:#ff5b5b;">0</div><div class="label">中国用户</div></div>
+        <div class="stat-card"><div class="num" id="statOnline">0</div><div class="label">实时在线</div></div>
+    </div>
+
+    <div class="datav-panel" id="countryPanel">
+        <h4>省份用户分布</h4>
+        <div id="countryList"></div>
+    </div>
+
+    <!-- 用户详情浮层 -->
+    <div class="user-popup" id="userPopup">
+        <button class="up-close" id="upClose">&times;</button>
+        <div class="up-head">
+            <img class="up-avatar" id="upAvatar" alt="avatar">
+            <div>
+                <div class="up-name" id="upName"></div>
+                <div class="up-meta" id="upMeta"></div>
+            </div>
+        </div>
+        <div class="up-loc" id="upLoc"></div>
+    </div>
+
+    <div id="datavChart"></div>
+    <div class="datav-tip" id="bottomTip">滚轮缩放 · 拖拽平移 · 点击省份聚焦用户 · 点击红色光点查看用户详情</div>
+</div>
+
+<script src="__ROOT__/static/js/echarts.min.js"></script>
+<script>
+(function(){
+    var chart = echarts.init(document.getElementById('datavChart'));
+    var points = [];        // 全部用户点
+    var provinceStats = []; // 省份统计
+    var countryStats = [];  // 国家统计
+    var currentView = 'china'; // 默认中国视图（用户主要看中国）
+    var activeProvince = '';   // 当前聚焦的省份（空=全部）
+
+    // 中文国家名映射
+    var cnMap = {
+        'China':'中国','United States':'美国','United States of America':'美国','Japan':'日本',
+        'South Korea':'韩国','Korea':'韩国','Russia':'俄罗斯','United Kingdom':'英国',
+        'France':'法国','Germany':'德国','Canada':'加拿大','Australia':'澳大利亚',
+        'Singapore':'新加坡','India':'印度','Brazil':'巴西','Thailand':'泰国',
+        'Vietnam':'越南','Malaysia':'马来西亚','Indonesia':'印度尼西亚','Philippines':'菲律宾',
+        'Italy':'意大利','Spain':'西班牙','Netherlands':'荷兰','Switzerland':'瑞士'
+    };
+    function cn(name) { return cnMap[name] || name; }
+    var zhToEn = {};
+    (function(){ for (var k in cnMap) { zhToEn[cnMap[k]] = k; } })();
+    function toEn(name) { return zhToEn[name] || name; }
+
+    // 省份简称 -> 全称（匹配 china.json 的 feature name）
+    var provFull = {
+        '北京':'北京市','天津':'天津市','上海':'上海市','重庆':'重庆市',
+        '广东':'广东省','江苏':'江苏省','浙江':'浙江省','山东':'山东省','河南':'河南省',
+        '河北':'河北省','山西':'山西省','湖北':'湖北省','湖南':'湖南省','福建':'福建省',
+        '安徽':'安徽省','江西':'江西省','四川':'四川省','贵州':'贵州省','云南':'云南省',
+        '陕西':'陕西省','甘肃':'甘肃省','青海':'青海省','海南':'海南省','辽宁':'辽宁省',
+        '吉林':'吉林省','黑龙江':'黑龙江省','内蒙古':'内蒙古自治区','新疆':'新疆维吾尔自治区',
+        '西藏':'西藏自治区','宁夏':'宁夏回族自治区','广西':'广西壮族自治区',
+        '香港':'香港特别行政区','澳门':'澳门特别行政区','台湾':'台湾省'
+    };
+    // 全称 -> 简称（用于匹配 region 里的简称）
+    function provShort(full) {
+        for (var s in provFull) { if (provFull[s] === full) return s; }
+        return full;
+    }
+    // 判断一个 region 字符串属于哪个省份简称
+    function matchProvince(region) {
+        if (!region) return '';
+        region = String(region);
+        // 精确全称
+        for (var s in provFull) { if (region.indexOf(provFull[s]) >= 0) return s; }
+        // 简称
+        for (var s in provFull) { if (region.indexOf(s) >= 0) return s; }
+        return '';
+    }
+    // 将地图上的全称转为简称，匹配省份统计/用户
+    function normProv(fullName) {
+        var short = provShort(fullName);
+        if (short !== fullName) return short;
+        // 已经是简称则直接返回
+        return fullName;
+    }
+
+    function userTooltip(d) {
+        return '<div style="color:#333;background:#fff;padding:10px 14px;border-radius:10px;min-width:150px;">'
+            + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+            + (d.avatar ? '<img src="'+d.avatar+'" style="width:32px;height:32px;border-radius:50%;border:1px solid #e2e8f0;object-fit:cover;">' : '')
+            + '<b>' + d.name + '</b></div>'
+            + '<div style="font-size:12px;color:#555;">' + (d.country||'') + ' ' + (d.region||'') + ' ' + (d.city||'') + '</div></div>';
+    }
+
+    // 构建中国视图
+    function buildChinaOption() {
+        // 省份地图着色数据（简称匹配）
+        var mapData = provinceStats.map(function(p){ return { name: provFull[p.name] || p.name, value: p.count }; });
+        return {
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params){
+                    if (params.seriesType === 'scatter' || params.seriesType === 'effectScatter') {
+                        return userTooltip(params.data);
+                    }
+                    var count = 0;
+                    for (var i = 0; i < provinceStats.length; i++) {
+                        if (normProv(params.name) === provinceStats[i].name || params.name === provinceStats[i].name) { count = provinceStats[i].count; break; }
+                    }
+                    return '<div style="color:#fff;background:rgba(15,23,42,0.92);padding:8px 14px;border-radius:8px;border:1px solid rgba(79,172,254,0.4);">'
+                        + '<b style="font-size:14px;">' + params.name + '</b>'
+                        + '<div style="font-size:12px;color:#ff5b5b;margin-top:2px;">用户数：' + count + '</div>'
+                        + '</div>';
+                }
+            },
+            geo: {
+                map: 'china', roam: true, zoom: 1.1, center: [104, 35],
+                scaleLimit: { min: 0.7, max: 30 },
+                itemStyle: {
+                    areaColor: '#101c3a',
+                    borderColor: 'rgba(79,172,254,0.45)',
+                    borderWidth: 0.8,
+                    shadowColor: 'rgba(79,172,254,0.3)', shadowBlur: 8
+                },
+                emphasis: {
+                    label: { show: true, color: '#fff', fontSize: 13 },
+                    itemStyle: { areaColor: '#1c3a7a' }
+                },
+                select: {
+                    label: { show: true, color: '#fff' },
+                    itemStyle: { areaColor: '#2b4c99', borderColor: '#00f2fe', borderWidth: 1.5 }
+                }
+            },
+            series: [
+                { type: 'map', map: 'china', geoIndex: 0, data: mapData, selectedMode: false, roam: true,
+                  itemStyle: { areaColor: '#101c3a', borderColor: 'rgba(79,172,254,0.45)' } },
+                {
+                    type: 'scatter', coordinateSystem: 'geo',
+                    data: buildScatterData(),  // 所有用户红色圆点
+                    symbol: 'circle', symbolSize: 7,
+                    itemStyle: { color: '#ff5b5b', shadowBlur: 8, shadowColor: 'rgba(255,91,91,0.9)', opacity: 0.95 },
+                    emphasis: { itemStyle: { color: '#ffdd00', shadowBlur: 14, shadowColor: '#ffdd00' }, label: { show: false } },
+                    zlevel: 5, cursor: 'pointer'
+                }
+            ]
+        };
+    }
+
+    // 判断头像是否可用（http/https 图片可用；data:image/svg 等复杂 URI 不可用于 image symbol）
+    function usableAvatar(a) {
+        if (!a) return '';
+        a = String(a);
+        // 跳过 data: URI（含 svg 等，ECharts image:// 无法解析）
+        if (a.indexOf('data:') === 0) return '';
+        // 仅 http/https 或 // 或相对路径可用
+        return a;
+    }
+
+    // 坐标错开：同一坐标多个用户时，按螺旋偏移散开，避免堆叠成一个点
+    var coordGrid = {};
+    function scatterOffset(lng, lat, index) {
+        var key = lng.toFixed(3) + ',' + lat.toFixed(3);
+        if (!coordGrid[key]) coordGrid[key] = 0;
+        coordGrid[key]++;
+        var n = coordGrid[key] - 1;
+        if (n === 0) return [lng, lat];
+        // 螺旋散开，步长约 0.15 度（约 15km），最多 40 层
+        var layer = Math.floor((Math.sqrt(n - 1) + 1) / 2);
+        var step = 0.15 * layer;
+        var idx = n - (2 * layer - 1) * (2 * layer - 1);
+        var side = Math.floor(idx / (2 * layer));
+        var pos = idx % (2 * layer) - (layer - 1);
+        var dlng = 0, dlat = 0;
+        if (side === 0) { dlng = pos * step; dlat = -layer * step; }
+        else if (side === 1) { dlng = layer * step; dlat = pos * step; }
+        else if (side === 2) { dlng = -pos * step; dlat = layer * step; }
+        else { dlng = -layer * step; dlat = -pos * step; }
+        return [lng + dlng, lat + dlat];
+    }
+
+    // 构建散点数据（所有用户都显示；有头像用圆形头像，无头像/头像不可用用红色圆点）
+    function buildScatterData(provinceFilter) {
+        coordGrid = {};
+        var list = [];
+        points.forEach(function(p){
+            if (provinceFilter) {
+                if (matchProvince(p.region) !== provinceFilter) return;
+            }
+            var coord = scatterOffset(p.value[0], p.value[1], list.length);
+            var item = {
+                name: p.name, value: [coord[0], coord[1], 1],
+                avatar: p.avatar, region: p.region, city: p.city, country: p.country
+            };
+            var av = usableAvatar(p.avatar);
+            if (av) {
+                // 圆形头像
+                item.symbol = 'image://' + av;
+                item.symbolSize = 22;
+                item.symbolKeepAspect = true;
+            } else {
+                // 红色圆点
+                item.symbol = 'circle';
+                item.symbolSize = 8;
+            }
+            list.push(item);
+        });
+        return list;
+    }
+
+    function buildWorldOption() {
+        var mapData = countryStats.map(function(c){ return { name: toEn(c.name), value: c.count }; });
+        return {
+            backgroundColor: 'transparent',
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params){
+                    if (params.seriesType === 'scatter' || params.seriesType === 'effectScatter') return userTooltip(params.data);
+                    var name = cn(params.name);
+                    var count = 0;
+                    for (var i = 0; i < countryStats.length; i++) {
+                        if (countryStats[i].name === name || toEn(countryStats[i].name) === params.name) { count = countryStats[i].count; break; }
+                    }
+                    return '<div style="color:#fff;background:rgba(15,23,42,0.92);padding:8px 14px;border-radius:8px;border:1px solid rgba(79,172,254,0.4);">'
+                        + '<b style="font-size:14px;">' + name + '</b>'
+                        + (count > 0 ? '<div style="font-size:12px;color:#ff5b5b;margin-top:2px;">用户数：' + count + '</div>' : '<div style="font-size:11px;color:#8ea4c8;margin-top:2px;">暂无用户</div>')
+                        + '</div>';
+                }
+            },
+            geo: {
+                map: 'world', roam: true, zoom: 1.2, center: [105, 35],
+                scaleLimit: { min: 0.6, max: 20 },
+                itemStyle: { areaColor: '#101c3a', borderColor: 'rgba(79,172,254,0.45)', borderWidth: 0.5 },
+                emphasis: { label: { show: true, color: '#fff', fontSize: 12 }, itemStyle: { areaColor: '#1c3a7a' } }
+            },
+            series: [
+                { type: 'map', map: 'world', geoIndex: 0, data: mapData, roam: true },
+                {
+                    type: 'scatter', coordinateSystem: 'geo',
+                    data: points.map(function(p){ return { name: p.name, value: p.value, avatar: p.avatar, region: p.region, city: p.city, country: p.country }; }),
+                    symbol: 'circle', symbolSize: 7,
+                    itemStyle: { color: '#ff5b5b', shadowBlur: 8, shadowColor: 'rgba(255,91,91,0.9)' },
+                    zlevel: 5, cursor: 'pointer'
+                }
+            ]
+        };
+    }
+
+    function getJSON(url, cb) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.onreadystatechange = function(){
+            if (xhr.readyState === 4) {
+                var data = null;
+                if (xhr.status === 200) { try { data = JSON.parse(xhr.responseText); } catch(e) {} }
+                cb(data);
+            }
+        };
+        xhr.send();
+    }
+    function ensureWorld(cb) {
+        if (echarts.getMap('world')) { cb(); return; }
+        getJSON('__ROOT__/static/map/world.json', function(geoJson){ if (geoJson) echarts.registerMap('world', geoJson); cb(); });
+    }
+    function ensureChina(cb) {
+        if (echarts.getMap('china')) { cb(); return; }
+        getJSON('__ROOT__/static/map/china.json', function(geoJson){ if (geoJson) echarts.registerMap('china', geoJson); cb(); });
+    }
+
+    function showView(v) {
+        currentView = v;
+        activeProvince = '';
+        if (v === 'china') {
+            document.getElementById('viewHint').textContent = '中国视图 · 点击省份查看该省用户 · 点击光点查看用户详情';
+            chart.setOption(buildChinaOption(), true);
+        } else {
+            document.getElementById('viewHint').textContent = '世界视图 · 点击中国进入省份地图 · 点击光点查看用户详情';
+            chart.setOption(buildWorldOption(), true);
+        }
+        closePopup();
+    }
+
+    // 聚焦某省份：高亮该省用户（放大头像），但其他省用户仍显示（淡显）
+    function focusProvince(shortName, fullName) {
+        activeProvince = shortName;
+        var count = 0;
+        for (var i = 0; i < provinceStats.length; i++) {
+            if (provinceStats[i].name === shortName) { count = provinceStats[i].count; break; }
+        }
+        var opt = buildChinaOption();
+        // 重新计算散点数据（坐标错开），聚焦省用大头像，其他省用淡红色小点（仍显示）
+        coordGrid = {};
+        var focusData = [];
+        var otherData = [];
+        points.forEach(function(p){
+            var mp = matchProvince(p.region);
+            var coord = scatterOffset(p.value[0], p.value[1], focusData.length + otherData.length);
+            var base = { name: p.name, value: [coord[0], coord[1], 1], avatar: p.avatar, region: p.region, city: p.city, country: p.country };
+            if (mp === shortName) {
+                var av = usableAvatar(p.avatar);
+                if (av) { base.symbol = 'image://' + av; base.symbolSize = 30; base.symbolKeepAspect = true; }
+                else { base.symbol = 'circle'; base.symbolSize = 12; }
+                focusData.push(base);
+            } else {
+                otherData.push(base);
+            }
+        });
+        // 三个系列：地图 + 其他省（淡显但仍可见）+ 聚焦省（大头像高亮）
+        opt.series = [
+            { type: 'map', map: 'china', geoIndex: 0, data: opt.series[0].data, selectedMode: false, roam: true,
+              itemStyle: { areaColor: '#101c3a', borderColor: 'rgba(79,172,254,0.45)' } },
+            { type: 'scatter', coordinateSystem: 'geo', data: otherData, symbol: 'circle', symbolSize: 6,
+              itemStyle: { color: '#5a6a8a', shadowBlur: 0, opacity: 0.75 }, zlevel: 4, cursor: 'pointer' },
+            { type: 'scatter', coordinateSystem: 'geo', data: focusData,
+              itemStyle: { color: '#ff5b5b', shadowBlur: 12, shadowColor: 'rgba(255,91,91,0.9)' },
+              emphasis: { itemStyle: { color: '#ffdd00' } }, zlevel: 6, cursor: 'pointer' }
+        ];
+        // 地图选中高亮聚焦省
+        opt.geo.regions = [{ name: fullName, itemStyle: { areaColor: '#2b4c99', borderColor: '#00f2fe', borderWidth: 1.5 }, label: { show: true, color: '#fff' } }];
+        chart.setOption(opt, true);
+        document.getElementById('viewHint').textContent = fullName + '：' + count + ' 位用户（已高亮）· 其他省淡显 · 点击其他省份可切换';
+    }
+
+    // 显示用户详情浮层
+    function showPopup(d, px, py) {
+        var pop = document.getElementById('userPopup');
+        document.getElementById('upName').textContent = d.name || '';
+        document.getElementById('upMeta').textContent = (d.country||'') + (d.region ? ' · ' + d.region : '');
+        document.getElementById('upLoc').textContent = (d.city ? d.city + ' · ' : '') + (d.value ? '坐标 ' + d.value[0].toFixed(2) + ', ' + d.value[1].toFixed(2) : '');
+        var av = document.getElementById('upAvatar');
+        if (d.avatar) {
+            av.src = d.avatar; av.style.display = '';
+            av.onerror = function(){ this.style.display = 'none'; };
+        } else {
+            av.style.display = 'none';
+        }
+        // 定位（跟随点击位置，不遮挡）
+        var w = 210, h = 130;
+        var x = px + 14, y = py - h - 10;
+        if (x + w > window.innerWidth) x = px - w - 14;
+        if (y < 60) y = py + 14;
+        pop.style.left = x + 'px';
+        pop.style.top = y + 'px';
+        pop.style.display = 'block';
+    }
+    function closePopup() {
+        document.getElementById('userPopup').style.display = 'none';
+    }
+
+    // 点击事件
+    chart.on('click', function(params){
+        if (params.seriesType === 'scatter') {
+            // 点击用户光点：显示详情浮层
+            var d = params.data;
+            showPopup(d, params.event.offsetX, params.event.offsetY);
+            return;
+        }
+        if (currentView === 'china') {
+            if (params.componentType === 'geo' || params.seriesType === 'map') {
+                var fullName = params.name;         // 地图全称，如"广东省"
+                var shortName = normProv(fullName);  // 简称"广东"
+                focusProvince(shortName, fullName);
+            }
+        } else {
+            // 世界视图：点击中国进入省份
+            if (params.componentType === 'geo' || params.seriesType === 'map') {
+                if (params.name === 'China' || cn(params.name) === '中国') {
+                    ensureChina(function(){ showView('china'); });
+                }
+            }
+        }
+    });
+
+    // 点击空白恢复全部
+    chart.getZr().on('click', function(e){
+        if (!e.target) {
+            closePopup();
+            if (currentView === 'china' && activeProvince) {
+                activeProvince = '';
+                showView('china');
+            }
+        }
+    });
+
+    document.getElementById('upClose').onclick = closePopup;
+
+    getJSON('{$dataUrl}', function(res){
+        if (res && res.code == 1) {
+            points = res.points || [];
+            provinceStats = res.province_stats || [];
+            countryStats = res.country_stats || [];
+            document.getElementById('statTotal').textContent = res.stats.total_users || 0;
+            document.getElementById('statChina').textContent = res.stats.china_users || 0;
+            document.getElementById('statOnline').textContent = res.stats.online || 0;
+
+            // 省份排行（右侧面板），点击可聚焦
+            var html = '';
+            if (provinceStats.length) {
+                provinceStats.forEach(function(c){
+                    var full = provFull[c.name] || c.name;
+                    html += '<div class="panel-row" data-prov="' + c.name + '" data-full="' + full + '">'
+                        + '<span class="pname">' + full + '</span>'
+                        + '<span class="pcount">' + c.count + '</span></div>';
+                });
+            } else {
+                html = '<div style="color:#8ea4c8;font-size:12px;">暂无数据</div>';
+            }
+            document.getElementById('countryList').innerHTML = html;
+            // 面板点击聚焦省份
+            document.querySelectorAll('#countryList .panel-row').forEach(function(row){
+                row.addEventListener('click', function(){
+                    var prov = this.getAttribute('data-prov');
+                    var full = this.getAttribute('data-full');
+                    focusProvince(prov, full);
+                });
+            });
+
+            // 默认进入中国视图
+            ensureChina(function(){ showView('china'); });
+        }
+    });
+
+    window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+</body>
+</html>

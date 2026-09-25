@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="description" content="{$description|default=''}">
+    <meta name="keywords" content="{$keywords|default=''}">
+    <link rel="shortcut icon" type="image/x-icon" href="{$favicon|default=''}"/>
+    <title>{$webname|default='YunHost'} - {$title|default=''}</title>
+
+    <!-- 电脑端 CSS 资源（液态玻璃主题） -->
+    <link rel="stylesheet" type="text/css" href="__ROOT__/static/assets/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="__ROOT__/static/css/glass-theme.css?v=17">
+    {if isset($web.glass_theme) && $web.glass_theme == 'pink_blue'}<link rel="stylesheet" type="text/css" href="__ROOT__/static/css/pink-blue-gradient.css?v=8">{/if}
+
+    <!-- 手机端原生APP风格 CSS -->
+    <link rel="stylesheet" type="text/css" href="__ROOT__/static/css/mobile-app.css?v=15">
+
+    <!-- jQuery -->
+    <script type="text/javascript" src="__ROOT__/static/js/jquery.min.js"></script>
+    <script>window['__' + 'ROOT__'] = "__ROOT__";</script>
+
+    <style>
+        /* 确保电脑端全局样式不干扰手机端 */
+        body.glass-enabled { padding-top: 0 !important; }
+        /* 背景图/视频/GIF 由 glass-theme.css 统一处理，此处不再重复定义，避免层级冲突 */
+    </style>
+</head>
+{php}
+// === 用户个性化主题（覆盖全站默认） ===
+$userTheme = null;
+if (session('userid')) {
+    try {
+        $userTheme = \think\Db::name('user')->where('id', session('userid'))->field('theme_mode,theme_glass,theme_bg_type,theme_bg_image')->find();
+    } catch (\Throwable $e) { $userTheme = null; }
+}
+
+// === 背景系统（与电脑端完全一致，用户设置优先） ===
+$glassOpacity = isset($web['glass_opacity']) ? intval($web['glass_opacity']) / 100 : 0.72;
+$bgType = isset($web['bg_type']) ? $web['bg_type'] : 'image';
+$bgImage = isset($web['bg_image']) ? $web['bg_image'] : '';
+
+// 用户个性化覆盖
+if ($userTheme) {
+    if (!empty($userTheme['theme_bg_type'])) $bgType = $userTheme['theme_bg_type'];
+    if ($userTheme['theme_bg_image'] !== null && $userTheme['theme_bg_image'] !== '') $bgImage = $userTheme['theme_bg_image'];
+    if ($userTheme['theme_glass'] !== null && $userTheme['theme_glass'] !== '') $glassEnabled = ($userTheme['theme_glass'] == '1');
+    if ($userTheme['theme_mode'] !== null && $userTheme['theme_mode'] !== '') $themeMode = $userTheme['theme_mode'];
+}
+
+$isVideoBg = ($bgType === 'video' && !empty($bgImage));
+$isGifBg = ($bgType === 'gif' && !empty($bgImage));
+$hasBg = !empty($bgImage);
+$bgBlurPx = isset($web['bg_blur']) ? intval($web['bg_blur']) : 0;
+$glassEnabled = (!isset($glassEnabled) ? (!isset($web['glass_enabled']) || $web['glass_enabled'] == "1") : $glassEnabled);
+$themeMode = isset($themeMode) ? $themeMode : (isset($web['theme_mode']) ? $web['theme_mode'] : 'light');
+
+$bodyClass = $glassEnabled ? 'glass-enabled' : 'no-glass-theme';
+if ($glassEnabled && $hasBg) $bodyClass .= ' glass-bg-image';
+if ($glassEnabled && $bgBlurPx > 0 && !$isVideoBg && !$isGifBg) $bodyClass .= ' glass-bg-blurred';
+
+$dataBgType = ($glassEnabled && $hasBg) ? 'data-bg-type="' . $bgType . '"' : '';
+$dataTheme = 'data-theme="' . $themeMode . '"';
+$bodyStyle = '--glass-opacity: ' . $glassOpacity . ';';
+if (!$isVideoBg && $hasBg) $bodyStyle .= '--glass-bg-image: url(\'' . addslashes($bgImage) . '\');';
+if ($bgBlurPx > 0 && !$isVideoBg && !$isGifBg) $bodyStyle .= '--glass-bg-blur: ' . $bgBlurPx . 'px;';
+if ($themeMode === 'dark') $bodyStyle .= 'color-scheme: dark;';
+
+echo '<body class="' . $bodyClass . '" ' . $dataBgType . ' ' . $dataTheme . ' style="' . $bodyStyle . '">';
+
+if ($glassEnabled && $isVideoBg) {
+    echo '<video id="glass-bg-video" class="glass-bg-video" src="' . htmlspecialchars($bgImage, ENT_QUOTES, 'UTF-8') . '" autoplay muted loop playsinline></video>';
+} elseif ($glassEnabled && $isGifBg) {
+    echo '<div id="glass-bg-gif" class="glass-bg-gif" style="background-image:url(\'' . addslashes($bgImage) . '\');"></div>';
+}
+{/php}
+
+<!-- Toast -->
+<div class="app-toast" id="appToast"></div>
+
+<!-- 页面容器 -->
+<div class="app-page">
+
+<!-- 顶部导航栏 -->
+<header class="app-topbar">
+    {if isset($back_url)}
+    <a href="{$back_url}" class="app-back"><i class="fas fa-arrow-left"></i></a>
+    {/if}
+    {if isset($web.logo) && $web.logo}
+    <div class="app-logo">
+        <img src="{if strpos($web.logo, 'http') === 0}{$web.logo}{else}__ROOT__/{:ltrim($web.logo, '/')}{/if}" alt="logo">
+    </div>
+    {/if}
+    <div class="app-title">{$title|default=$webname|default='YunHost'}</div>
+    {if isset($header_right)}
+    <div class="app-action">{$header_right}</div>
+    {/if}
+</header>
+
+<!-- 内容区 -->
+<div class="app-content">

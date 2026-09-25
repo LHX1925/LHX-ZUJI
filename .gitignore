@@ -1,8 +1,3 @@
-# 运行时目录
-/runtime/
-
-# 安装锁文件（防止泄露安装状态）
-/install.lock
 
 # 上传目录
 /public/static/captcha/
@@ -10,11 +5,9 @@
 /public/static/img/
 /public/uploads/
 
-# 数据库配置文件（包含敏感信息）
-/app/database.php
-
-# 应用配置文件（可能包含敏感信息）
-/app/config.php
+# 服务器站点专属 PHP 配置（open_basedir 与站点目录强绑定，换域名/换目录会直接 404）
+.user.ini
+/public/.user.ini
 
 # 用户文件
 .DS_Store

@@ -1,0 +1,85 @@
+{php}$title = '转让市场'; $tab_active = 'order';{/php}
+{include file="default/mobile/header" /}
+{if isset($isBanned) && $isBanned}
+<div class="app-card" style="border-left:4px solid #F59E0B;background:rgba(245,158,11,0.08);padding:14px 16px;margin-bottom:12px;font-size:13px;color:#92400E;">
+    <strong><i class="fas fa-exclamation-triangle"></i> 您的账号已被封禁</strong><br>
+    封禁至：<strong>{:date('Y-m-d H:i:s', $banEndTime)}</strong><br>
+    封禁原因：{$banReason|default:'管理员未填写原因'}
+</div>
+{/if}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;"><i class="fas fa-exchange-alt" style="color:var(--glass-primary);"></i> 转让市场</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">浏览并购买其他用户转让的主机</p>
+</div>
+<div class="app-categories" style="margin-bottom:12px;">
+    <div class="app-category-chip active" id="tabAll" onclick="switchTab('all')">全部</div>
+    <div class="app-category-chip" id="tabPublic" onclick="switchTab('public')">公开转让</div>
+    <div class="app-category-chip" id="tabPrivate" onclick="switchTab('private')">指定转让</div>
+    <div class="app-category-chip" id="tabMy" onclick="switchTab('my')">我的转让</div>
+</div>
+{if isset($transfers) && count($transfers) > 0}
+<div id="transfer-list">
+    {foreach $transfers as $t}
+    <div class="app-card transfer-item" data-type="{$t.type|default='public'}" data-mine="{$t.is_mine|default='0'}" style="margin-bottom:12px;padding:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:15px;font-weight:700;color:var(--glass-text);display:flex;align-items:center;gap:6px;">
+                    <i class="fas fa-server" style="color:var(--glass-primary);font-size:14px;"></i>
+                    {$t.product_name|default='未知产品'}
+                    {if $t.type == 'private'}<span class="app-tag" style="font-size:10px;background:rgba(139,92,246,0.12);color:#7C3AED;">指定</span>{/if}
+                </div>
+                <div style="font-size:12px;color:var(--glass-text-muted);margin-top:4px;">
+                    卖家: {$t.seller_name|default='未知'} | 到期: {:date('Y-m-d', $t.ztime)}
+                </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+                <div style="font-size:20px;font-weight:800;color:#F59E0B;">¥{$t.price|default='0.00'}</div>
+                {if $t.original_price > 0 && $t.price < $t.original_price}
+                <div style="font-size:11px;color:var(--glass-text-muted);text-decoration:line-through;">¥{$t.original_price}</div>
+                {/if}
+            </div>
+        </div>
+        {if $t.is_mine}
+        <div class="app-tag" style="background:rgba(59,130,246,0.12);color:var(--glass-primary);margin-bottom:8px;">我的转让</div>
+        {/if}
+        <div style="display:flex;gap:8px;">
+            <a href="__ROOT__/user/transferBuy/{$t.id}" class="app-btn" style="flex:1;text-align:center;text-decoration:none;font-size:13px;padding:10px;">
+                <i class="fas fa-shopping-cart"></i> 立即购买
+            </a>
+            {if $t.is_mine}
+            <button class="app-btn" onclick="cancelTransfer({$t.id})" style="flex:1;background:transparent;color:#EF4444;border:1px solid #EF4444;font-size:13px;padding:10px;">
+                <i class="fas fa-times"></i> 取消转让
+            </button>
+            {/if}
+        </div>
+    </div>
+    {/foreach}
+</div>
+{if isset($transfers) && method_exists($transfers, 'render')}
+<div style="padding:16px;text-align:center;">{$transfers->render()}</div>
+{/if}
+{else}
+<div class="app-empty"><i class="fas fa-exchange-alt"></i><p>暂无转让信息</p></div>
+{/if}
+<script>
+function switchTab(tab) {
+    document.querySelectorAll('.app-category-chip').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    document.querySelectorAll('.transfer-item').forEach(function(item) {
+        var type = item.getAttribute('data-type');
+        var isMine = item.getAttribute('data-mine');
+        if (tab === 'all') { item.style.display = 'block'; }
+        else if (tab === 'my') { item.style.display = isMine === '1' ? 'block' : 'none'; }
+        else { item.style.display = type === tab ? 'block' : 'none'; }
+    });
+}
+function cancelTransfer(id) {
+    if (!confirm('确定要取消此转让吗？')) return;
+    fetch('__ROOT__/user/transferCancel', { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: 'id=' + id })
+    .then(function(r) { return r.json(); }).then(function(res) {
+        if (res.code == '1') { appToast(res.msg, 'success'); setTimeout(function() { location.reload(); }, 1000); }
+        else { appToast(res.msg, 'error'); }
+    });
+}
+</script>
+{include file="default/mobile/footer" /}

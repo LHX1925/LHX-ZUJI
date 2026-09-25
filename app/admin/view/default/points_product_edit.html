@@ -99,9 +99,9 @@ $(function(){
       if (res.code == '1') {
         layer.msg(res.msg, {icon:1}, function(){ location.href = '{:url("admin/index/pointsProducts")}'; });
       } else {
-        layer.msg(res.msg, {icon:2}); btn.prop('disabled', false);
+        GlassTip.error(res.msg); btn.prop('disabled', false);
       }
-    }, 'json').fail(function(){ layer.msg('请求失败', {icon:2}); btn.prop('disabled', false); });
+    }, 'json').fail(function(){ GlassTip.error('请求失败'); btn.prop('disabled', false); });
   });
 });
 </script>

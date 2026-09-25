@@ -1,0 +1,319 @@
+/* ============================================================
+   全局 Layer 弹窗玻璃化主题（前台 + 后台共用）
+   统一优化所有 layer.msg / layer.alert / layer.confirm / layer.load / layer.open
+   浅色 / 深色（body[data-theme="dark"]）自动适配
+   ============================================================ */
+
+/* --- 基础弹窗：圆角 + 阴影 + 玻璃质感 --- */
+.layui-layer {
+    border-radius: 16px !important;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.18), 0 2px 12px rgba(0,0,0,0.08) !important;
+    -webkit-box-shadow: 0 12px 48px rgba(0,0,0,0.18), 0 2px 12px rgba(0,0,0,0.08) !important;
+    background: rgba(255,255,255,0.86) !important;
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255,255,255,0.65) !important;
+    overflow: hidden;
+    animation: glassLayerIn 0.22s cubic-bezier(0.21, 1.02, 0.73, 1) !important;
+}
+
+@keyframes glassLayerIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- 关闭按钮 --- */
+.layui-layer-setwin .layui-layer-close {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.layui-layer-setwin .layui-layer-close:hover {
+    transform: rotate(90deg);
+    opacity: 0.8;
+}
+
+/* --- 标题栏 --- */
+.layui-layer-title {
+    padding: 14px 20px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    background: rgba(255,255,255,0.5) !important;
+    border-bottom: 1px solid rgba(226,232,240,0.6) !important;
+    border-radius: 16px 16px 0 0 !important;
+}
+
+/* --- 内容区 --- */
+.layui-layer-content {
+    padding: 20px !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    color: #475569 !important;
+}
+
+/* --- 对话框主体 --- */
+.layui-layer-dialog {
+    background: rgba(255,255,255,0.92) !important;
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+
+/* --- 按钮区 --- */
+.layui-layer-btn {
+    padding: 12px 20px 16px !important;
+    text-align: center !important;
+    border-top: 1px solid rgba(241,245,249,0.8) !important;
+}
+
+.layui-layer-btn a {
+    height: 38px !important;
+    line-height: 38px !important;
+    padding: 0 26px !important;
+    margin: 0 6px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    border-radius: 10px !important;
+    border: none !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.layui-layer-btn .layui-layer-btn0 {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 14px rgba(99,102,241,0.32) !important;
+}
+.layui-layer-btn .layui-layer-btn0:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(99,102,241,0.42) !important;
+    color: #fff !important;
+}
+
+.layui-layer-btn .layui-layer-btn1 {
+    background: rgba(241,245,249,0.9) !important;
+    color: #475569 !important;
+}
+.layui-layer-btn .layui-layer-btn1:hover {
+    background: rgba(226,232,240,0.95) !important;
+}
+
+/* ==========================================
+   layer.msg 轻提示美化（icon 1/2/0/3/4/16）
+   ========================================== */
+
+.layui-layer-msg {
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 14px 26px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.3px !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.04) !important;
+    animation: layerMsgIn 0.25s cubic-bezier(0.21, 1.02, 0.73, 1) !important;
+}
+
+@keyframes layerMsgIn {
+    from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 成功 (icon:1) */
+.layui-layer-msg:has(.layui-layer-ico1) {
+    background: #f0fdf4 !important;
+    color: #166534 !important;
+    border-left: 3px solid #22c55e !important;
+}
+
+/* 失败/错误 (icon:2) */
+.layui-layer-msg:has(.layui-layer-ico2) {
+    background: #fef2f2 !important;
+    color: #991b1b !important;
+    border-left: 3px solid #ef4444 !important;
+}
+
+/* 警告 (icon:0 / icon:3) */
+.layui-layer-msg:has(.layui-layer-ico0),
+.layui-layer-msg:has(.layui-layer-ico3) {
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border-left: 3px solid #f59e0b !important;
+}
+
+/* 信息 (icon:4) */
+.layui-layer-msg:has(.layui-layer-ico4) {
+    background: #eff6ff !important;
+    color: #1e40af !important;
+    border-left: 3px solid #3b82f6 !important;
+}
+
+/* 加载中 (icon:16) */
+.layui-layer-msg:has(.layui-layer-ico16) {
+    background: #f8fafc !important;
+    color: #475569 !important;
+    border-left: 3px solid #6366f1 !important;
+}
+
+/* layer 内部图标微调 */
+.layui-layer-msg .layui-layer-ico {
+    position: relative;
+    top: -1px;
+}
+
+/* ==========================================
+   layer.load 加载层美化
+   ========================================== */
+
+.layui-layer-loading {
+    border-radius: 14px !important;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
+}
+
+.layui-layer-loading .layui-layer-content {
+    padding: 24px 32px !important;
+    font-size: 14px !important;
+    color: #64748b !important;
+}
+
+.layui-layer-loading .layui-layer-loading-icon {
+    animation: layerLoadingSpin 0.8s linear infinite !important;
+}
+
+@keyframes layerLoadingSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* ==========================================
+   layer.open 弹层美化
+   ========================================== */
+
+.layui-layer-dialog .layui-layer-content {
+    padding: 24px 20px !important;
+    text-align: center !important;
+}
+
+/* ==========================================
+   遮罩层优化
+   ========================================== */
+
+.layui-layer-shade {
+    background-color: rgba(15, 23, 42, 0.2) !important;
+    opacity: 1 !important;
+    animation: layerShadeIn 0.2s ease !important;
+}
+
+@keyframes layerShadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ==========================================
+   深色玻璃主题适配（body[data-theme="dark"]）
+   ========================================== */
+
+body[data-theme="dark"] .layui-layer {
+    background: rgba(30,41,59,0.88) !important;
+    border: 1px solid rgba(148,163,184,0.18) !important;
+}
+
+body[data-theme="dark"] .layui-layer-dialog {
+    background: rgba(30,41,59,0.94) !important;
+}
+
+body[data-theme="dark"] .layui-layer-title {
+    color: #f1f5f9 !important;
+    background: rgba(51,65,85,0.5) !important;
+    border-bottom: 1px solid rgba(148,163,184,0.18) !important;
+}
+
+body[data-theme="dark"] .layui-layer-content {
+    color: #cbd5e1 !important;
+}
+
+body[data-theme="dark"] .layui-layer-btn {
+    border-top: 1px solid rgba(148,163,184,0.15) !important;
+}
+
+body[data-theme="dark"] .layui-layer-btn .layui-layer-btn0 {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    color: #fff !important;
+}
+
+body[data-theme="dark"] .layui-layer-btn .layui-layer-btn1 {
+    background: rgba(51,65,85,0.7) !important;
+    color: #cbd5e1 !important;
+}
+body[data-theme="dark"] .layui-layer-btn .layui-layer-btn1:hover {
+    background: rgba(71,85,105,0.85) !important;
+}
+
+/* 深色 msg */
+body[data-theme="dark"] .layui-layer-msg {
+    background: rgba(30,41,59,0.94) !important;
+    border: 1px solid rgba(148,163,184,0.18) !important;
+    box-shadow: 0 10px 36px rgba(0,0,0,0.5) !important;
+}
+
+body[data-theme="dark"] .layui-layer-msg:has(.layui-layer-ico1) {
+    background: rgba(22,101,52,0.35) !important;
+    color: #86efac !important;
+    border-left: 3px solid #22c55e !important;
+}
+
+body[data-theme="dark"] .layui-layer-msg:has(.layui-layer-ico2) {
+    background: rgba(127,29,29,0.42) !important;
+    color: #fca5a5 !important;
+    border-left: 3px solid #ef4444 !important;
+}
+
+body[data-theme="dark"] .layui-layer-msg:has(.layui-layer-ico0),
+body[data-theme="dark"] .layui-layer-msg:has(.layui-layer-ico3) {
+    background: rgba(120,53,15,0.42) !important;
+    color: #fcd34d !important;
+    border-left: 3px solid #f59e0b !important;
+}
+
+body[data-theme="dark"] .layui-layer-msg:has(.layui-layer-ico4) {
+    background: rgba(30,58,138,0.42) !important;
+    color: #93c5fd !important;
+    border-left: 3px solid #3b82f6 !important;
+}
+
+body[data-theme="dark"] .layui-layer-msg:has(.layui-layer-ico16) {
+    background: rgba(51,65,85,0.65) !important;
+    color: #cbd5e1 !important;
+    border-left: 3px solid #6366f1 !important;
+}
+
+/* 深色遮罩 */
+body[data-theme="dark"] .layui-layer-shade {
+    background-color: rgba(2,6,23,0.52) !important;
+}
+
+/* ==========================================
+   响应式：移动端适配
+   ========================================== */
+
+@media (max-width: 768px) {
+    .layui-layer {
+        border-radius: 10px !important;
+    }
+    .layui-layer-msg {
+        border-radius: 10px !important;
+        padding: 12px 20px !important;
+        font-size: 13px !important;
+    }
+    .layui-layer-title {
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+    }
+    .layui-layer-content {
+        padding: 16px !important;
+        font-size: 13px !important;
+    }
+    .layui-layer-btn a {
+        height: 34px !important;
+        line-height: 34px !important;
+        padding: 0 18px !important;
+        font-size: 12px !important;
+    }
+}

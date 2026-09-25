@@ -1,0 +1,137 @@
+{php}$title = '用户排行榜'; $tab_active = 'home';{/php}
+{include file="default/mobile/header" /}
+
+<div class="app-card" style="margin-bottom: 12px; text-align: center; padding: 20px 16px;">
+    <h2 style="font-size: 18px; font-weight: 700; color: var(--glass-text); margin: 0 0 4px;"><i class="fas fa-trophy" style="color: #F59E0B;"></i> 用户排行榜</h2>
+    <p style="font-size: 13px; color: var(--glass-text-secondary); margin: 0;">查看各维度排名，看看谁是本站的顶尖玩家</p>
+</div>
+
+<!-- Tab Navigation -->
+<div class="app-categories" style="margin-bottom: 12px;">
+    <div class="app-category-chip active" data-tab="points"><i class="fas fa-coins"></i> 积分</div>
+    <div class="app-category-chip" data-tab="recharge"><i class="fas fa-yen-sign"></i> 充值</div>
+    <div class="app-category-chip" data-tab="vip"><i class="fas fa-crown"></i> VIP</div>
+    <div class="app-category-chip" data-tab="host"><i class="fas fa-server"></i> 主机</div>
+</div>
+
+<!-- Points Ranking -->
+<div class="rankings-panel active" id="panel-points">
+{if empty($pointsRanking)}
+<div class="app-empty"><i class="fas fa-coins"></i><p>暂无数据</p></div>
+{else}
+<div class="app-card" style="overflow: hidden; padding: 0;">
+{foreach $pointsRanking as $k=>$user}
+<div class="app-list-item" style="display: flex; align-items: center; padding: 12px 16px; {if $k==0}background: rgba(255,215,0,0.06);{elseif $k==1}background: rgba(192,192,192,0.05);{elseif $k==2}background: rgba(205,127,50,0.05);{/if}">
+    <div style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; margin-right: 12px; {if $k==0}background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff;{elseif $k==1}background: linear-gradient(135deg, #C0C0C0, #A8A8A8); color: #fff;{elseif $k==2}background: linear-gradient(135deg, #CD7F32, #B8722E); color: #fff;{else}color: var(--glass-text-secondary); background: var(--glass-bg-light);{/if}">
+        {if $k==0 || $k==1 || $k==2}<i class="fas fa-medal"></i>{else}{$k+1}{/if}
+    </div>
+    <img src="{:get_user_avatar($user)}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; margin-right: 10px; border: 2px solid var(--glass-border-subtle);">
+    <div style="flex: 1; min-width: 0;">
+        <div style="font-size: 14px; font-weight: 600; color: var(--glass-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{$user.name|default=$user.user}</div>
+        <div style="font-size: 11px; color: var(--glass-text-muted);">@{$user.user}</div>
+    </div>
+    <div style="text-align: right; flex-shrink: 0; margin-left: 12px;">
+        <span style="font-size: 16px; font-weight: 700; color: var(--glass-primary);">{$user.points|default=0}</span>
+        <span style="font-size: 11px; color: var(--glass-text-muted);">积分</span>
+    </div>
+</div>
+{/foreach}
+</div>
+{/if}
+</div>
+
+<!-- Recharge Ranking -->
+<div class="rankings-panel" id="panel-recharge">
+{if empty($rechargeRanking)}
+<div class="app-empty"><i class="fas fa-yen-sign"></i><p>暂无数据</p></div>
+{else}
+<div class="app-card" style="overflow: hidden; padding: 0;">
+{foreach $rechargeRanking as $k=>$user}
+<div class="app-list-item" style="display: flex; align-items: center; padding: 12px 16px; {if $k==0}background: rgba(255,215,0,0.06);{elseif $k==1}background: rgba(192,192,192,0.05);{elseif $k==2}background: rgba(205,127,50,0.05);{/if}">
+    <div style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; margin-right: 12px; {if $k==0}background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff;{elseif $k==1}background: linear-gradient(135deg, #C0C0C0, #A8A8A8); color: #fff;{elseif $k==2}background: linear-gradient(135deg, #CD7F32, #B8722E); color: #fff;{else}color: var(--glass-text-secondary); background: var(--glass-bg-light);{/if}">
+        {if $k==0 || $k==1 || $k==2}<i class="fas fa-medal"></i>{else}{$k+1}{/if}
+    </div>
+    <img src="{:get_user_avatar($user)}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; margin-right: 10px; border: 2px solid var(--glass-border-subtle);">
+    <div style="flex: 1; min-width: 0;">
+        <div style="font-size: 14px; font-weight: 600; color: var(--glass-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{$user.name|default=$user.user}</div>
+        <div style="font-size: 11px; color: var(--glass-text-muted);">@{$user.user}</div>
+    </div>
+    <div style="text-align: right; flex-shrink: 0; margin-left: 12px;">
+        <span style="font-size: 16px; font-weight: 700; color: var(--glass-primary);">{$user.total_recharge|default=0}</span>
+        <span style="font-size: 11px; color: var(--glass-text-muted);">元</span>
+    </div>
+</div>
+{/foreach}
+</div>
+{/if}
+</div>
+
+<!-- VIP Ranking -->
+<div class="rankings-panel" id="panel-vip">
+{if empty($vipRanking)}
+<div class="app-empty"><i class="fas fa-crown"></i><p>暂无数据</p></div>
+{else}
+<div class="app-card" style="overflow: hidden; padding: 0;">
+{foreach $vipRanking as $k=>$user}
+<div class="app-list-item" style="display: flex; align-items: center; padding: 12px 16px; {if $k==0}background: rgba(255,215,0,0.06);{elseif $k==1}background: rgba(192,192,192,0.05);{elseif $k==2}background: rgba(205,127,50,0.05);{/if}">
+    <div style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; margin-right: 12px; {if $k==0}background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff;{elseif $k==1}background: linear-gradient(135deg, #C0C0C0, #A8A8A8); color: #fff;{elseif $k==2}background: linear-gradient(135deg, #CD7F32, #B8722E); color: #fff;{else}color: var(--glass-text-secondary); background: var(--glass-bg-light);{/if}">
+        {if $k==0 || $k==1 || $k==2}<i class="fas fa-medal"></i>{else}{$k+1}{/if}
+    </div>
+    <img src="{:get_user_avatar($user)}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; margin-right: 10px; border: 2px solid var(--glass-border-subtle);">
+    <div style="flex: 1; min-width: 0;">
+        <div style="font-size: 14px; font-weight: 600; color: var(--glass-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{$user.name|default=$user.user}</div>
+        <div style="font-size: 11px; color: var(--glass-text-muted);">@{$user.user}</div>
+    </div>
+    <div style="flex-shrink: 0; margin-left: 12px;">
+        <span class="app-tag" style="background: {if $user.membership_level == 1}rgba(205,127,50,0.15); color: #8B6914;{elseif $user.membership_level == 2}rgba(192,192,192,0.2); color: #6B7280;{elseif $user.membership_level == 3}rgba(255,215,0,0.15); color: #B8860B;{elseif $user.membership_level == 4}rgba(139,92,246,0.15); color: #6D28D9;{elseif $user.membership_level == 5}rgba(59,130,246,0.15); color: #1D4ED8;{else}background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(245,158,11,0.12)); color: #B91C1C;{/if}">{$user.vip_name|default='VIP'.$user.membership_level}</span>
+    </div>
+</div>
+{/foreach}
+</div>
+{/if}
+</div>
+
+<!-- Host Ranking -->
+<div class="rankings-panel" id="panel-host">
+{if empty($hostRanking)}
+<div class="app-empty"><i class="fas fa-server"></i><p>暂无数据</p></div>
+{else}
+<div class="app-card" style="overflow: hidden; padding: 0;">
+{foreach $hostRanking as $k=>$user}
+<div class="app-list-item" style="display: flex; align-items: center; padding: 12px 16px; {if $k==0}background: rgba(255,215,0,0.06);{elseif $k==1}background: rgba(192,192,192,0.05);{elseif $k==2}background: rgba(205,127,50,0.05);{/if}">
+    <div style="width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0; margin-right: 12px; {if $k==0}background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff;{elseif $k==1}background: linear-gradient(135deg, #C0C0C0, #A8A8A8); color: #fff;{elseif $k==2}background: linear-gradient(135deg, #CD7F32, #B8722E); color: #fff;{else}color: var(--glass-text-secondary); background: var(--glass-bg-light);{/if}">
+        {if $k==0 || $k==1 || $k==2}<i class="fas fa-medal"></i>{else}{$k+1}{/if}
+    </div>
+    <img src="{:get_user_avatar($user)}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; margin-right: 10px; border: 2px solid var(--glass-border-subtle);">
+    <div style="flex: 1; min-width: 0;">
+        <div style="font-size: 14px; font-weight: 600; color: var(--glass-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{$user.name|default=$user.user}</div>
+        <div style="font-size: 11px; color: var(--glass-text-muted);">@{$user.user}</div>
+    </div>
+    <div style="text-align: right; flex-shrink: 0; margin-left: 12px;">
+        <span style="font-size: 16px; font-weight: 700; color: var(--glass-primary);">{$user.host_count|default=0}</span>
+        <span style="font-size: 11px; color: var(--glass-text-muted);">台</span>
+    </div>
+</div>
+{/foreach}
+</div>
+{/if}
+</div>
+
+<script>
+(function() {
+    var tabs = document.querySelectorAll('.app-category-chip');
+    var panels = document.querySelectorAll('.rankings-panel');
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            var target = this.getAttribute('data-tab');
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            this.classList.add('active');
+            panels.forEach(function(p) { p.classList.remove('active'); });
+            var panel = document.getElementById('panel-' + target);
+            if (panel) panel.classList.add('active');
+        });
+    });
+})();
+</script>
+
+{include file="default/mobile/footer" /}

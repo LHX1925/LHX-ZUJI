@@ -518,22 +518,36 @@ function viewDetail(transferId, price) {
     });
 }
 
+function randomPwd() {
+    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var s = '';
+    for (var i = 0; i < 10; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+    return s;
+}
+
 function doBuy(transferId, price) {
     var msg = price > 0 ? '确定要购买该转让主机吗？将支付 ¥' + price : '确定要领取该免费转让主机吗？';
-    layer.confirm(msg, {icon: 3, title: '确认购买'}, function() {
-        var load = layer.load(1, {time: false});
-        $.post('__ROOT__/user/transferBuy', {transfer_id: transferId}, function(res) {
-            layer.close(load);
-            if (res.code == '1') {
-                layer.alert(res.msg, {icon: 1}, function() {
-                    location.reload();
-                });
-            } else {
-                layer.alert(res.msg, {icon: 2});
-            }
-        }, 'json').fail(function() {
-            layer.close(load);
-            layer.alert('请求失败，请稍后再试', {icon: 2});
+    layer.prompt({
+        title: '设置新主机密码（留空则自动随机）',
+        formType: 1,
+        value: randomPwd()
+    }, function(pass, index) {
+        layer.close(index);
+        layer.confirm(msg, {icon: 3, title: '确认购买'}, function() {
+            var load = layer.load(1, {time: false});
+            $.post('__ROOT__/user/transferBuy', {transfer_id: transferId, password: pass}, function(res) {
+                layer.close(load);
+                if (res.code == '1') {
+                    layer.alert(res.msg, {icon: 1}, function() {
+                        location.reload();
+                    });
+                } else {
+                    layer.alert(res.msg, {icon: 2});
+                }
+            }, 'json').fail(function() {
+                layer.close(load);
+                layer.alert('请求失败，请稍后再试', {icon: 2});
+            });
         });
     });
 }
@@ -602,7 +616,7 @@ function loadMessages() {
                 for (var i = 0; i < msgs.length; i++) {
                     var m = msgs[i];
                     var cls = m.is_mine ? 'mine' : 'other';
-                    var avatar = getAvatarUrl(m.sender_qq);
+                    var avatar = m.sender_avatar ? m.sender_avatar : getAvatarUrl(m.sender_qq);
                     var html = '<div class="chat-msg ' + cls + '">';
                     html += '<img class="avatar" src="' + avatar + '" alt="">';
                     html += '<div class="msg-body">';

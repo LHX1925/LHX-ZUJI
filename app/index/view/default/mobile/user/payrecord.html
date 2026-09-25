@@ -1,0 +1,34 @@
+{php}$title = '充值记录'; $tab_active = 'host'; $back_url = '/user';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">充值记录</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">查看余额充值与在线支付明细</p>
+</div>
+{if isset($payrecord) && count($payrecord) > 0}
+<div class="app-card" style="overflow:hidden;padding:0;">
+    {foreach $payrecord as $p}
+    <div class="app-list-item" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:14px;font-weight:600;color:var(--glass-text);">{$p.name}</span>
+            <span style="font-size:16px;font-weight:800;color:var(--glass-primary);">¥{$p.money}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--glass-text-muted);">
+            <span>#{$p.id} · {$p.ordernumber}</span>
+            <span><i class="fas fa-credit-card" style="margin-right:4px;"></i> {$p.pay}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;">
+            <span style="color:var(--glass-text-muted);">{:date('Y-m-d H:i', $p.time)}</span>
+            {if $p.state=="1"}<span class="app-tag" style="background:rgba(16,185,129,0.15);color:#10B981;">已支付</span>
+            {elseif $p.state=="2"}<span class="app-tag" style="background:rgba(239,68,68,0.15);color:#EF4444;">未支付</span>
+            {/if}
+        </div>
+    </div>
+    {/foreach}
+</div>
+{if method_exists($payrecord, 'render')}
+<div style="padding:16px;text-align:center;">{$payrecord->render()}</div>
+{/if}
+{else}
+<div class="app-empty"><i class="fas fa-receipt"></i><p>暂无充值记录</p></div>
+{/if}
+{include file="default/mobile/footer" /}

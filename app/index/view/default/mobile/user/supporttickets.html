@@ -1,0 +1,35 @@
+{php}$title = '工单列表'; $tab_active = 'host'; $back_url = '/user';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">工单列表</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">查看工单处理进度</p>
+</div>
+<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+    <a href="__ROOT__/user/submitticket" class="app-btn" style="font-size:13px;padding:8px 16px;"><i class="fas fa-plus"></i> 提交工单</a>
+</div>
+{if isset($ticket) && count($ticket) > 0}
+<div class="app-card" style="overflow:hidden;padding:0;">
+    {foreach $ticket as $t}
+    <a href="__ROOT__/user/supportticket/{$t.id}" class="app-list-item" style="display:flex;justify-content:space-between;align-items:center;text-decoration:none;padding:14px 16px;">
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:600;color:var(--glass-text);">{$t.title}</div>
+            <div style="font-size:11px;color:var(--glass-text-muted);margin-top:4px;">#{$t.id} · {:date('Y-m-d H:i:s', $t.time)}</div>
+        </div>
+        <div style="flex-shrink:0;margin-left:12px;display:flex;align-items:center;gap:8px;">
+            {if $t.state=="1"}<span class="app-tag" style="background:rgba(245,158,11,0.15);color:#F59E0B;">待回复</span>
+            {elseif $t.state=="2"}<span class="app-tag" style="background:rgba(245,158,11,0.15);color:#F59E0B;">等待回复</span>
+            {elseif $t.state=="3"}<span class="app-tag" style="background:rgba(16,185,129,0.15);color:#10B981;">已回复</span>
+            {elseif $t.state=="4"}<span class="app-tag" style="background:rgba(239,68,68,0.15);color:#EF4444;">已关闭</span>
+            {/if}
+            <i class="fas fa-chevron-right" style="color:var(--glass-text-muted);font-size:12px;"></i>
+        </div>
+    </a>
+    {/foreach}
+</div>
+{if method_exists($ticket, 'render')}
+<div style="padding:16px;text-align:center;">{$ticket->render()}</div>
+{/if}
+{else}
+<div class="app-empty"><i class="fas fa-ticket-alt"></i><p>暂无工单</p></div>
+{/if}
+{include file="default/mobile/footer" /}

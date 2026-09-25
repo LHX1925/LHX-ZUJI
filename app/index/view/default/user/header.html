@@ -3,15 +3,50 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-        <title>{$webname} - [title]</title>
-        <meta name="description" content="{$description}">
-        <meta name="keywords" content="{$keywords}">
-        <link rel="shortcut icon" type="image/x-icon" href="{$favicon}"/>
+        {php}
+// 模板顶部兜底：在某些 controller 未调用 assignCommonVars() 时，确保所有公共变量都有默认值
+// 避免出现「未定义变量 $webname / $description / $keywords / $favicon / $user」等错误
+$web      = isset($web)      && is_array($web) ? $web : [];
+$webname  = isset($webname)  ? $webname  : (isset($web['name'])        ? $web['name']        : '');
+$description = isset($description) ? $description : (isset($web['description']) ? $web['description'] : '');
+$keywords = isset($keywords) ? $keywords : (isset($web['keywords'])    ? $web['keywords']    : '');
+$favicon  = isset($favicon)  ? $favicon  : (isset($web['favicon'])     ? $web['favicon']     : '');
+$user     = isset($user)     && is_array($user) ? $user : [];
+$userid   = isset($user['id']) ? intval($user['id']) : 0;
+$templateset = isset($templateset) && is_array($templateset) ? $templateset : [''=>''];
+$membershipLevel = isset($membershipLevel) ? intval($membershipLevel) : 0;
+$membershipInfo  = isset($membershipInfo)  ? $membershipInfo  : null;
+{/php}
+        <title>{$webname|default=''} - [title]</title>
+        <meta name="description" content="{$description|default=''}">
+        <meta name="keywords" content="{$keywords|default=''}">
+        <link rel="shortcut icon" type="image/x-icon" href="{$favicon|default=''}"/>
+        {php}$__l2dPreLogged = session('userid') ? 1 : 0;{/php}
+        {if $__l2dPreLogged}
+        <script>
+        /* 跨页音乐续播预热：head 阶段就用上次的音频直链开始缓冲，与页面加载并行，
+           避免切换页面后重新拉流造成的卡顿（无播放记录时不发起任何请求） */
+        (function(){
+            try {
+                var raw = sessionStorage.getItem('l2d_np_live');
+                if (!raw) return;
+                var o = JSON.parse(raw);
+                if (!o || !o.id || !o.src || !o.playing) return;
+                var el = new Audio();
+                el.preload = 'auto';
+                if (o.volume > 0) el.volume = o.volume;
+                el.src = o.src;
+                window.__l2dPreAudio = el;
+                window.__l2dPreItem = o;
+            } catch (e) {}
+        })();
+        </script>
+        {/if}
         <link rel="stylesheet" type="text/css" href="__ROOT__/static/assets/css/font-awesome.min.css">
         <link rel="stylesheet" id="css-main" href="__ROOT__/static/assets/css/oneui.min.css">
-        <link rel="stylesheet" type="text/css" href="__ROOT__/static/css/glass-theme.css?v=7">
-        {if isset($web.glass_theme) && $web.glass_theme == 'pink_blue'}<link rel="stylesheet" type="text/css" href="__ROOT__/static/css/pink-blue-gradient.css?v=4">{/if}
-        <script type="text/javascript" src="__ROOT__/static/js/glass-animations.js?v=5"></script>
+        <link rel="stylesheet" type="text/css" href="__ROOT__/static/css/glass-theme.css?v=17">
+        {if isset($web.glass_theme) && $web.glass_theme == 'pink_blue'}<link rel="stylesheet" type="text/css" href="__ROOT__/static/css/pink-blue-gradient.css?v=7">{/if}
+        <script type="text/javascript" src="__ROOT__/static/js/glass-animations.js?v=6"></script>
         <style>
             :root {
                 --topbar-height: 64px;
@@ -19,6 +54,19 @@
 
             body {
                 padding-top: calc(var(--topbar-height) + 24px) !important;
+            }
+
+            html, body {
+                max-width: 100%;
+                overflow-x: hidden;
+            }
+
+            img, video {
+                max-width: 100%;
+                height: auto;
+            }
+            iframe {
+                max-width: 100%;
             }
 
             /* Top navigation layout */
@@ -32,6 +80,11 @@
                 flex: 1 0 auto;
                 padding: 0;
                 margin-left: 0 !important;
+                transition: margin-right 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            body.console-sidebar-open #main-container {
+                margin-right: 240px !important;
             }
 
             #page-header {
@@ -544,6 +597,143 @@
                 max-width: 1000px;
             }
 
+            /* 用户控制台右侧侧边菜单（默认收起，由右上角三个点控制展开） */
+            .console-sidebar {
+                position: fixed;
+                top: calc(var(--topbar-height) + 24px);
+                right: 16px;
+                width: 216px;
+                bottom: 16px;
+                z-index: 1020;
+                display: flex;
+                flex-direction: column;
+                background: var(--glass-bg, rgba(255,255,255,0.6));
+                backdrop-filter: blur(var(--glass-blur, 20px));
+                -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
+                border: 1px solid var(--glass-border, rgba(255,255,255,0.3));
+                border-radius: var(--glass-radius-lg, 18px);
+                box-shadow: var(--glass-shadow-sm, 0 1px 3px rgba(0,0,0,0.04)), var(--glass-shadow-inset, none);
+                padding: 12px 10px;
+                overflow-y: auto;
+                transform: translateX(120%);
+                opacity: 0;
+                visibility: hidden;
+                transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.28s ease, visibility 0.28s ease;
+            }
+
+            .console-sidebar.open {
+                transform: translateX(0);
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .console-sidebar::-webkit-scrollbar { width: 5px; }
+            .console-sidebar::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.4); border-radius: 3px; }
+
+            .console-sidebar .sidebar-user {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 12px;
+                margin-bottom: 10px;
+                border-bottom: 1px solid var(--glass-border, rgba(148,163,184,0.2));
+            }
+
+            .console-sidebar .sidebar-user img {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                object-fit: cover;
+                flex-shrink: 0;
+            }
+
+            .console-sidebar .sidebar-user .name {
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--glass-text);
+                line-height: 1.2;
+            }
+
+            .console-sidebar .sidebar-user .meta {
+                font-size: 11px;
+                color: var(--glass-text-muted);
+            }
+
+            .console-sidebar .sidebar-group {
+                margin-bottom: 6px;
+            }
+
+            .console-sidebar .sidebar-group-title {
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--glass-text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                padding: 8px 12px 4px;
+            }
+
+            .console-sidebar .sidebar-link {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 12px;
+                border-radius: 10px;
+                font-size: 13.5px;
+                font-weight: 500;
+                color: var(--glass-text-secondary);
+                text-decoration: none;
+                transition: all 0.18s ease;
+                margin-bottom: 2px;
+            }
+
+            .console-sidebar .sidebar-link i {
+                width: 18px;
+                text-align: center;
+                font-size: 14px;
+                color: var(--glass-text-muted);
+                transition: color 0.18s ease;
+                flex-shrink: 0;
+            }
+
+            .console-sidebar .sidebar-link:hover {
+                background: var(--glass-bg-light, rgba(255,255,255,0.6));
+                color: var(--glass-text);
+                text-decoration: none;
+            }
+
+            .console-sidebar .sidebar-link:hover i {
+                color: var(--glass-primary);
+            }
+
+            .console-sidebar .sidebar-link.active {
+                background: linear-gradient(135deg, var(--glass-primary), var(--glass-primary-dark));
+                color: #fff;
+                font-weight: 600;
+                box-shadow: 0 2px 10px rgba(37,99,235,0.25);
+            }
+
+            .console-sidebar .sidebar-link.active i {
+                color: #fff;
+            }
+            .console-sidebar .sidebar-link.sidebar-logout {
+                color: #f87171;
+            }
+            .console-sidebar .sidebar-link.sidebar-logout i {
+                color: #f87171;
+            }
+            .console-sidebar .sidebar-link.sidebar-logout:hover {
+                background: rgba(239, 68, 68, 0.12);
+                color: #ef4444;
+            }
+            .console-sidebar .sidebar-link.sidebar-logout:hover i {
+                color: #ef4444;
+            }
+
+            @media (max-width: 992px) {
+                .console-sidebar { display: none !important; }
+                body.console-sidebar-open #main-container { margin-right: 0 !important; }
+            }
+
             /* Page Footer */
             #page-footer {
                 font-size: 13px;
@@ -701,7 +891,9 @@
 
             .table-responsive {
                 border-radius: var(--glass-radius);
-                overflow: hidden;
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
             }
 
             /* Form */
@@ -852,6 +1044,12 @@
                 .topbar-brand {
                     font-size: 16px !important;
                     gap: 8px !important;
+                }
+                .topbar-brand span {
+                    max-width: 110px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
                 .topbar-brand-icon {
                     width: 30px !important;
@@ -1151,24 +1349,28 @@
         </style>
     </head>
 {php}
+$web = function_exists('apply_user_theme') ? apply_user_theme($web) : $web;
+$themeMode = (isset($web['theme_mode']) && $web['theme_mode'] === 'dark') ? 'dark' : 'light';
 $bgImagesAttr = isset($web['bg_images']) ? str_replace(["\r\n", "\r", "\n"], ",", $web['bg_images']) : '';
 $glassOpacity = isset($web['glass_opacity']) ? intval($web['glass_opacity']) / 100 : 0.72;
 $bgType = isset($web['bg_type']) ? $web['bg_type'] : 'image';
 $isVideoBg = ($bgType === 'video' && !empty($web['bg_image']));
 $isGifBg = ($bgType === 'gif' && !empty($web['bg_image']));
 $hasBg = !empty($web['bg_image']);
-$bgBlurPx = isset($web['bg_blur']) ? intval($web['bg_blur']) : 3;
+$bgBlurPx = isset($web['bg_blur']) ? intval($web['bg_blur']) : 0;
 $glassEnabled = (!isset($web['glass_enabled']) || $web['glass_enabled'] == "1");
 
 $bodyClass = $glassEnabled ? 'glass-enabled' : 'no-glass-theme';
 if ($glassEnabled && $hasBg) $bodyClass .= ' glass-bg-image';
-if ($glassEnabled && $bgBlurPx > 0) $bodyClass .= ' glass-bg-blurred';
+// 视频/GIF 背景保持清晰不模糊（模糊叠加层会盖住动态背景导致发糊），仅静态图片支持后台模糊程度
+if ($glassEnabled && $bgBlurPx > 0 && !$isVideoBg && !$isGifBg) $bodyClass .= ' glass-bg-blurred';
 
 $bodyStyle = '--glass-opacity: ' . $glassOpacity . ';';
 if (!$isVideoBg && $hasBg) $bodyStyle .= '--glass-bg-image: url(\'' . addslashes($web['bg_image']) . '\');';
-if ($bgBlurPx > 0) $bodyStyle .= '--glass-bg-blur: ' . $bgBlurPx . 'px;';
+if ($bgBlurPx > 0 && !$isVideoBg && !$isGifBg) $bodyStyle .= '--glass-bg-blur: ' . $bgBlurPx . 'px;';
 
 $bodyAttrs = '';
+$bodyAttrs .= ' data-theme="' . $themeMode . '"';
 if ($hasBg) $bodyAttrs .= ' data-bg-main="' . htmlspecialchars($web['bg_image'], ENT_QUOTES, 'UTF-8') . '"';
 $bodyAttrs .= ' data-bg-type="' . htmlspecialchars($bgType, ENT_QUOTES, 'UTF-8') . '"';
 if (isset($web['bg_gradient']) && $web['bg_gradient'] != 'default') $bodyAttrs .= ' data-bg-gradient="' . htmlspecialchars($web['bg_gradient'], ENT_QUOTES, 'UTF-8') . '"';
@@ -1185,6 +1387,7 @@ if ($glassEnabled && $isVideoBg) {
 
 echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs . '>';
 {/php}
+
         <div id="page-container">
 
             <header id="page-header" class="glass-topbar">
@@ -1205,8 +1408,7 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
                         <a class="topbar-link glass-topbar-link{if isset($active) && $active=='order'} active{/if}" href="__ROOT__/user/order">我的服务</a>
                         <a class="topbar-link glass-topbar-link{if isset($active) && $active=='transaction'} active{/if}" href="__ROOT__/user/transaction">订单记录</a>
                         <a class="topbar-link glass-topbar-link{if isset($active) && $active=='supportticket'} active{/if}" href="__ROOT__/user/supportticket">工单中心</a>
-                        <a class="topbar-link glass-topbar-link{if isset($active) && $active=='aff'} active{/if}" href="__ROOT__/user/aff">推广中心</a>
-                        <a class="topbar-link glass-topbar-link{if isset($active) && $active=='transferMarket'} active{/if}" href="__ROOT__/user/transferMarket">转让市场</a>
+                        <a class="topbar-link glass-topbar-link{if isset($active) && $active=='activity'} active{/if}" href="__ROOT__/user/activity">活动中心</a>
                     </nav>
 
                     <div class="topbar-right">
@@ -1220,17 +1422,15 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
                             <i class="fas fa-bell"></i>
                             <span class="bell-badge" id="announcementBadge" style="display:none;"></span>
                         </a>
-                        {php}$cartCount = isset($user['id']) ? \think\Db::name('shopping_cart')->where(['userid'=>$user['id'],'status'=>'0'])->count() : 0;{/php}
-                        <a href="__ROOT__/user/cart" class="topbar-cart-btn" title="购物车">
-                            <i class="fas fa-shopping-cart"></i>
-                            {if $cartCount > 0}<span class="cart-count">{$cartCount}</span>{/if}
+                        <a href="__ROOT__/cart" class="topbar-cart-btn" title="购买产品">
+                            <i class="fas fa-shopping-bag"></i>
                         </a>
                         <a href="__ROOT__/user/transferMarket" class="topbar-msg-btn" id="transferMsgBell" title="转让消息">
                             <i class="fas fa-comment-alt"></i>
                             <span class="msg-count" id="transferMsgBadge" style="display:none;">0</span>
                         </a>
                         <a class="topbar-avatar glass-avatar" href="__ROOT__/user/information" title="{$user.name}">
-                            <img src="https://q1.qlogo.cn/g?b=qq&nk={$user.qq}&s=100" alt="avatar">
+                            <img src="{:get_user_avatar($user)}" alt="avatar">
                             {if $membershipLevel > 0 && !empty($membershipInfo)}
                             <span class="topbar-vip-badge"><img src="__ROOT__/static/img/vip/{$membershipInfo.icon}" alt="{$membershipInfo.name}"></span>
                             {/if}
@@ -1244,6 +1444,85 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
                     </div>
                 </div>
             </header>
+
+            <!-- 用户控制台左侧侧边菜单（桌面端） -->
+            <aside class="console-sidebar" id="consoleSidebar">
+                <div class="sidebar-user">
+                    <img src="{:get_user_avatar($user)}" alt="avatar">
+                    <div>
+                        <div class="name">{$user.name}</div>
+                        <div class="meta">ID: {$user.id}</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-group">
+                    <div class="sidebar-group-title">概览</div>
+                    <a class="sidebar-link{if isset($active) && $active=='index'} active{/if}" href="__ROOT__/user/index">
+                        <i class="fas fa-home"></i> 控制台首页
+                    </a>
+                </div>
+
+                <div class="sidebar-group">
+                    <div class="sidebar-group-title">主机与服务</div>
+                    <a class="sidebar-link{if isset($active) && $active=='order'} active{/if}" href="__ROOT__/user/order">
+                        <i class="fas fa-server"></i> 我的服务
+                    </a>
+                    <a class="sidebar-link" href="__ROOT__/cart">
+                        <i class="fas fa-shopping-bag"></i> 选购产品
+                    </a>
+                    <a class="sidebar-link{if isset($active) && $active=='cdkey'} active{/if}" href="__ROOT__/user/cdkey">
+                        <i class="fas fa-key"></i> 卡密兑换
+                    </a>
+                    <a class="sidebar-link{if isset($active) && $active=='transferMarket'} active{/if}" href="__ROOT__/user/transferMarket">
+                        <i class="fas fa-exchange-alt"></i> 转让市场
+                    </a>
+                    <a class="sidebar-link{if isset($active) && $active=='domain'} active{/if}" href="__ROOT__/domain">
+                        <i class="fas fa-globe"></i> 域名商城
+                    </a>
+                </div>
+
+                <div class="sidebar-group">
+                    <div class="sidebar-group-title">订单与财务</div>
+                    <a class="sidebar-link{if isset($active) && $active=='transaction'} active{/if}" href="__ROOT__/user/transaction">
+                        <i class="fas fa-file-invoice"></i> 订单记录
+                    </a>
+                    <a class="sidebar-link{if isset($active) && $active=='payrecord'} active{/if}" href="__ROOT__/user/payrecord">
+                        <i class="fas fa-wallet"></i> 充值记录
+                    </a>
+                    <a class="sidebar-link" href="__ROOT__/user/pointsShop">
+                        <i class="fas fa-store"></i> 积分商城
+                    </a>
+                </div>
+
+                <div class="sidebar-group">
+                    <div class="sidebar-group-title">支持与互动</div>
+                    <a class="sidebar-link{if isset($active) && $active=='supportticket'} active{/if}" href="__ROOT__/user/supportticket">
+                        <i class="fas fa-headset"></i> 工单中心
+                    </a>
+                    <a class="sidebar-link{if isset($active) && $active=='activity'} active{/if}" href="__ROOT__/user/activity">
+                        <i class="fas fa-gift"></i> 活动中心
+                    </a>
+                    <a class="sidebar-link{if isset($active) && $active=='aff'} active{/if}" href="__ROOT__/user/aff">
+                        <i class="fas fa-bullhorn"></i> 推广中心
+                    </a>
+                    <a class="sidebar-link{if isset($active) && $active=='developer'} active{/if}" href="__ROOT__/user/developer">
+                        <i class="fas fa-code"></i> 开发者中心
+                    </a>
+                </div>
+
+                <div class="sidebar-group">
+                    <div class="sidebar-group-title">账户</div>
+                    <a class="sidebar-link" href="__ROOT__/user/information">
+                        <i class="fas fa-user-cog"></i> 账户设置
+                    </a>
+                    <a class="sidebar-link{if isset($active) && $active=='theme'} active{/if}" href="__ROOT__/user/theme">
+                        <i class="fas fa-palette"></i> 个性化主题
+                    </a>
+                    <a class="sidebar-link sidebar-logout" href="__ROOT__/user/logout">
+                        <i class="fas fa-sign-out-alt"></i> 退出登录
+                    </a>
+                </div>
+            </aside>
 
             <div class="mobile-nav-backdrop" id="mobile-nav-backdrop"></div>
             <div class="mobile-nav glass-sidebar" id="mobile-nav">
@@ -1260,8 +1539,8 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
                     <a href="__ROOT__/user/order">
                         <i class="fas fa-server"></i> 我的服务
                     </a>
-                    <a href="__ROOT__/user/cart">
-                        <i class="fas fa-shopping-cart"></i> 购物车
+                    <a href="__ROOT__/cart">
+                        <i class="fas fa-shopping-bag"></i> 选购
                     </a>
                     <a href="__ROOT__/user/transferMarket">
                         <i class="fas fa-exchange-alt"></i> 转让市场
@@ -1281,8 +1560,20 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
                     <a class="{if isset($active) && $active=='cdkey'}active{/if}" href="__ROOT__/user/cdkey">
                         <i class="fas fa-key"></i> 卡密兑换
                     </a>
+                    <a class="{if isset($active) && $active=='activity'}active{/if}" href="__ROOT__/user/activity">
+                        <i class="fas fa-gift"></i> 活动中心
+                    </a>
+                    <a class="{if isset($active) && $active=='domain'}active{/if}" href="__ROOT__/domain">
+                        <i class="fas fa-globe"></i> 域名商城
+                    </a>
+                    <a class="{if isset($active) && $active=='developer'}active{/if}" href="__ROOT__/user/developer">
+                        <i class="fas fa-code"></i> 开发者中心
+                    </a>
                     <a href="__ROOT__/user/information">
                         <i class="fas fa-user-cog"></i> 账户设置
+                    </a>
+                    <a class="{if isset($active) && $active=='theme'}active{/if}" href="__ROOT__/user/theme">
+                        <i class="fas fa-palette"></i> 个性化主题
                     </a>
                     {if isset($web.qq_group) && $web.qq_group}
                     {php}$qqGroupUrl = $web['qq_group']; if (strpos($qqGroupUrl, 'http') !== 0) { $qqGroupUrl = 'https://qm.qq.com/q/' . $qqGroupUrl; }{/php}
@@ -1295,7 +1586,7 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
                     </a>
                 </div>
                 <div class="mobile-nav-user">
-                    <img src="https://q1.qlogo.cn/g?b=qq&nk={$user.qq}&s=100" alt="avatar">
+                    <img src="{:get_user_avatar($user)}" alt="avatar">
                     <div class="flex-fill">
                         <div class="name">{$user.name}</div>
                         <div class="meta">ID: {$user.id}</div>
@@ -1330,9 +1621,29 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
                     }
 
                     if (toggle) toggle.addEventListener('click', openMenu);
-                    if (more) more.addEventListener('click', openMenu);
+                    if (more) {
+                        // 三个点：切换用户控制台左侧侧边栏的展开/收缩
+                        more.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            var sidebar = document.getElementById('consoleSidebar');
+                            if (sidebar) {
+                                var willOpen = !sidebar.classList.contains('open');
+                                sidebar.classList.toggle('open', willOpen);
+                                document.body.classList.toggle('console-sidebar-open', willOpen);
+                            }
+                        });
+                    }
                     if (close) close.addEventListener('click', closeMenu);
                     if (backdrop) backdrop.addEventListener('click', closeMenu);
+
+                    // 点击侧边栏外区域时收起侧边栏
+                    document.addEventListener('click', function(e) {
+                        var sidebar = document.getElementById('consoleSidebar');
+                        if (sidebar && sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== more && !more.contains(e.target)) {
+                            sidebar.classList.remove('open');
+                            document.body.classList.remove('console-sidebar-open');
+                        }
+                    });
                 })();
 
                 /**

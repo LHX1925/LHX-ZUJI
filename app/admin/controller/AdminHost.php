@@ -17,23 +17,11 @@ class AdminHost extends Controller
 
         // 权限判断
         $this->hasFullAccess = ($this->user['is_super'] == 1 || $this->user['role_id'] == 1);
-        $adminPermissions = $this->hasFullAccess ? ['all'] : [];
-        if (!$this->hasFullAccess && $this->user['role_id']) {
-            try {
-                $role = Db::name('admin_role')->where('id', $this->user['role_id'])->find();
-                if ($role) {
-                    $adminPermissions = json_decode($role['permissions'], true) ?: [];
-                }
-            } catch (\Exception $e) {
-                $adminPermissions = [];
-            }
-        }
-        if ($this->hasFullAccess && in_array('all', $adminPermissions)) {
-            $adminPermissions = ['all', 'user', 'product', 'classification', 'server', 'order', 'ticket', 'announcement', 'pay', 'pays', 'aff', 'set', 'admin_manager', 'sq', 'transaction', 'transferrecord', 'op_log'];
-        }
+        $adminPermissions = get_admin_permissions($this->user);
 
         $this->assign([
             'webname'  => $this->web['name'],
+            'web'     => $this->web,
             'user'     => $this->user,
             'adminPermissions' => $adminPermissions,
             'templateset' => file_exists(PATH . "/app/index/view/" . $this->web["template"] . "/set.php") ? "1" : "0",
@@ -43,14 +31,8 @@ class AdminHost extends Controller
 
     protected function checkPermission($permission) {
         if ($this->hasFullAccess) return true;
-        try {
-            $role = Db::name('admin_role')->where('id', $this->user['role_id'])->find();
-            if (!$role) return false;
-            $permissions = json_decode($role['permissions'], true);
-            return in_array($permission, $permissions) || in_array('all', $permissions);
-        } catch (\Exception $e) {
-            return false;
-        }
+        $permissions = get_admin_permissions($this->user);
+        return in_array($permission, $permissions) || in_array('all', $permissions);
     }
 
     // 主机列表
@@ -269,5 +251,185 @@ class AdminHost extends Controller
         $result = Db::name('order')->where('1=1')->delete();
         admin_op_log('host_delete_all', '一键删除所有主机', ['count' => $result]);
         return json(['code' => 1, 'msg' => "成功删除 {$result} 个主机"]);
+    }
+
+    /* ==================== Docker 容器开通管理 ==================== */
+
+    // Docker 开通记录列表
+    public function docker() {
+        if (!$this->checkPermission('server') && !$this->hasFullAccess) {
+            $this->error('您没有权限访问此页面', '/admin/index');
+        }
+        if (function_exists('ensure_docker_order_table')) {
+            ensure_docker_order_table();
+        }
+
+        $search = input('search', '');
+        $stateFilter = input('state', '');
+
+        $query = Db::name('docker_order')->alias('d')
+            ->join('user u', 'd.userid = u.id', 'LEFT')
+            ->field('d.*, u.user as user_name, u.mail as user_mail')
+            ->order('d.id desc');
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('d.username', 'like', '%' . $search . '%')
+                  ->whereOr('d.orderid', 'like', '%' . $search . '%')
+                  ->whereOr('d.id', 'like', '%' . $search . '%')
+                  ->whereOr('u.user', 'like', '%' . $search . '%');
+            });
+        }
+        if ($stateFilter !== '') {
+            $query->where('d.state', $stateFilter);
+        }
+
+        $data = $query->paginate(15, false, ['query' => request()->param()]);
+
+        $stat = [
+            'total'   => Db::name('docker_order')->count(),
+            'pending' => Db::name('docker_order')->where('state', '1')->count(),
+            'active'  => Db::name('docker_order')->where('state', '2')->count(),
+            'failed'  => Db::name('docker_order')->where('state', '4')->count(),
+        ];
+
+        return $this->fetch('/' . $this->web["admintemplate"] . '/docker_manager', [
+            'list'        => $data,
+            'search'      => $search,
+            'stateFilter' => $stateFilter,
+            'stat'        => $stat,
+            'dockerPrice' => function_exists('docker_price') ? docker_price($this->web) : 0,
+            'dockerMode'  => function_exists('docker_mode') ? docker_mode($this->web) : 'manual',
+            'globalOn'    => (isset($this->web['docker_enabled']) && $this->web['docker_enabled'] == '1'),
+            'payBalance'  => !(isset($this->web['docker_pay_balance']) && $this->web['docker_pay_balance'] == '0'),
+            'payOnline'   => (isset($this->web['docker_pay_online']) && $this->web['docker_pay_online'] == '1'),
+        ]);
+    }
+
+    // Docker 开通记录操作：open / close / delete
+    public function dockerOperate() {
+        if (!$this->checkPermission('server') && !$this->hasFullAccess) {
+            return json(['code' => -1, 'msg' => '无权限']);
+        }
+        if (!Request::instance()->isPost()) {
+            return json(['code' => -1, 'msg' => '非法请求']);
+        }
+        if (!csrf_verify(input('__token__'))) {
+            return json(['code' => -1, 'msg' => '安全验证失败，请刷新页面重试']);
+        }
+
+        $id  = intval(input('id', 0));
+        $act = input('act', '');
+        if (!$id || !in_array($act, ['open', 'close', 'delete'], true)) {
+            return json(['code' => -1, 'msg' => '参数错误']);
+        }
+
+        if (function_exists('ensure_docker_order_table')) {
+            ensure_docker_order_table();
+        }
+        $row = Db::name('docker_order')->where('id', $id)->find();
+        if (!$row) {
+            return json(['code' => -1, 'msg' => '开通记录不存在']);
+        }
+
+        if ($act === 'delete') {
+            Db::name('docker_order')->where('id', $id)->delete();
+            admin_op_log('docker_record_delete', '删除 Docker 开通记录：' . $row['username'], ['id' => $id]);
+            return json(['code' => 1, 'msg' => '记录已删除']);
+        }
+
+        if ($act === 'close') {
+            if ((string) $row['state'] !== '2') {
+                return json(['code' => -1, 'msg' => '该记录当前不是「已开通」状态，无需关闭']);
+            }
+            $r = function_exists('docker_shutdown') ? docker_shutdown($row) : ['code' => -1, 'msg' => '系统未加载 Docker 模块'];
+            admin_op_log('docker_close', '关闭 Docker：' . $row['username'], ['id' => $id, 'result' => $r['msg']]);
+            return json(['code' => (!empty($r['code']) && (string) $r['code'] === '1') ? 1 : -1, 'msg' => $r['msg']]);
+        }
+
+        // open（含失败重试）
+        if ((string) $row['state'] === '2') {
+            return json(['code' => -1, 'msg' => '该主机 Docker 已开通，无需重复操作']);
+        }
+        Db::name('docker_order')->where('id', $id)->update([
+            'opened_by' => 'admin',
+            'admin_id'  => intval(session('adminid')),
+        ]);
+        $row['opened_by'] = 'admin';
+        $r = function_exists('docker_provision') ? docker_provision($row) : ['code' => -1, 'msg' => '系统未加载 Docker 模块'];
+        admin_op_log('docker_open', '开通 Docker：' . $row['username'], ['id' => $id, 'result' => $r['msg']]);
+        return json(['code' => (!empty($r['code']) && (string) $r['code'] === '1') ? 1 : -1, 'msg' => $r['msg']]);
+    }
+
+    // 后台手动为指定主机开通 Docker（不涉及支付）
+    public function dockerCreate() {
+        if (!$this->checkPermission('server') && !$this->hasFullAccess) {
+            return json(['code' => -1, 'msg' => '无权限']);
+        }
+        if (!Request::instance()->isPost()) {
+            return json(['code' => -1, 'msg' => '非法请求']);
+        }
+        if (!csrf_verify(input('__token__'))) {
+            return json(['code' => -1, 'msg' => '安全验证失败，请刷新页面重试']);
+        }
+        if (function_exists('ensure_docker_order_table')) {
+            ensure_docker_order_table();
+        }
+
+        $orderid = intval(input('orderid', 0));
+        $remark  = trim((string) input('remark', ''));
+        if ($orderid <= 0) {
+            return json(['code' => -1, 'msg' => '请填写主机订单 ID']);
+        }
+
+        $order = Db::name('order')->where('id', $orderid)->find();
+        if (!$order) {
+            return json(['code' => -1, 'msg' => '主机订单不存在（订单 ID：' . $orderid . '）']);
+        }
+        if (empty($order['user'])) {
+            return json(['code' => -1, 'msg' => '该主机尚未开通面板账号，无法开通 Docker']);
+        }
+        $cart = Db::name('cart')->where('id', $order['cartid'])->find();
+        if (!$cart) {
+            return json(['code' => -1, 'msg' => '该订单对应的产品已删除']);
+        }
+        $server = Db::name('server')->where('id', $cart['serverid'])->find();
+        if (!$server || empty($server['serverplugins'])) {
+            return json(['code' => -1, 'msg' => '该产品的服务器未配置控制面板插件']);
+        }
+        if (!function_exists('docker_plugin_supported') || !docker_plugin_supported($server)) {
+            return json(['code' => -1, 'msg' => '当前控制面板插件（' . $server['serverplugins'] . '）不支持 Docker 容器开通']);
+        }
+        $exist = Db::name('docker_order')->where('orderid', $orderid)->where('state', '2')->find();
+        if ($exist) {
+            return json(['code' => -1, 'msg' => '该主机已开通 Docker 容器（记录 ID：' . $exist['id'] . '）']);
+        }
+
+        $now = time();
+        $id = Db::name('docker_order')->insertGetId([
+            'userid'    => intval($order['userid']),
+            'orderid'   => $orderid,
+            'cartid'    => intval($cart['id']),
+            'serverid'  => intval($cart['serverid']),
+            'username'  => $order['user'],
+            'price'     => 0,
+            'paid'      => 0,
+            'payway'    => 'admin',
+            'mode'      => 'auto',
+            'state'     => '1',
+            'opened_by' => 'admin',
+            'admin_id'  => intval(session('adminid')),
+            'remark'    => mb_substr($remark, 0, 250),
+            'atime'     => $now,
+            'utime'     => $now,
+        ]);
+        $row = Db::name('docker_order')->where('id', $id)->find();
+        $r = docker_provision($row);
+        admin_op_log('docker_create', '后台手动开通 Docker：' . $order['user'], ['order_id' => $orderid, 'result' => $r['msg']]);
+        return json([
+            'code' => (!empty($r['code']) && (string) $r['code'] === '1') ? 1 : -1,
+            'msg'  => $r['msg'],
+            'id'   => $id,
+        ]);
     }
 }

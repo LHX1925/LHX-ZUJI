@@ -1,0 +1,101 @@
+{php}$title = '购买产品'; $tab_active = 'product'; $back_url = '/';{/php}
+{include file="default/mobile/header" /}
+
+<div class="app-card" style="text-align:center;margin-bottom:12px;">
+    <div class="app-product-price" style="font-size:32px;margin-bottom:4px;">
+        {if $product.money=="0"}免费{else}¥{$product.money}<small>/{if $product.cycle=='day'}日{elseif $product.cycle=='month'}月{elseif $product.cycle=='season'}季{elseif $product.cycle=='year'}年{elseif $product.cycle=='unrestricted'}次{else}期{/if}</small>{/if}
+    </div>
+    <div style="font-size:15px;font-weight:700;color:var(--text);">{$product.name|default=''}</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-top:4px;">确认购买信息</div>
+</div>
+
+<form id="buyForm" action="__ROOT__/user/cartAdd" method="post">
+    <input type="hidden" name="cartid" value="{$product.id|default=''}">
+
+    <div class="app-card" style="margin-bottom:12px;">
+        <div class="app-input-group">
+            <label class="app-input-label">购买时长</label>
+            <div class="app-input-row">
+                <input type="number" class="app-input" name="time" value="1" min="1" id="timeInput">
+                <span style="font-size:13px;color:var(--text-muted);white-space:nowrap;padding:0 8px;">{if $product.money=="0"}免费{else}{$product.money}元{/if}/{if $product.cycle=='day'}日{elseif $product.cycle=='month'}月{elseif $product.cycle=='season'}季{elseif $product.cycle=='year'}年{elseif $product.cycle=='unrestricted'}次{else}期{/if}</span>
+            </div>
+        </div>
+        <div class="app-input-group" style="margin-bottom:0;">
+            <label class="app-input-label">主机账号 <small style="font-weight:400;color:var(--text-muted);">(字母开头3-50位)</small></label>
+            <div class="app-input-row">
+                <input type="text" class="app-input" name="user" id="hostUserInput" value="{:userrandom()}" placeholder="可自定义主机账号">
+                <button type="button" class="app-btn app-btn-outline app-btn-sm" onclick="randomUser()">随机</button>
+            </div>
+        </div>
+        <div class="app-input-group" style="margin-bottom:0;">
+            <label class="app-input-label">主机密码 <small style="font-weight:400;color:var(--text-muted);">(6-50位)</small></label>
+            <div class="app-input-row">
+                <input type="text" class="app-input" name="password" id="hostPassInput" value="{:random()}" placeholder="可自定义主机密码">
+                <button type="button" class="app-btn app-btn-outline app-btn-sm" onclick="randomPass()">随机</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-card" style="margin-bottom:12px;">
+        <div class="app-info-row" style="border-bottom:none;padding:0;">
+            <span class="app-info-label">应付总额</span>
+            <span class="app-info-value" id="totalPrice" style="color:var(--glass-primary);font-size:18px;">{if $product.money=="0"}免费{else}¥{$product.money}{/if}</span>
+        </div>
+    </div>
+
+    {if isset($product.inventory) && $product.inventory<'1'}
+    <button type="submit" class="app-btn app-btn-block" disabled>已售完</button>
+    {else}
+    <button type="submit" class="app-btn app-btn-primary app-btn-block"><i class="fas fa-shopping-cart"></i> 加入购物车</button>
+    {/if}
+</form>
+
+<script>
+var price = parseFloat('{$product.money|default=0}') || 0;
+var timeInput = document.getElementById('timeInput');
+var totalPriceEl = document.getElementById('totalPrice');
+function updateTotal() {
+    var qty = parseInt(timeInput.value) || 0;
+    if (qty < 1) { totalPriceEl.textContent = '时长错误'; return; }
+    if (price === 0) { totalPriceEl.textContent = '免费'; return; }
+    totalPriceEl.textContent = '¥' + (price * qty);
+}
+timeInput.addEventListener('input', updateTotal);
+updateTotal();
+function randomUser() {
+    var n = '';
+    for (var i = 0; i < 6; i++) n += Math.floor(Math.random() * 10);
+    document.getElementById('hostUserInput').value = 'a' + n;
+}
+function randomPass() {
+    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var s = '';
+    for (var i = 0; i < 8; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+    document.getElementById('hostPassInput').value = s;
+}
+document.getElementById('buyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var btn = this.querySelector("button[type='submit']");
+    var user = this.querySelector("input[name='user']").value;
+    var password = this.querySelector("input[name='password']").value;
+    var time = this.querySelector("input[name='time']").value;
+    var cartid = this.querySelector("input[name='cartid']").value;
+    if (!user || !password || !time) { appToast('请确保必填项不为空', 'error'); return false; }
+    btn.disabled = true;
+    appToast('正在加入购物车...', 'info');
+    fetch(this.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+        body: 'cartid=' + encodeURIComponent(cartid) + '&user=' + encodeURIComponent(user) + '&password=' + encodeURIComponent(password) + '&time=' + encodeURIComponent(time)
+    })
+    .then(function(res) { return res.text().then(function(text) { try { return JSON.parse(text); } catch (err) { var hint = text ? String(text).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : ''; if (hint.length > 160) hint = hint.slice(0, 160) + '...'; throw new Error(hint || '响应异常'); } }); })
+    .then(function(data) {
+        if (data.code == 1) { appToast(data.msg || '已加入购物车', 'success'); setTimeout(function() { location.href = '__ROOT__/user/cart'; }, 1500); }
+        else { btn.disabled = false; appToast(data.msg || '加入购物车失败', 'error'); }
+    })
+    .catch(function(err) { btn.disabled = false; appToast(err.message || '请求失败', 'error'); });
+    return false;
+});
+</script>
+
+{include file="default/mobile/footer" /}

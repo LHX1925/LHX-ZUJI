@@ -1,0 +1,158 @@
+{php}$title = '发起转让'; $tab_active = 'order';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">发起转让</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">选择您的主机发布到转让市场</p>
+</div>
+{if isset($isBanned) && $isBanned}
+<div class="app-card" style="border-left:4px solid #F59E0B;background:rgba(245,158,11,0.08);padding:14px 16px;margin-bottom:12px;font-size:13px;color:#92400E;">
+    <strong><i class="fas fa-exclamation-triangle"></i> 您的账号已被封禁，暂无法转让</strong>
+</div>
+{/if}
+{if isset($orders) && count($orders) > 0}
+<div class="app-card" style="padding:16px;margin-bottom:12px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);font-size:12px;color:var(--glass-text-secondary);line-height:1.7;">
+    <i class="fas fa-info-circle" style="color:var(--glass-primary);"></i> 转让前请确认：<br>
+    1. 转让需要邮箱验证，请确保已绑定邮箱<br>
+    2. 转让价格不能超过原购买价格<br>
+    3. 免费主机转让价格必须为0<br>
+    4. 转让完成后，主机将归属于购买方
+</div>
+<div class="app-card" style="padding:20px 16px;">
+    <div class="app-categories" style="margin-bottom:16px;">
+        <div class="app-category-chip active" id="tabPublic" onclick="switchMode('public')">
+            <i class="fas fa-globe"></i> 公开市场
+        </div>
+        <div class="app-category-chip" id="tabPrivate" onclick="switchMode('private')">
+            <i class="fas fa-user-lock"></i> 指定用户
+        </div>
+    </div>
+    <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">选择主机 <small style="color:var(--glass-text-muted);">*必选</small></label>
+        <select class="app-input" id="order_id" onchange="onOrderChange()" style="appearance:auto;">
+            <option value="">-- 请选择要转让的主机 --</option>
+            {foreach $orders as $o}
+            <option value="{$o.id}" data-money="{$o.money|default='0'}">
+                {$o.product_name|default='未知产品'} (#{$o.id}) - 到期: {:date('Y-m-d', $o.ztime)}
+            </option>
+            {/foreach}
+        </select>
+    </div>
+    <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">原购买价格</label>
+        <input type="text" class="app-input" id="original_price" readonly value="--" style="background:var(--glass-bg-light);color:var(--glass-text-muted);">
+    </div>
+    <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">转让价格 <small style="color:var(--glass-text-muted);">（元）</small></label>
+        <input type="number" class="app-input" id="price" placeholder="请输入转让价格" value="0" min="0" step="0.01">
+        <div id="priceHint" style="font-size:11px;color:var(--glass-text-muted);margin-top:4px;"></div>
+    </div>
+    <div id="targetUserGroup" style="display:none;margin-bottom:14px;">
+        <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">指定接收用户ID</label>
+        <input type="number" class="app-input" id="target_userid" placeholder="输入目标用户ID" value="" min="1">
+        <div style="font-size:11px;color:var(--glass-text-muted);margin-top:4px;">仅该用户可在转让市场看到并购买此主机</div>
+    </div>
+    <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">联系方式</label>
+        <input type="text" class="app-input" id="contact_info" placeholder="如：QQ号、微信号等" maxlength="500">
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <input type="text" class="app-input" id="email_code" placeholder="请输入邮箱验证码" maxlength="6" style="flex:1;">
+        <button type="button" class="app-btn" id="btnSendCode" onclick="sendCode()" style="flex-shrink:0;padding:10px 16px;font-size:13px;background:transparent;color:var(--glass-primary);border:1.5px solid var(--glass-primary);">发送验证码</button>
+    </div>
+    <button type="button" class="app-btn" id="btnSubmit" onclick="submitTransfer()" style="width:100%;"><i class="fas fa-paper-plane"></i> 发布转让</button>
+</div>
+{else}
+<div class="app-empty"><i class="fas fa-server"></i><h3 style="font-size:16px;color:var(--glass-text);">没有可转让的主机</h3><p>您当前没有运行中且未在转让中的主机</p></div>
+{/if}
+<script>
+var originalPrice = 0;
+var currentMode = 'public';
+function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('tabPublic').classList.toggle('active', mode === 'public');
+    document.getElementById('tabPrivate').classList.toggle('active', mode === 'private');
+    document.getElementById('targetUserGroup').style.display = mode === 'private' ? 'block' : 'none';
+    if (mode !== 'private') document.getElementById('target_userid').value = '';
+}
+function onOrderChange() {
+    var sel = document.querySelector('#order_id option:checked');
+    var money = sel ? (sel.getAttribute('data-money') || 0) : 0;
+    originalPrice = parseFloat(money);
+    document.getElementById('original_price').value = originalPrice > 0 ? '¥' + originalPrice.toFixed(2) : '免费';
+    if (originalPrice > 0) {
+        document.getElementById('priceHint').textContent = '转让价格不能超过原价 ¥' + originalPrice.toFixed(2);
+    } else {
+        document.getElementById('priceHint').textContent = '免费主机转让价格必须为0';
+        document.getElementById('price').value = '0';
+    }
+}
+var countdown = 0;
+function sendCode() {
+    var orderId = document.getElementById('order_id').value;
+    if (!orderId) { appToast('请先选择要转让的主机', 'warning'); return; }
+    if (countdown > 0) return;
+    var btn = document.getElementById('btnSendCode');
+    btn.disabled = true;
+    btn.textContent = '发送中...';
+    fetch('__ROOT__/user/transferSendCode', { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: 'act=sendcode' })
+    .then(function(r) { return r.json(); }).then(function(res) {
+        if (res.code == '1') {
+            appToast(res.msg, 'success');
+            countdown = 60;
+            btn.textContent = countdown + '秒后重发';
+            var timer = setInterval(function() {
+                countdown--;
+                if (countdown <= 0) { clearInterval(timer); btn.disabled = false; btn.textContent = '发送验证码'; }
+                else { btn.textContent = countdown + '秒后重发'; }
+            }, 1000);
+        } else {
+            appToast(res.msg, 'error');
+            btn.disabled = false;
+            btn.textContent = '发送验证码';
+        }
+    }).catch(function() {
+        appToast('发送失败，请稍后再试', 'error');
+        btn.disabled = false;
+        btn.textContent = '发送验证码';
+    });
+}
+function submitTransfer() {
+    var orderId = document.getElementById('order_id').value;
+    if (!orderId) { appToast('请选择要转让的主机', 'warning'); return; }
+    var price = parseFloat(document.getElementById('price').value) || 0;
+    if (price < 0) { appToast('转让价格不能为负数', 'warning'); return; }
+    if (originalPrice > 0 && price > originalPrice) { appToast('转让价格不能超过原购买价格', 'warning'); return; }
+    if (originalPrice == 0 && price > 0) { appToast('免费主机转让价格必须为0', 'warning'); return; }
+    var emailCode = document.getElementById('email_code').value.trim();
+    if (!emailCode) { appToast('请输入邮箱验证码', 'warning'); return; }
+    if (currentMode === 'private') {
+        var targetUserid = parseInt(document.getElementById('target_userid').value) || 0;
+        if (targetUserid <= 0) { appToast('请输入指定接收用户的ID', 'warning'); return; }
+    }
+    var btn = document.getElementById('btnSubmit');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+    var formData = new FormData();
+    formData.append('act', 'submit');
+    formData.append('order_id', orderId);
+    formData.append('price', price);
+    formData.append('target_userid', currentMode === 'private' ? (document.getElementById('target_userid').value || 0) : 0);
+    formData.append('contact_info', document.getElementById('contact_info').value.trim());
+    formData.append('email_code', emailCode);
+    fetch('__ROOT__/user/transferHost', { method: 'POST', body: formData }).then(function(r) { return r.json(); }).then(function(res) {
+        if (res.code == '1') {
+            appToast(res.msg, 'success');
+            setTimeout(function() { location.href = '__ROOT__/user/transferMarket'; }, 1500);
+        } else {
+            appToast(res.msg, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> 发布转让';
+        }
+    }).catch(function() {
+        appToast('请求失败，请稍后再试', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> 发布转让';
+    });
+}
+</script>
+{include file="default/mobile/footer" /}

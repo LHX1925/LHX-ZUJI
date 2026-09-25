@@ -115,7 +115,7 @@
 <script>
 $('#info-form').on('submit', function(e){
   e.preventDefault();
-  var load = layer.msg('修改中，请稍后...',{icon:16,shade:0.8,time:false});
+  var load = layer.msg('修改中，请稍后...', {icon:16, shade:0.8, time:false});
   var name = $('input[name="name"]').val().trim();
   var mail = $('input[name="mail"]').val().trim();
   var qq = $('input[name="qq"]').val().trim();
@@ -138,7 +138,7 @@ $('#info-form').on('submit', function(e){
     },
     error:function(){
       layer.close(load);
-      layer.msg('网络错误，请重试',{icon:2});
+      GlassTip.error('网络错误，请重试');
     }
   });
   return false;

@@ -1,7 +1,21 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <title>{$webname} - 绑定账号</title>
+    <title>{$webname|default=''} - QQ一键注册</title>
+    <meta name="description" content="{$description|default=''}">
+    <meta name="keywords" content="{$keywords|default=''}">
+    {php}
+// 模板顶部兜底：避免 controller 没注入时报错（assign 失败或模板缓存过期）
+if (!isset($web) || !is_array($web))               $web = [];
+if (!isset($webname))                              $webname = isset($web['name']) ? $web['name'] : '';
+if (!isset($description))                          $description = isset($web['description']) ? $web['description'] : '';
+if (!isset($keywords))                             $keywords = isset($web['keywords']) ? $web['keywords'] : '';
+if (!isset($favicon))                              $favicon = isset($web['favicon']) ? $web['favicon'] : '';
+if (!isset($oauthData) || !is_array($oauthData))   $oauthData = ['type'=>'qq','nickname'=>'','avatar'=>''];
+$emailEnabled = !empty($emailEnabled);
+if (!isset($bindEmail))                            $bindEmail = '';
+{/php}
+    <link rel="shortcut icon" type="image/x-icon" href="{$favicon|default=''}"/>
     <style>
         #mainHeader,
         #mobileMenu {
@@ -70,7 +84,7 @@
 
         .auth-form {
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             background: var(--glass-bg-strong);
             backdrop-filter: blur(var(--glass-blur-strong));
             -webkit-backdrop-filter: blur(var(--glass-blur-strong));
@@ -102,6 +116,14 @@
             width: 100%;
         }
 
+        .auth-form .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--glass-text-secondary);
+            margin-bottom: 6px;
+        }
+
         .auth-form .form-control {
             width: 100%;
             display: block;
@@ -129,6 +151,48 @@
             color: var(--glass-text-muted);
         }
 
+        .auth-form .verify-row {
+            display: flex;
+            gap: 10px;
+        }
+        .auth-form .verify-row .form-control { flex: 1; }
+        .auth-form .verify-row .btn-send {
+            white-space: nowrap;
+            padding: 0 18px;
+            height: 50px;
+            border-radius: var(--glass-radius-sm);
+            border: 1px solid var(--glass-primary);
+            background: rgba(79, 124, 255, 0.1);
+            color: var(--glass-primary);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .auth-form .verify-row .btn-send:hover {
+            background: var(--glass-primary);
+            color: #fff;
+        }
+        .auth-form .verify-row .btn-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .auth-form .verify-row .btn-send.counting {
+            background: rgba(148, 163, 184, 0.15);
+            color: #94a3b8;
+            border-color: #cbd5e1;
+        }
+
+        .auth-form .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #059669;
+            margin-top: 4px;
+        }
+
         .auth-form .btn-primary {
             width: 100%;
             padding: 14px;
@@ -148,6 +212,23 @@
             box-shadow: 0 6px 24px var(--glass-primary-glow);
             transform: translateY(-1px);
         }
+        .auth-form .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-form .register-tip {
+            margin-top: 18px;
+            padding: 10px 14px;
+            background: rgba(245, 158, 11, 0.08);
+            border-left: 3px solid #f59e0b;
+            border-radius: 8px;
+            color: #92400e;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .auth-form .register-tip strong { color: #b45309; }
 
         @media (max-width: 480px) {
             .auth-top {
@@ -170,28 +251,49 @@
         <div class="auth-orb auth-orb-1"></div>
         <div class="auth-orb auth-orb-2"></div>
         <a href="__ROOT__/" class="auth-top logo">
-            <span>{$webname}</span>
+            <span>{$webname|default='站点'}</span>
         </a>
 
         <div class="auth-container">
             <div class="auth-form">
-                <h3>绑定账号</h3>
+                <h3>QQ 一键注册</h3>
                 <p class="oauth-hint">
-                    您正在使用{if $oauthData.type == 'qq'}QQ{else}微信{/if}快捷登录，请设置账号信息完成绑定
+                    您正在使用{if $oauthData.type == 'qq'}QQ{else}第三方账号{/if}快捷注册，为保障账户安全和找回账号，请填写以下信息并完成邮箱验证。
                 </p>
                 <form id="bindForm">
                     <div class="form-group">
-                        <input type="text" class="form-control" name="username" placeholder="请输入用户名" autocomplete="off">
+                        <label class="form-label">用户名 <span style="color:#ef4444;">*</span></label>
+                        <input type="text" class="form-control" name="username" placeholder="请输入用户名（英文/数字/下划线）" autocomplete="off">
                     </div>
                     <div class="form-group">
+                        <label class="form-label">登录密码 <span style="color:#ef4444;">*</span></label>
                         <input type="password" class="form-control" name="password" placeholder="请设置登录密码（至少6位）">
                     </div>
                     <div class="form-group">
+                        <label class="form-label">确认密码 <span style="color:#ef4444;">*</span></label>
                         <input type="password" class="form-control" name="password2" placeholder="请再次输入密码">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">邮箱 <span style="color:#ef4444;">*</span></label>
+                        <input type="email" class="form-control" name="email" id="emailInput" placeholder="请输入您的常用邮箱" value="{$bindEmail|default=''}" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邮箱验证码 <span style="color:#ef4444;">*</span></label>
+                        <div class="verify-row">
+                            <input type="text" class="form-control" name="code" id="codeInput" placeholder="请输入邮箱验证码" autocomplete="off" maxlength="6">
+                            <button type="button" class="btn-send" id="btnSendCode">发送验证码</button>
+                        </div>
+                        <div id="emailVerifyStatus" class="verified-badge" style="display:none;">
+                            <i class="fas fa-check-circle"></i> 邮箱已通过验证
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-primary">
-                        绑定并登录
+                        完成注册并登录
                     </button>
+                    <div class="register-tip">
+                        <strong>为什么必须填写邮箱？</strong><br>
+                        邮箱是您找回密码、接收重要通知、确认账户归属的唯一凭据。我们不会向您发送任何营销邮件。
+                    </div>
                 </form>
             </div>
         </div>
@@ -199,54 +301,140 @@
 
     {include file="default/captcha_assets" /}
     <script>
-        $(function($) {
-            $("#bindForm").submit(function() {
-                var btn = $(this).find("button[type='submit']");
-                var username = $(this).find("input[name='username']").val().trim();
-                var password = $(this).find("input[name='password']").val();
-                var password2 = $(this).find("input[name='password2']").val();
+    (function() {
+        var emailEnabled = {$emailEnabled ? 'true' : 'false'};
+        var $sendBtn = $('#btnSendCode');
+        var $emailInput = $('#emailInput');
+        var $codeInput = $('#codeInput');
+        var $emailStatus = $('#emailVerifyStatus');
+        var emailVerified = false;
+        var countdownTimer = null;
+        var countdown = 0;
 
-                if (!username) {
-                    showToast('请输入用户名', 'warning', 2500);
-                    return false;
+        function startCountdown() {
+            countdown = 60;
+            $sendBtn.addClass('counting').prop('disabled', true).text(countdown + 's 后重发');
+            countdownTimer = setInterval(function() {
+                countdown--;
+                if (countdown <= 0) {
+                    clearInterval(countdownTimer);
+                    $sendBtn.removeClass('counting').prop('disabled', false).text('重新发送');
+                } else {
+                    $sendBtn.text(countdown + 's 后重发');
                 }
-                if (!password) {
-                    showToast('请设置登录密码', 'warning', 2500);
-                    return false;
-                }
-                if (password.length < 6) {
-                    showToast('密码长度不能少于6位', 'warning', 2500);
-                    return false;
-                }
-                if (password !== password2) {
-                    showToast('两次密码不一致', 'warning', 2500);
-                    return false;
-                }
+            }, 1000);
+        }
 
-                btn.attr('disabled', 'true');
-                showToast('正在绑定，请稍后...', 'info', 1500);
+        function isValidEmail(v) {
+            return /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(v);
+        }
 
-                $.ajax({
-                    type: 'POST', url: '',
-                    data: { username: username, password: password, password2: password2 },
-                    dataType: 'json',
-                    success: function(data) {
-                        if (data.code == 1) {
-                            showToast(data.msg || '绑定成功', 'success', 1500);
-                            setTimeout(function() { location.href = data.url || '__ROOT__/user/index'; }, 1500);
-                        } else {
-                            btn.removeAttr('disabled');
-                            showToast(data.msg || '绑定失败', 'danger', 2500);
-                        }
-                    },
-                    error: function() {
-                        btn.removeAttr('disabled');
-                        showToast('网络错误，请稍后重试', 'danger', 2500);
+        function verifyCode() {
+            var email = $emailInput.val().trim();
+            var code = $codeInput.val().trim();
+            if (!email || !code) return;
+            $.ajax({
+                type: 'POST', url: '',
+                data: { act: 'verify_email_code', email: email, code: code },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.code == 1) {
+                        emailVerified = true;
+                        $emailStatus.show();
+                    } else {
+                        emailVerified = false;
+                        $emailStatus.hide();
                     }
-                });
-                return false;
+                }
             });
+        }
+
+        $codeInput.on('blur', verifyCode);
+
+        $sendBtn.on('click', function() {
+            var email = $emailInput.val().trim();
+            if (!email) { showToast('请先填写邮箱地址', 'warning', 2500); $emailInput.focus(); return false; }
+            if (!isValidEmail(email)) { showToast('邮箱格式错误', 'warning', 2500); $emailInput.focus(); return false; }
+            if (!emailEnabled) {
+                showToast('站点未启用邮件发送，无法验证邮箱。请联系管理员在「后台-站点设置」开启邮件通知后再试。', 'danger', 4000);
+                return false;
+            }
+            $sendBtn.prop('disabled', true).text('发送中...');
+            $.ajax({
+                type: 'POST', url: '',
+                data: { act: 'send_email_code', email: email },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.code == 1) {
+                        showToast(data.msg || '验证码已发送，请查收邮箱', 'success', 2500);
+                        startCountdown();
+                        emailVerified = false;
+                        $emailStatus.hide();
+                        $codeInput.val('').focus();
+                    } else {
+                        showToast(data.msg || '发送失败', 'danger', 3000);
+                        $sendBtn.prop('disabled', false).text('发送验证码');
+                    }
+                },
+                error: function() {
+                    showToast('网络错误，请稍后重试', 'danger', 2500);
+                    $sendBtn.prop('disabled', false).text('发送验证码');
+                }
+            });
+            return false;
         });
+
+        $('#bindForm').on('submit', function(e) {
+            e.preventDefault();
+            var btn = $(this).find("button[type='submit']");
+            var username = $(this).find("input[name='username']").val().trim();
+            var password = $(this).find("input[name='password']").val();
+            var password2 = $(this).find("input[name='password2']").val();
+            var email = $emailInput.val().trim();
+            var code = $codeInput.val().trim();
+
+            if (!username) { showToast('请输入用户名', 'warning', 2500); return false; }
+            if (!/^[A-Za-z0-9_]{3,24}$/.test(username)) {
+                showToast('用户名只能包含英文/数字/下划线，长度 3-24 位', 'warning', 3000); return false;
+            }
+            if (!password) { showToast('请设置登录密码', 'warning', 2500); return false; }
+            if (password.length < 6) { showToast('密码长度不能少于 6 位', 'warning', 2500); return false; }
+            if (password !== password2) { showToast('两次密码不一致', 'warning', 2500); return false; }
+            if (!email) { showToast('请输入邮箱地址', 'warning', 2500); $emailInput.focus(); return false; }
+            if (!isValidEmail(email)) { showToast('邮箱格式错误', 'warning', 2500); $emailInput.focus(); return false; }
+            if (!code || code.length !== 6) { showToast('请输入 6 位邮箱验证码', 'warning', 2500); $codeInput.focus(); return false; }
+
+            btn.prop('disabled', true).text('注册中...');
+            showToast('正在注册，请稍后...', 'info', 1500);
+
+            $.ajax({
+                type: 'POST', url: '',
+                data: {
+                    act: 'save',
+                    username: username,
+                    password: password,
+                    password2: password2,
+                    email: email,
+                    code: code
+                },
+                dataType: 'json',
+                success: function(data) {
+                    if (data.code == 1) {
+                        showToast(data.msg || '注册成功', 'success', 1500);
+                        setTimeout(function() { location.href = data.url || '__ROOT__/user/index'; }, 1500);
+                    } else {
+                        btn.prop('disabled', false).text('完成注册并登录');
+                        showToast(data.msg || '注册失败', 'danger', 3000);
+                    }
+                },
+                error: function() {
+                    btn.prop('disabled', false).text('完成注册并登录');
+                    showToast('网络错误，请稍后重试', 'danger', 2500);
+                }
+            });
+            return false;
+        });
+    })();
     </script>
     {include file="default/index/footer" /}
 </body>

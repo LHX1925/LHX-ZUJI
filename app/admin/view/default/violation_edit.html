@@ -103,8 +103,8 @@ function handleFiles(files) {
   if (!files || files.length === 0) return;
   for (var i = 0; i < files.length; i++) {
     (function(file) {
-      if (file.size > 5 * 1024 * 1024) { alert('文件 ' + file.name + ' 超过 5MB 限制'); return; }
-      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { alert('文件 ' + file.name + ' 格式不支持'); return; }
+      if (file.size > 5 * 1024 * 1024) { GlassTip.warning('文件 ' + file.name + ' 超过 5MB 限制'); return; }
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { GlassTip.warning('文件 ' + file.name + ' 格式不支持'); return; }
       var formData = new FormData();
       formData.append('file', file);
       formData.append('act', 'upload_image');
@@ -126,7 +126,7 @@ function handleFiles(files) {
               '</div>'
             );
           } else {
-            alert(res.msg || '上传失败');
+            GlassTip.error(res.msg || '上传失败');
           }
         },
         error: function(xhr, status, err) {
@@ -135,7 +135,7 @@ function handleFiles(files) {
             try { var r = JSON.parse(xhr.responseText); msg = r.msg || msg; } catch(e) {}
           }
           console.error('Upload error:', status, err, xhr.responseText);
-          alert(msg);
+          GlassTip.error(msg);
         }
       });
     })(files[i]);
@@ -152,10 +152,10 @@ $('#editForm').on('submit', function(e) {
   e.preventDefault();
   $.post('', $(this).serialize(), function(res) {
     if (res.code == 1) {
-      alert(res.msg);
-      location.href = '__ROOT__/admin/violation';
+      GlassTip.success(res.msg || '保存成功');
+      setTimeout(function(){ location.href = '__ROOT__/admin/violation'; }, 800);
     } else {
-      alert(res.msg || '保存失败');
+      GlassTip.error(res.msg || '保存失败');
     }
   }, 'json');
 });

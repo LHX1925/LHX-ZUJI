@@ -38,12 +38,30 @@
               <div class="mb-3"><label class="flbl">QQ</label><input class="finp" type="text" name="qq" placeholder="请输入QQ号码"></div>
               <div class="mb-3">
                 <label class="flbl">角色</label>
-                <select name="role_id" class="finp">
-                  <option value="0">未分配</option>
+                <select name="role_id" class="finp" id="role-select">
                   {foreach $roles as $role}
                   <option value="{$role.id}">{$role.name}</option>
                   {/foreach}
                 </select>
+              </div>
+              <div class="mb-3" id="perm-box" style="display:none;">
+                <label class="flbl">权限设置（普通管理员）</label>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+                  <div class="row">
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="all" class="perm-all" style="margin-right:6px;">所有权限</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="user" class="perm-item" style="margin-right:6px;">用户管理</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="product" class="perm-item" style="margin-right:6px;">产品管理</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="order" class="perm-item" style="margin-right:6px;">订单管理</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="ticket" class="perm-item" style="margin-right:6px;">工单管理</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="announcement" class="perm-item" style="margin-right:6px;">公告管理</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="pay" class="perm-item" style="margin-right:6px;">支付配置</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="aff" class="perm-item" style="margin-right:6px;">推广管理</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="set" class="perm-item" style="margin-right:6px;">网站设置</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="server" class="perm-item" style="margin-right:6px;">服务器管理</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="classification" class="perm-item" style="margin-right:6px;">分类管理</label></div>
+                    <div class="col-md-4"><label class="form-check" style="font-size:13px;color:#42526e;margin-bottom:8px;"><input type="checkbox" name="permissions[]" value="admin_manager" class="perm-item" style="margin-right:6px;">管理员管理</label></div>
+                  </div>
+                </div>
               </div>
               <div class="pt-3 mt-3" style="border-top:1px solid #f1f5f9;">
                 <button type="submit" class="nbtn pri">确定</button>
@@ -59,9 +77,24 @@
 
 {include file="default/footer" /}
 <script>
+// 角色切换：普通管理员(2)显示权限勾选，超级管理员(1)隐藏
+function togglePermBox(){
+  var role = parseInt($('#role-select').val());
+  if (role === 2) { $('#perm-box').show(); }
+  else { $('#perm-box').hide(); $('.perm-item,.perm-all').prop('checked', false); }
+}
+$('#role-select').on('change', togglePermBox);
+$('.perm-all').on('change', function(){
+  $('.perm-item').prop('checked', $(this).is(':checked'));
+});
+$('.perm-item').on('change', function(){
+  if (!$(this).is(':checked')) { $('.perm-all').prop('checked', false); }
+});
+togglePermBox();
+
 $('#add-form').on('submit', function(e){
   e.preventDefault();
-  var load = layer.msg('添加中...',{icon:16,shade:0.8,time:false});
+  var load = layer.msg('添加中...', {icon:16, shade:0.8, time:false});
   $.ajax({
     type:'POST', url:'', data:$(this).serialize(), dataType:'json',
     success:function(data){
@@ -69,7 +102,7 @@ $('#add-form').on('submit', function(e){
       if(data.code==1){ layer.alert(data.msg,{icon:1,shade:0.8},function(){ location.href='/admin/admin_manager'; }); }
       else { layer.alert(data.msg,{icon:2,shade:0.8}); }
     },
-    error:function(){ layer.close(load); layer.msg('添加失败',{icon:2}); }
+    error:function(){ layer.close(load); GlassTip.error('添加失败'); }
   });
 });
 </script>

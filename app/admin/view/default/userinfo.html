@@ -1,189 +1,280 @@
 {include file="default/header" title="用户信息"/}
+<style>
+/* ===== 用户详情页专用样式 ===== */
+.ud-wrap{max-width:1180px;margin:0 auto;width:100%}
+.ud-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.ud-topbar h1{font-size:22px;font-weight:700;color:#1e293b;margin:0}
+.ud-topbar .btns{display:flex;gap:10px}
+.btn-ud-save{border:0;border-radius:10px;padding:10px 22px;font-size:14px;font-weight:500;color:#fff;background:linear-gradient(180deg,#3d84f5,#1f62d8);cursor:pointer;box-shadow:0 4px 12px rgba(31,98,216,.24);font-family:inherit;transition:filter .15s}
+.btn-ud-save:hover{filter:brightness(1.07)}
+.btn-ud-danger{border:0;border-radius:10px;padding:10px 22px;font-size:14px;font-weight:500;color:#fff;background:linear-gradient(180deg,#f56c6c,#e5484d);cursor:pointer;box-shadow:0 4px 12px rgba(229,72,77,.22);font-family:inherit;transition:filter .15s}
+.btn-ud-danger:hover{filter:brightness(1.05)}
+.btn-ud-plain{border:1px solid #d7dfeb;border-radius:10px;padding:10px 22px;font-size:14px;font-weight:500;color:#475569;background:#fff;cursor:pointer;font-family:inherit;transition:.15s}
+.btn-ud-plain:hover{border-color:#9db4d8;color:#1f6feb}
+
+/* 资料卡 */
+.ud-hero{background:#fff;border:1px solid #e4eaf2;border-radius:14px;padding:24px 26px;box-shadow:0 4px 16px rgba(16,42,87,.05);margin-bottom:18px}
+.ud-hero-inner{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.ud-avatar{width:76px;height:76px;border-radius:50%;overflow:hidden;flex:0 0 76px;background:#eef2f7;border:3px solid #eaf1fc;box-shadow:0 4px 12px rgba(16,42,87,.10)}
+.ud-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.ud-id-block{min-width:0}
+.ud-name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ud-name{font-size:20px;font-weight:700;color:#1e293b}
+.ud-pill{display:inline-flex;align-items:center;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px}
+.ud-pill-user{background:#e9f1fd;color:#1f6feb;border:1px solid #d2e2fb}
+.ud-pill-vip{background:#fff7e8;color:#b8860b;border:1px solid #f5e3b8}
+.ud-pill-vip.v0{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}
+.ud-pill-vip.v1{background:#fdf1e2;color:#a05a1c;border-color:#f3ddc0}
+.ud-pill-vip.v2{background:#f1f5f9;color:#64748b;border-color:#dbe3ec}
+.ud-pill-vip.v3{background:#fff7e0;color:#b8860b;border-color:#f0e0a8}
+.ud-pill-vip.v4{background:#f5effd;color:#7c3aed;border-color:#e4d8f8}
+.ud-pill-vip.v5{background:#e8f4fd;color:#0369a1;border-color:#cfe8f8}
+.ud-pill-vip.v6{background:#fdeef3;color:#be185d;border-color:#f8d5e3}
+.ud-status-row{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ud-sub{font-size:12.5px;color:#94a3b8;margin-top:6px}
+
+/* 三张信息卡 */
+.ud-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-bottom:18px}
+.ud-card{background:#fff;border:1px solid #e4eaf2;border-radius:14px;padding:0 0 14px;box-shadow:0 4px 16px rgba(16,42,87,.05);overflow:hidden}
+.ud-card-title{font-size:15px;font-weight:700;color:#1e293b;background:#f8fafd;border-bottom:1px solid #edf1f7;padding:13px 20px;display:flex;align-items:center;gap:8px}
+.ud-card-title .mdi{color:#1f6feb;font-size:18px}
+.ud-rows{padding:6px 20px 0}
+.ud-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed #eef1f6}
+.ud-row:last-child{border-bottom:0}
+.ud-row label{width:96px;flex:0 0 96px;font-size:13px;color:#64748b;margin:0}
+.ud-row .val{flex:1;min-width:0}
+.ud-row .txt{font-size:13.5px;color:#1e293b;word-break:break-all}
+.ud-row input,.ud-row select{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:7px 11px;font-size:13.5px;color:#1e293b;background:#fbfcfe;font-family:inherit;outline:none;transition:border .15s,box-shadow .15s}
+.ud-row input:focus,.ud-row select:focus{border-color:#4b8ef7;box-shadow:0 0 0 3px rgba(75,142,247,.13);background:#fff}
+.ud-row input::placeholder{color:#aab4c2}
+.ud-badge{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:999px}
+.ud-badge.ok{background:#e8f8ee;color:#16a34a;border:1px solid #c9ecd6}
+.ud-badge.warn{background:#fff7e8;color:#d97706;border:1px solid #f5e3b8}
+.ud-badge.ban{background:#fdeef0;color:#e5484d;border:1px solid #f8d3d8}
+.ud-mini-btn{border:0;border-radius:8px;padding:6px 14px;font-size:12.5px;cursor:pointer;font-family:inherit;color:#fff;background:#16a34a;transition:filter .15s}
+.ud-mini-btn:hover{filter:brightness(1.08)}
+.ud-mini-btn.red{background:#e5484d}
+.ud-ban-reason{font-size:12px;color:#94a3b8;margin-top:4px}
+
+/* 产品列表 */
+.ud-products{background:#fff;border:1px solid #e4eaf2;border-radius:14px;box-shadow:0 4px 16px rgba(16,42,87,.05);overflow:hidden}
+.ud-products .ud-card-title{border-bottom:1px solid #edf1f7}
+.ud-products .table{margin:0}
+.ud-products thead th{background:#f8fafd;font-size:13px;color:#64748b;font-weight:600;border-bottom:1px solid #edf1f7;padding:11px 16px;white-space:nowrap}
+.ud-products tbody td{font-size:13.5px;color:#334155;padding:11px 16px;vertical-align:middle}
+.ud-empty{text-align:center;color:#94a3b8;font-size:13px;padding:30px 0}
+@media(max-width:768px){
+  .ud-row{flex-wrap:wrap}
+  .ud-row label{width:100%;flex:0 0 100%}
+}
+</style>
 <!--页面主要内容-->
     <main class="lyear-layout-content">
-	
+
       <div class="container-fluid glass-animate-in">
+        <div class="ud-wrap">
 
-        <div class="row">
+          <!-- 顶部标题栏 -->
+          <div class="ud-topbar">
+            <h1>用户详细信息</h1>
+            <div class="btns">
+              <button type="submit" form="udEditForm" class="btn-ud-save"><i class="mdi mdi-content-save-outline"></i> 修改保存</button>
+              {if $userinfo.ban_time > time()}
+              <button type="button" class="btn-ud-plain" onclick="unbanUser({$userinfo.id})"><i class="mdi mdi-lock-open"></i> 解封用户</button>
+              {else /}
+              <button type="button" class="btn-ud-danger" onclick="banUser({$userinfo.id})"><i class="mdi mdi-lock"></i> 封禁用户</button>
+              {/if}
+            </div>
+          </div>
 
-          <div class="col-lg-12">
-            <div class="card admin-card">
-              <header class="card-header"><div class="card-title">用户信息</div></header>
-              <div class="card-body">
+          <!-- 资料卡 -->
+          <div class="ud-hero">
+            <div class="ud-hero-inner">
+              <div class="ud-avatar">
+                <img src="{:get_user_avatar($userinfo)}" alt="头像">
+              </div>
+              <div class="ud-id-block">
+                <div class="ud-name-row">
+                  <span class="ud-name">{$userinfo.name}</span>
+                  <span class="ud-pill ud-pill-user">{$userinfo.user}</span>
+                </div>
+                <div class="ud-status-row">
+                  <span class="ud-sub" style="margin:0">所属等级</span>
+                  <span class="ud-pill ud-pill-vip v{$userinfo.membership_level|default='0'}">{:get_membership_name($userinfo['membership_level'] ?? 0)}</span>
+                  {if $userinfo.ban_time > time()}
+                  <span class="ud-badge ban"><i class="mdi mdi-lock"></i> 已封禁至 {$userinfo.ban_time|date="Y-m-d H:i",###}</span>
+                  {elseif $userinfo.state=="0" /}
+                  <span class="ud-badge warn"><i class="mdi mdi-snowflake"></i> 已冻结</span>
+                  {else /}
+                  <span class="ud-badge ok"><i class="mdi mdi-check-circle"></i> 正常</span>
+                  {/if}
+                </div>
+                <div class="ud-sub">UID: {$userinfo.id} · 注册时间 {if $userinfo.time}{$userinfo.time|date="Y-m-d H:i:s",###}{else /}—{/if}</div>
+                {if $userinfo.ban_time > time() && $userinfo.ban_reason}
+                <div class="ud-ban-reason">封禁原因：{$userinfo.ban_reason}</div>
+                {/if}
+              </div>
+            </div>
+          </div>
 
-                <ul class="nav nav-tabs" id="userinfoTabs">
-                  <li class="nav-item">
-                    <button class="nav-link active" id="basic-config" data-bs-toggle="tab" data-bs-target="#config" type="button" >信息</button>
-                  </li>
-                  <li class="nav-item">
-                    <button class="nav-link" id="basic-sys" data-bs-toggle="tab" data-bs-target="#sys" type="button">产品</button>
-                  </li>
-                </ul>
+          <!-- 编辑表单（包裹三张卡） -->
+          <form id="udEditForm" action="" method="post" name="edit-form" class="edit-form admin-form" onsubmit="return false;">
 
-                <form action="" method="post" name="edit-form" class="edit-form admin-form">
-                  <div class="tab-content">
+          <div class="ud-cards">
 
+            <!-- 账户信息 -->
+            <div class="ud-card">
+              <div class="ud-card-title"><i class="mdi mdi-account-circle-outline"></i> 账户信息</div>
+              <div class="ud-rows">
+                <div class="ud-row">
+                  <label>名称</label>
+                  <div class="val"><input type="text" name="name" value="{$userinfo.name}"></div>
+                </div>
+                <div class="ud-row">
+                  <label>账号</label>
+                  <div class="val"><input type="text" name="user" value="{$userinfo.user}"></div>
+                </div>
+                <div class="ud-row">
+                  <label>余额</label>
+                  <div class="val"><input type="text" name="money" value="{$userinfo.money}"></div>
+                </div>
+                <div class="ud-row">
+                  <label>QQ</label>
+                  <div class="val"><input type="text" name="qq" value="{$userinfo.qq}"></div>
+                </div>
+                <div class="ud-row">
+                  <label>邮箱地址</label>
+                  <div class="val"><input type="text" name="mail" value="{$userinfo.mail}"></div>
+                </div>
+                <div class="ud-row">
+                  <label>地址</label>
+                  <div class="val"><input type="text" name="address" value="{$userinfo.address}"></div>
+                </div>
+              </div>
+            </div>
 
-
-
-                    <div class="tab-pane fade show active" id="config" aria-labelledby="basic-config">
-
-
-
-                      <div class="mb-3">
-                        <label for="web_site_title" class="form-label">名称</label>
-                        <input class="form-control" type="text" name="name" value="{$userinfo.name}" placeholder="">      
-                      </div>
-
-                      <div class="mb-3">
-                        <label for="web_site_title" class="form-label">账号</label>
-                        <input class="form-control" type="text" name="user" value="{$userinfo.user}" placeholder="">      
-                      </div>
-
-                      <div class="mb-3">
-                        <label for="web_site_title" class="form-label">余额</label>
-                        <input class="form-control" type="text" name="money" value="{$userinfo.money}" placeholder="">      
-                      </div>
-
-                      <div class="mb-3">
-                        <label for="web_site_title" class="form-label">QQ</label>
-                        <input class="form-control" type="text" name="qq" value="{$userinfo.qq}" placeholder="">      
-                      </div>
-
-                      <div class="mb-3">
-                        <label for="web_site_title" class="form-label">邮箱</label>
-                        <input class="form-control" type="text" name="mail" value="{$userinfo.mail}" placeholder="">      
-                      </div>
-
-                      <div class="mb-3">
-                        <label for="web_site_title" class="form-label">地址</label>
-                        <input class="form-control" type="text" name="address" value="{$userinfo.address}" placeholder="">      
-                      </div>
-
-
-                      <div class="mb-3">
-                        <label for="web_site_title" class="form-label">aff</label>
-                        <input class="form-control" type="text" name="aff" value="{$userinfo.aff}" placeholder="">      
-                      </div>
-
-
-                      <div class="mb-3">
-                        <label for="web_site_title" class="form-label">aff余额</label>
-                        <input class="form-control" type="text" name="affmoney" value="{$userinfo.affmoney}" placeholder="">      
-                      </div>
-
-                      <div class="mb-3">
-                        <label for="web_site_title" class="form-label">上级ID</label>
-                        <input class="form-control" type="text" name="upperid" value="{$userinfo.upperid}" placeholder="">      
-                      </div>
-
-
-
-                      <div class="mb-3">
-                        <label for="web_site_title" class="form-label">密码</label>
-                        <input class="form-control" type="text" name="password" placeholder="不修改请留空" value="" placeholder="">      
-                      </div>
-
-<div class="mb-3">
-                    <label for="type" class="form-label">账号状态</label>
-                    <div class="form-controls">
-                      <select name="state" class="form-select" id="type">
-                        <option value="1" {if $userinfo.state=="1"}selected{/if}>开启</option>
-                        <option value="0" {if $userinfo.state=="0"}selected{/if}>冻结</option>
-                      </select>
-                    </div>
+            <!-- 推广与上级信息 -->
+            <div class="ud-card">
+              <div class="ud-card-title"><i class="mdi mdi-account-group-outline"></i> 推广与上级信息</div>
+              <div class="ud-rows">
+                <div class="ud-row">
+                  <label>aff</label>
+                  <div class="val"><input type="text" name="aff" value="{$userinfo.aff}"></div>
+                </div>
+                <div class="ud-row">
+                  <label>aff 余额</label>
+                  <div class="val"><input type="text" name="affmoney" value="{$userinfo.affmoney}"></div>
+                </div>
+                <div class="ud-row">
+                  <label>上级ID</label>
+                  <div class="val"><input type="text" name="upperid" value="{$userinfo.upperid}"></div>
+                </div>
+                <div class="ud-row">
+                  <label>实名认证状态</label>
+                  <div class="val">
+                    <select name="realname_status">
+                      <option value="0" {if $userinfo.realname_status=="0"}selected{/if}>未认证</option>
+                      <option value="3" {if $userinfo.realname_status=="3"}selected{/if}>审核中</option>
+                      <option value="1" {if $userinfo.realname_status=="1"}selected{/if}>已认证</option>
+                      <option value="2" {if $userinfo.realname_status=="2"}selected{/if}>已驳回</option>
+                    </select>
                   </div>
+                </div>
+                <div class="ud-row">
+                  <label>用户积分</label>
+                  <div class="val"><input type="number" name="points" value="{$userinfo.points|default='0'}" min="0" step="1"></div>
+                </div>
+              </div>
+            </div>
 
-                  <div class="mb-3">
-                    <label class="form-label">实名认证状态</label>
-                    <div class="form-controls">
-                      <select name="realname_status" class="form-select">
-                        <option value="0" {if $userinfo.realname_status=="0"}selected{/if}>未认证</option>
-                        <option value="3" {if $userinfo.realname_status=="3"}selected{/if}>审核中</option>
-                        <option value="1" {if $userinfo.realname_status=="1"}selected{/if}>已认证</option>
-                        <option value="2" {if $userinfo.realname_status=="2"}selected{/if}>已驳回</option>
-                      </select>
-                    </div>
+            <!-- 身份与状态信息 -->
+            <div class="ud-card">
+              <div class="ud-card-title"><i class="mdi mdi-shield-account-outline"></i> 身份与状态信息</div>
+              <div class="ud-rows">
+                <div class="ud-row">
+                  <label>密码</label>
+                  <div class="val"><input type="password" name="password" value="" placeholder="不修改请留空" autocomplete="new-password"></div>
+                </div>
+                <div class="ud-row">
+                  <label>账号状态</label>
+                  <div class="val">
+                    <select name="state">
+                      <option value="1" {if $userinfo.state=="1"}selected{/if}>正常</option>
+                      <option value="0" {if $userinfo.state=="0"}selected{/if}>冻结</option>
+                    </select>
                   </div>
-
-                  <div class="mb-3">
-                    <label class="form-label">VIP等级</label>
-                    <div class="form-controls">
-                      <select name="membership_level" class="form-select">
-                        <option value="0" {if $userinfo.membership_level=="0" || !isset($userinfo.membership_level)}selected{/if}>普通用户</option>
-                        <option value="1" {if $userinfo.membership_level=="1"}selected{/if}>青铜VIP</option>
-                        <option value="2" {if $userinfo.membership_level=="2"}selected{/if}>白银VIP</option>
-                        <option value="3" {if $userinfo.membership_level=="3"}selected{/if}>黄金VIP</option>
-                        <option value="4" {if $userinfo.membership_level=="4"}selected{/if}>紫金VIP</option>
-                        <option value="5" {if $userinfo.membership_level=="5"}selected{/if}>钻石VIP</option>
-                        <option value="6" {if $userinfo.membership_level=="6"}selected{/if}>至尊VIP</option>
-                      </select>
-                    </div>
+                </div>
+                <div class="ud-row">
+                  <label>实名姓名</label>
+                  <div class="val"><input type="text" name="realname" value="{$userinfo.realname}" placeholder="实名认证的姓名"></div>
+                </div>
+                <div class="ud-row">
+                  <label>身份证号</label>
+                  <div class="val"><input type="text" name="idcard" value="{$userinfo.idcard}" placeholder="实名认证的身份证号"></div>
+                </div>
+                <div class="ud-row">
+                  <label>VIP等级</label>
+                  <div class="val">
+                    <select name="membership_level">
+                      <option value="0" {if $userinfo.membership_level=="0" || !isset($userinfo.membership_level)}selected{/if}>普通用户</option>
+                      <option value="1" {if $userinfo.membership_level=="1"}selected{/if}>青铜VIP</option>
+                      <option value="2" {if $userinfo.membership_level=="2"}selected{/if}>白银VIP</option>
+                      <option value="3" {if $userinfo.membership_level=="3"}selected{/if}>黄金VIP</option>
+                      <option value="4" {if $userinfo.membership_level=="4"}selected{/if}>紫金VIP</option>
+                      <option value="5" {if $userinfo.membership_level=="5"}selected{/if}>钻石VIP</option>
+                      <option value="6" {if $userinfo.membership_level=="6"}selected{/if}>至尊VIP</option>
+                    </select>
                   </div>
-
-                  <div class="mb-3">
-                    <label class="form-label">用户积分</label>
-                    <input class="form-control" type="number" name="points" value="{$userinfo.points|default='0'}" min="0" step="1" placeholder="用户当前积分">
+                </div>
+                {if $userPhone}
+                <div class="ud-row">
+                  <label>手机号</label>
+                  <div class="val"><span class="txt"><i class="mdi mdi-cellphone" style="color:#1f6feb;margin-right:5px"></i>{$userPhone}</span><span class="ud-badge ok" style="margin-left:8px"><i class="mdi mdi-check-circle"></i>手机三要素已认证</span></div>
+                </div>
+                {/if}
+                <div class="ud-row">
+                  <label>封禁状态</label>
+                  <div class="val" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                    {if $userinfo.ban_time > time()}
+                    <span class="ud-badge ban">已封禁至 {$userinfo.ban_time|date="Y-m-d H:i",###}</span>
+                    <button type="button" class="ud-mini-btn" onclick="unbanUser({$userinfo.id})">解封</button>
+                    {else /}
+                    <span class="ud-badge ok">未封禁</span>
+                    <button type="button" class="ud-mini-btn red" onclick="banUser({$userinfo.id})">封禁</button>
+                    {/if}
                   </div>
+                </div>
+              </div>
+            </div>
 
-                  <div class="mb-3">
-                    <label class="form-label">实名姓名</label>
-                    <input class="form-control" type="text" name="realname" value="{$userinfo.realname}" placeholder="实名认证的姓名">
-                  </div>
+          </div>
+          </form>
 
-                  <div class="mb-3">
-                    <label class="form-label">身份证号</label>
-                    <input class="form-control" type="text" name="idcard" value="{$userinfo.idcard}" placeholder="实名认证的身份证号">
-                  </div>
-
-<div class="mb-3">
-                    <label class="form-label">封禁状态</label>
-                    <div class="form-controls">
-                      {if $userinfo.ban_time > time()}
-                      <span class="admin-badge admin-badge-warning" style="font-size:14px;padding:6px 14px;">已封禁至 {$userinfo.ban_time|date="Y-m-d H:i:s",###}</span>
-                      {if $userinfo.ban_reason}
-                      <span class="admin-field-hint">封禁原因：{$userinfo.ban_reason}</span>
-                      {/if}
-                      <br><br>
-                      <button type="button" class="btn-admin btn-admin-success" onclick="unbanUser({$userinfo.id})"><i class="mdi mdi-lock-open"></i> 解封用户</button>
-                      {else}
-                      <span class="admin-badge admin-badge-success" style="font-size:14px;padding:6px 14px;">正常</span>
-                      <br><br>
-                      <button type="button" class="btn-admin btn-admin-danger" onclick="banUser({$userinfo.id})"><i class="mdi mdi-lock"></i> 封禁用户</button>
-                      {/if}
-                    </div>
-                  </div>
-  
-                     <button type="submit" class="btn-admin btn-admin-primary me-1">修改</button>
-                    </div>
-
-
-                    <div class="tab-pane fade" id="sys" aria-labelledby="basic-sys">
-
-
-<div class="table-responsive-sm">
-          <table class="table table-hover table-admin">
-            <thead>
-              <tr>
-                <th scope="col">ID</th>
-                <th scope="col">名称</th>
-                <th scope="col">账号</th>
-                <th scope="col">开通时间</th>
-                <th scope="col">到期时间</th>
-                <th scope="col">状态</th>
-                <th scope="col">操作</th>
-              </tr>
-            </thead>
-            <tbody>
+          <!-- 产品列表 -->
+          <div class="ud-products">
+            <div class="ud-card-title"><i class="mdi mdi-package-variant-closed"></i> 产品列表</div>
+            <div class="table-responsive-sm">
+              <table class="table table-hover table-admin">
+                <thead>
+                  <tr>
+                    <th scope="col">产品ID</th>
+                    <th scope="col">名称</th>
+                    <th scope="col">账号</th>
+                    <th scope="col">开通时间</th>
+                    <th scope="col">到期时间</th>
+                    <th scope="col">状态</th>
+                    <th scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
 {foreach $userorder as $u}
-
-              <tr>
-                <th scope="row">{$u.id}</th>
-                <td>{$u.cartid}</td>
-                <td>{$u.user}</td>
-                <td>{$u.atime|date="Y-m-d H:i:s",###}</td>
-                <td>{$u.ztime|date="Y-m-d H:i:s",###}</td>
-                <td>
+                  <tr>
+                    <th scope="row">{$u.id}</th>
+                    <td>{$u.cartid}</td>
+                    <td>{$u.user}</td>
+                    <td>{$u.atime|date="Y-m-d H:i:s",###}</td>
+                    <td>{$u.ztime|date="Y-m-d H:i:s",###}</td>
+                    <td>
 {if $u.state=="1"}
 <span class="admin-badge admin-badge-success">正常</span>
 {/if}
@@ -197,103 +288,80 @@
 <td>
 <a href="/admin/user/{$userid}/{$u.id}" class="btn-admin btn-admin-success btn-sm me-1"><i class="mdi mdi-pencil"></i>查看信息</a>
 </td>
-              </tr>
+                  </tr>
 {/foreach}
-            </tbody>
-          </table>
-</div>
-
-
-
-
-                    </div>
-
-
-
-
-                  </div>
-
- 
-                </form>
-
-              </div>
+{if empty($userorder)}
+                  <tr><td colspan="7" class="ud-empty">该用户暂无产品</td></tr>
+{/if}
+                </tbody>
+              </table>
             </div>
           </div>
 
         </div>
+      </div>
 
-      </div>    
-	
 	</main>
     <!--End 页面主要内容-->
 
 
  {include file="default/footer" /}
 <script>
-    // 手动初始化 Bootstrap 5 标签页切换
-    $(function() {
-        var tabList = [].slice.call(document.querySelectorAll('#userinfoTabs button[data-bs-toggle="tab"]'));
-        tabList.forEach(function(triggerEl) {
-            var tabTrigger = new bootstrap.Tab(triggerEl);
-            triggerEl.addEventListener('click', function(e) {
-                e.preventDefault();
-                tabTrigger.show();
-            });
-        });
-    });
+    $(function(){
+        // 提交修改
+        $("form.edit-form").submit(function (){
+            var load = layer.msg('修改中，请稍后...', {icon:16, shade:0.8, time:false});
 
-    $("form").submit(function (){
-        var load = layer.msg('修改中，请稍后...',{icon:16,shade:0.8,time:false});
+            var name = $("input[name='name']").val();
+            var user = $("input[name='user']").val();
+            var money = $("input[name='money']").val();
+            var qq = $("input[name='qq']").val();
+            var mail = $("input[name='mail']").val();
+            var address = $("input[name='address']").val();
+            var password = $("input[name='password']").val();
+            var aff = $("input[name='aff']").val();
+            var affmoney = $("input[name='affmoney']").val();
+            var upperid = $("input[name='upperid']").val();
+            var state = $("select[name='state']").val();
+            var realname_status = $("select[name='realname_status']").val();
+            var membership_level = $("select[name='membership_level']").val();
+            var points = $("input[name='points']").val();
+            var realname = $("input[name='realname']").val();
+            var idcard = $("input[name='idcard']").val();
 
-        var name = $("input[name='name']").val();
-        var user = $("input[name='user']").val();
-        var money = $("input[name='money']").val();
-        var qq = $("input[name='qq']").val();
-        var mail = $("input[name='mail']").val();
-        var address = $("input[name='address']").val();
-        var password = $("input[name='password']").val();       
-        var aff = $("input[name='aff']").val();       
-        var affmoney = $("input[name='affmoney']").val();       
-        var upperid = $("input[name='upperid']").val();       
-        var state = $("select[name='state']").val();
-        var realname_status = $("select[name='realname_status']").val();
-        var membership_level = $("select[name='membership_level']").val();
-        var points = $("input[name='points']").val();
-        var realname = $("input[name='realname']").val();
-        var idcard = $("input[name='idcard']").val();
-
-           $.ajax({
-            type:'POST',
-            url:'',
-            data:{
-                name:name,
-                user:user,
-                money:money,
-                qq:qq,
-                mail:mail,
-                address:address,
-                password:password,
-                aff:aff,
-                affmoney:affmoney,
-                upperid:upperid,
-                state:state,
-                realname_status:realname_status,
-                membership_level:membership_level,
-                points:points,
-                realname:realname,
-                idcard:idcard,
-            },
-            dataType:'json',
-            success:function (data){
-                layer.close(load);
-                if(data.code == 1){
-                    layer.alert(data.msg,{icon:1,shade:0.8});
-                }else{
-                    layer.alert(data.msg,{icon:2,shade:0.8});
+               $.ajax({
+                type:'POST',
+                url:'',
+                data:{
+                    name:name,
+                    user:user,
+                    money:money,
+                    qq:qq,
+                    mail:mail,
+                    address:address,
+                    password:password,
+                    aff:aff,
+                    affmoney:affmoney,
+                    upperid:upperid,
+                    state:state,
+                    realname_status:realname_status,
+                    membership_level:membership_level,
+                    points:points,
+                    realname:realname,
+                    idcard:idcard,
+                },
+                dataType:'json',
+                success:function (data){
+                    layer.close(load);
+                    if(data.code == 1){
+                        layer.msg(data.msg,{icon:1});
+                    }else{
+                        layer.msg(data.msg,{icon:2});
+                    }
                 }
-            }
+            });
+            return false;
         });
-        return false;
     });
 
 function banUser(userid){
@@ -323,7 +391,7 @@ layer.open({
 }
 
 function banUserSubmit(userid){
-var load = layer.msg('封禁中，请稍后...',{icon:16,time:false});
+var load = layer.msg('封禁中，请稍后...', {icon:16, shade:0.8, time:false});
 var ban_duration = $("input[name='ban_duration']").val();
 var ban_reason = $("textarea[name='ban_reason']").val();
 $.ajax({
@@ -339,11 +407,11 @@ $.ajax({
     success:function (data){
         layer.close(load);
         if(data.code == 1){
-            layer.alert(data.msg,{icon:1},function(){
+            layer.msg(data.msg,{icon:1},function(){
                 window.location.href = "";
             });
         }else{
-            layer.alert(data.msg,{icon:2});
+            layer.msg(data.msg,{icon:2});
         }
     }
 });
@@ -351,7 +419,7 @@ $.ajax({
 
 function unbanUser(userid){
 layer.confirm('确定要解封用户ID为 <span style="color:#0b5ed7">'+ userid +'</span> 吗？<br>解封后主机需手动恢复。', function (){
-    var load = layer.msg('解封中，请稍后...',{icon:16,time:false});
+    var load = layer.msg('解封中，请稍后...', {icon:16, shade:0.8, time:false});
     $.ajax({
         type:'POST',
         url:'/admin/user',
@@ -363,11 +431,11 @@ layer.confirm('确定要解封用户ID为 <span style="color:#0b5ed7">'+ userid 
         success:function (data){
             layer.close(load);
             if(data.code == 1){
-                layer.alert(data.msg,{icon:1},function(){
+                layer.msg(data.msg,{icon:1},function(){
                     window.location.href = "";
                 });
             }else{
-                layer.alert(data.msg,{icon:2});
+                layer.msg(data.msg,{icon:2});
             }
         }
     });

@@ -211,17 +211,45 @@
 
 <script>
 function doExchange(id, name, points) {
-    if (!confirm('确定要使用 ' + points + ' 积分兑换「' + name + '」吗？')) return;
-    $.post('__ROOT__/user/pointsExchange', { product_id: id }, function(res) {
-        if (res.code == '1') {
-            alert(res.msg);
-            location.reload();
-        } else {
-            alert(res.msg);
-        }
-    }, 'json').fail(function() {
-        alert('兑换失败，请稍后再试');
-    });
+    var doPost = function() {
+        $.post('__ROOT__/user/pointsExchange', { product_id: id }, function(res) {
+            if (res.code == '1') {
+                if (window.GlassToast) {
+                    GlassToast.success(res.msg);
+                } else {
+                    alert(res.msg);
+                }
+                setTimeout(function() { location.reload(); }, 1200);
+            } else {
+                if (window.GlassToast) {
+                    GlassToast.error(res.msg || '兑换失败');
+                } else {
+                    alert(res.msg);
+                }
+            }
+        }, 'json').fail(function() {
+            if (window.GlassToast) {
+                GlassToast.error('兑换失败，请稍后再试');
+            } else {
+                alert('兑换失败，请稍后再试');
+            }
+        });
+    };
+
+    if (window.GlassToast) {
+        GlassToast.confirm({
+            type: 'warning',
+            title: '确认兑换',
+            msg: '确定要使用 ' + points + ' 积分兑换「' + name + '」吗？',
+            confirmText: '确认兑换',
+            cancelText: '取消',
+            onOk: doPost
+        });
+    } else if (!confirm('确定要使用 ' + points + ' 积分兑换「' + name + '」吗？')) {
+        return;
+    } else {
+        doPost();
+    }
 }
 </script>
 {include file="default/user/footer" /}

@@ -1,0 +1,144 @@
+{php}$title = '找回密码'; $tab_active = 'home'; $back_url = '/login';{/php}
+{include file="default/mobile/header" /}
+
+<div class="app-auth-page">
+    <div style="text-align:center;margin-bottom:24px;">
+        <h2 style="font-size:20px;font-weight:700;color:var(--text);margin:0 0 6px;">重置密码</h2>
+        <p style="font-size:13px;color:var(--text-muted);margin:0;">请输入您的邮箱地址重置密码</p>
+    </div>
+
+    <form id="pwresetForm" class="app-auth-form">
+        <input type="hidden" name="csrf_token" value="{:csrf_token()}">
+
+        <div class="app-input-group">
+            <input type="email" name="email" class="app-input" placeholder="请输入注册邮箱" required>
+        </div>
+
+        <div class="app-input-group">
+            <button type="button" id="slide-captcha-btn" style="width:100%;height:44px;border:1.5px dashed var(--glass-primary);border-radius:12px;background:var(--glass-bg-light);color:var(--glass-primary);font-size:14px;cursor:pointer;font-weight:500;transition:all 0.2s;">点击进行滑块验证</button>
+            <input type="hidden" name="captcha" id="captcha-verified" value="">
+            <div id="captcha-status" style="margin-top:4px;font-size:12px;min-height:18px;color:var(--text-muted);"></div>
+        </div>
+
+        <div class="app-input-group">
+            <div class="app-input-row">
+                <input type="text" class="app-input" name="code" placeholder="邮箱验证码" required>
+                <button type="button" class="app-btn app-btn-outline app-btn-sm" id="sendCode">获取验证码</button>
+            </div>
+        </div>
+
+        <div class="app-input-group">
+            <input type="password" name="password" class="app-input" placeholder="新密码" required>
+        </div>
+
+        <div class="app-input-group">
+            <input type="password" name="repassword" class="app-input" placeholder="确认新密码" required>
+        </div>
+
+        <button type="submit" class="app-btn app-btn-primary app-btn-block">重置密码</button>
+
+        <div class="app-auth-link">
+            想起密码了？<a href="__ROOT__/login">返回登录</a>
+        </div>
+    </form>
+</div>
+
+{include file="index@default/captcha_assets" /}
+
+<script>
+$(function() {
+    var captchaVerified = false;
+    if (typeof window.slideCaptcha !== 'function') {
+        $('#slide-captcha-btn').html('验证组件加载失败，请刷新').css({'border-color':'#f44336','background':'#FFEBEE','color':'#f44336'});
+    }
+
+    $('#slide-captcha-btn').on('click', function() {
+        if (typeof window.slideCaptcha !== 'function') return;
+        window.slideCaptcha({
+            onSuccess: function(token) {
+                captchaVerified = true;
+                $('#captcha-verified').val(token);
+                $('#slide-captcha-btn').css({'border-color':'#4caf50','background':'#E8F5E9','color':'#4caf50'}).html('验证通过');
+            },
+            onError: function() {
+                captchaVerified = false;
+                $('#captcha-verified').val('');
+                $('#slide-captcha-btn').css({'border-color':'#f44336','background':'#FFEBEE','color':'#f44336'}).html('验证失败，点击重试');
+            },
+            onClose: function() {
+                if (!captchaVerified) {
+                    $('#slide-captcha-btn').css({'border-color':'var(--glass-primary)','background':'var(--glass-bg-light)','color':'var(--glass-primary)'}).html('点击进行滑块验证');
+                }
+            }
+        });
+    });
+
+    function resetCaptcha() {
+        captchaVerified = false;
+        $('#captcha-verified').val('');
+        $('#slide-captcha-btn').css({'border-color':'var(--glass-primary)','background':'var(--glass-bg-light)','color':'var(--glass-primary)'}).html('点击进行滑块验证');
+    }
+
+    $('#sendCode').on('click', function() {
+        var email = $('input[name="email"]').val();
+        if (!email) { appToast('请填写邮箱', 'error'); return; }
+        if (!captchaVerified) { appToast('请先完成滑块验证', 'warning'); return; }
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '发送中...';
+        $.ajax({
+            type: 'POST',
+            url: '',
+            data: { act: 'sendcode', email: email, captcha: $('#captcha-verified').val() },
+            dataType: 'json',
+            success: function(data) {
+                if (data.code == 1) {
+                    appToast(data.msg, 'success');
+                    var count = 60;
+                    var timer = setInterval(function() {
+                        btn.textContent = count + '秒后重发';
+                        count--;
+                        if (count < 0) { clearInterval(timer); btn.disabled = false; btn.textContent = '获取验证码'; }
+                    }, 1000);
+                } else {
+                    appToast(data.msg, 'error');
+                    btn.disabled = false;
+                    btn.textContent = '获取验证码';
+                    resetCaptcha();
+                }
+            }
+        });
+    });
+
+    $('#pwresetForm').on('submit', function(e) {
+        e.preventDefault();
+        if (!captchaVerified) { appToast('请先完成滑块验证', 'warning'); return; }
+        var form = this;
+        var btn = form.querySelector('button[type="submit"]');
+        var data = new FormData(form);
+        data.append('act', 'reset');
+        btn.disabled = true;
+        btn.textContent = '处理中...';
+        $.ajax({
+            type: 'POST',
+            url: '',
+            data: data,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function(res) {
+                if (res.code == 1) {
+                    appToast(res.msg, 'success');
+                    setTimeout(function() { location.href = '__ROOT__/login'; }, 1500);
+                } else {
+                    appToast(res.msg, 'error');
+                    btn.disabled = false;
+                    btn.textContent = '重置密码';
+                }
+            }
+        });
+    });
+});
+</script>
+
+{include file="default/mobile/footer" /}

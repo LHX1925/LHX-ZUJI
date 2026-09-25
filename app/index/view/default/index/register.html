@@ -158,14 +158,18 @@
         }
 
         .auth-illustration {
-            margin-top: 48px;
+            margin-top: 32px;
             width: 100%;
-            max-width: 460px;
+            max-width: 260px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .auth-illustration img {
             width: 100%;
             height: auto;
+            max-height: 340px;
+            object-fit: contain;
             display: block;
             border-radius: var(--glass-radius-lg);
         }
@@ -482,7 +486,7 @@
                         <div class="form-group">
                             <div class="input-with-icon">
                                 <i class="fas fa-lock"></i>
-                                <input type="password" name="userPwd" class="form-control" placeholder="设置密码">
+                                <input type="password" name="userPwd" class="form-control" placeholder="设置密码（≥8位，含大小写字母和数字）">
                             </div>
                         </div>
 
@@ -824,6 +828,13 @@
                 });
             });
 
+            // 密码复杂度：长度≥8，且必须同时包含大写字母、小写字母和数字（账号不做限制）
+            function checkCredComplexity(u, p){
+                if((p||'').length < 8) return '密码长度至少 8 位';
+                if(!(/[A-Z]/.test(p) && /[a-z]/.test(p) && /\d/.test(p))) return '密码必须同时包含大写字母、小写字母和数字';
+                return '';
+            }
+
             {if $zcyxyz=="1"}
             $("form").submit(function (){
                 var login = $("button[type='submit']");
@@ -845,6 +856,9 @@
                     showToast('请先完成邮箱验证（点击邮件链接或输入备用验证码）', 'warning', 2500);
                     return false;
                 }
+
+                var credErr = checkCredComplexity(userUser, userPwd);
+                if (credErr) { showToast(credErr, 'danger', 3000); return false; }
 
                 if (!$('#agreement').is(':checked')) {
                     showToast('请阅读并同意服务协议', 'warning', 2500);
@@ -910,6 +924,9 @@
                     showToast('请确保必填项不为空', 'danger', 2500);
                     return false;
                 }
+
+                var credErr = checkCredComplexity(userUser, userPwd);
+                if (credErr) { showToast(credErr, 'danger', 3000); return false; }
 
                 if (!$('#agreement').is(':checked')) {
                     showToast('请阅读并同意服务协议', 'warning', 2500);

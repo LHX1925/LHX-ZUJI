@@ -1,0 +1,477 @@
+{include file="default/header" title="开发者API管理"/}
+<style>
+.lyear-layout-content.page-wrap{position:relative!important;height:auto!important;width:100%!important;max-width:1400px!important;margin:0 auto!important;left:auto!important;padding:calc(64px + 24px) 20px 40px 20px!important}
+.page-wrap { --pri: #3b82f6; --pri2: #2563eb; --radius: 16px; }
+.page-header-bar {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 16px; padding: 20px 24px; margin-bottom: 20px;
+  color: #fff; box-shadow: 0 4px 20px rgba(59,130,246,0.25);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.page-header-bar h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.page-header-bar .sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+.content-card {
+  background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+  border: 1px solid #e8ecf1; overflow: hidden; margin-bottom: 20px;
+}
+.content-card-header {
+  padding: 14px 20px; border-bottom: 1px solid #f1f5f9;
+  font-weight: 700; color: #1a1a2e; font-size: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.content-card-header::before{
+  content:''; width:4px; height:18px; border-radius:2px;
+  background: linear-gradient(180deg,#3b82f6,#1d4ed8);
+}
+.content-card-body { padding: 18px 20px; }
+.new-table { width:100%; border-collapse:collapse; font-size:13px; }
+.new-table thead th {
+  background:#f8fafc; color:#475569; font-weight:600;
+  padding:10px 12px; border-bottom:2px solid #e2e8f0;
+  font-size:11px; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap;
+}
+.new-table tbody td {
+  padding:10px 12px; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:middle;
+}
+.new-table tbody tr:hover { background:#fafbfc; }
+.new-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:7px 16px; border-radius:10px; border:none;
+  font-size:12px; font-weight:600; cursor:pointer;
+  transition:all 0.2s; text-decoration:none;
+}
+.new-btn.primary { background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; box-shadow:0 3px 10px rgba(59,130,246,0.3); }
+.new-btn.primary:hover { transform:translateY(-1px); box-shadow:0 5px 16px rgba(59,130,246,0.4); }
+.new-btn.success { background:linear-gradient(135deg,#10b981,#059669); color:#fff; }
+.new-btn.success:hover { transform:translateY(-1px); }
+.new-btn.warn { background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; }
+.new-btn.danger { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; }
+.new-btn.outline { background:#fff; color:#3b82f6; border:2px solid #e2e8f0; }
+.new-btn.outline:hover { border-color:#3b82f6; background:#eff6ff; }
+.new-btn.sm { padding:4px 10px; font-size:11px; }
+.new-badge { display:inline-flex; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.new-badge.danger { background:#fef2f2; color:#dc2626; }
+.new-badge.success { background:#ecfdf5; color:#059669; }
+.new-badge.warning { background:#fffbeb; color:#d97706; }
+.new-badge.info { background:#eff6ff; color:#2563eb; }
+.new-badge.gray { background:#f1f5f9; color:#64748b; }
+.form-input { padding:9px 14px; border:2px solid #e2e8f0; border-radius:10px; font-size:13px; transition:all 0.2s; background:#fff; color:#334155; }
+.form-input:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.1); outline:none; }
+.form-select { padding:9px 14px; border:2px solid #e2e8f0; border-radius:10px; font-size:13px; background:#fff; color:#334155; }
+.form-select:focus { border-color:#3b82f6; box-shadow:0 0 0 3px rgba(59,130,246,0.1); outline:none; }
+.search-box { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.search-box .form-input { width:auto; min-width:240px; }
+.mono { font-family:'SF Mono','Fira Code','Consolas',monospace; font-size:12px; color:#64748b; }
+
+.tab-nav { display:flex; gap:0; margin-bottom:20px; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; flex-wrap:wrap; }
+.tab-nav a { display:inline-flex; align-items:center; gap:6px; padding:10px 22px; font-size:13px; font-weight:600; text-decoration:none; color:#64748b; background:#f8fafc; border-right:1px solid #e2e8f0; transition:all 0.2s; }
+.tab-nav a:last-child { border-right:none; }
+.tab-nav a:hover { background:#f1f5f9; color:#334155; }
+.tab-nav a.active { background:linear-gradient(135deg,#3b82f6,#2563eb); color:#fff; }
+
+/* 设置表单 */
+.setting-row { display:flex; align-items:center; gap:16px; padding:14px 0; border-bottom:1px solid #f1f5f9; }
+.setting-row:last-child { border-bottom:none; }
+.setting-row .label { flex:0 0 220px; font-size:13px; font-weight:600; color:#334155; }
+.setting-row .label small { display:block; font-weight:400; color:#94a3b8; font-size:11px; margin-top:2px; }
+.setting-row .control { flex:1; }
+.switch { position:relative; display:inline-block; width:46px; height:24px; }
+.switch input { opacity:0; width:0; height:0; }
+.switch .slider { position:absolute; cursor:pointer; inset:0; background:#cbd5e1; transition:.3s; border-radius:24px; }
+.switch .slider:before { position:absolute; content:''; height:18px; width:18px; left:3px; top:3px; background:#fff; transition:.3s; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.switch input:checked + .slider { background:linear-gradient(135deg,#3b82f6,#2563eb); }
+.switch input:checked + .slider:before { transform:translateX(22px); }
+.fn-group { margin-bottom:16px; }
+.fn-group-title { font-size:13px; font-weight:700; color:#1a1a2e; margin:0 0 8px; padding-left:10px; border-left:3px solid #3b82f6; }
+.fn-list { display:flex; flex-wrap:wrap; gap:8px; }
+.fn-item { display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:12px; color:#475569; cursor:pointer; background:#fff; transition:all .15s; }
+.fn-item:hover { border-color:#3b82f6; }
+.fn-item input { accent-color:#2563eb; cursor:pointer; }
+.fn-item .fn-code { color:#94a3b8; font-family:monospace; font-size:10px; }
+.fn-item.off { background:#fef2f2; border-color:#fecaca; color:#b91c1c; }
+
+/* 统计卡片 */
+.stat-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px; margin-bottom:20px; }
+.stat-card { background:#fff; border-radius:14px; padding:18px 16px; box-shadow:0 2px 12px rgba(0,0,0,0.04); border:1px solid #e8ecf1; text-align:center; }
+.stat-card .num { font-size:26px; font-weight:800; color:#1a1a2e; line-height:1.2; }
+.stat-card .lbl { font-size:12px; color:#94a3b8; margin-top:4px; }
+.stat-card.c-blue .num { color:#2563eb; }
+.stat-card.c-green .num { color:#059669; }
+.stat-card.c-red .num { color:#dc2626; }
+.stat-card.c-orange .num { color:#d97706; }
+.stat-card.c-purple .num { color:#7c3aed; }
+.bar-wrap { background:#f1f5f9; border-radius:6px; height:8px; overflow:hidden; min-width:80px; }
+.bar-inner { height:100%; background:linear-gradient(90deg,#3b82f6,#2563eb); border-radius:6px; }
+
+@media (max-width:768px){
+  .page-header-bar { padding:14px 16px; border-radius:12px; }
+  .page-header-bar h2 { font-size:17px; }
+  .content-card-body { padding:12px 14px; }
+  .new-table thead { display:none; }
+  .new-table tbody td { display:block; text-align:right; padding:6px 8px; }
+  .new-table tbody td::before { content:attr(data-label); float:left; font-weight:600; color:#475569; font-size:10px; text-transform:uppercase; }
+  .new-table tbody tr { display:block; margin-bottom:6px; background:#fafbfc; border-radius:10px; padding:4px 8px; }
+  .setting-row { flex-direction:column; align-items:flex-start; gap:8px; }
+  .setting-row .label { flex:none; }
+  .search-box { flex-direction:column; align-items:stretch; }
+  .search-box .form-input { min-width:auto; width:100%; }
+}
+</style>
+<main class="lyear-layout-content page-wrap">
+  <div class="container-fluid">
+    <div class="page-header-bar">
+      <div>
+        <h2>开发者 API 管理</h2>
+        <div class="sub">接口开关 · 频率限流 · 密钥管理 · 调用统计</div>
+      </div>
+      <div>
+        <span style="font-size:12px;opacity:0.85;">API 地址：{if isset($web)}__ROOT__/api/{/if}</span>
+      </div>
+    </div>
+
+    <!-- Tab切换 -->
+    <div class="tab-nav">
+      <a href="?tab=settings" class="{if $tab=='settings'}active{/if}"><i class="mdi mdi-tune"></i> 接口设置</a>
+      <a href="?tab=keys" class="{if $tab=='keys'}active{/if}"><i class="mdi mdi-key-variant"></i> 密钥管理</a>
+      <a href="?tab=stats" class="{if $tab=='stats'}active{/if}"><i class="mdi mdi-chart-bar"></i> 调用统计</a>
+      <a href="?tab=bans" class="{if $tab=='bans'}active{/if}"><i class="mdi mdi-shield-alert-outline"></i> 封禁IP</a>
+    </div>
+
+    {if $tab == 'settings'}
+    <!-- ================= 接口设置 ================= -->
+    <div class="content-card">
+      <div class="content-card-header">接口控制</div>
+      <div class="content-card-body">
+        <form id="settingsForm">
+        {:token()}
+        <div class="setting-row">
+          <div class="label">开发者 API 总开关<small>关闭后所有 API 调用均被拒绝</small></div>
+          <div class="control">
+            <label class="switch">
+              <input type="checkbox" name="api_enabled" value="1" {if $settings.api_enabled == '1'}checked{/if}>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="label">调用频率限制<small>每个 IP / 每个密钥 每分钟最大调用次数，0 = 不限</small></div>
+          <div class="control">
+            <input class="form-input" type="number" name="api_rate" value="{$settings.api_rate}" min="0" style="width:120px;"> 次 / 分钟
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="label">超限自动封禁时长<small>超过频率限制后自动封禁 IP 的时长（秒），0 = 永久</small></div>
+          <div class="control">
+            <input class="form-input" type="number" name="api_rate_ban" value="{$settings.api_rate_ban}" min="0" style="width:120px;"> 秒
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="label">实名信息加密传输<small>开启后，实名认证的姓名/身份证/手机号在前端 AES 加密提交，防止抓包</small></div>
+          <div class="control">
+            <label class="switch">
+              <input type="checkbox" name="realname_encrypt" value="1" {if $settings.realname_encrypt == '1'}checked{/if}>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <div style="padding:16px 0 6px;">
+          <button type="button" class="new-btn primary" onclick="saveSettings()"><i class="mdi mdi-content-save"></i> 保存设置</button>
+        </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-header">功能开关<small style="font-weight:400;color:#94a3b8;margin-left:8px;">取消勾选即关闭对应 API 功能</small></div>
+      <div class="content-card-body">
+        <div style="margin-bottom:12px;">
+          <a href="javascript:;" class="new-btn outline sm" onclick="checkAllFn(true)">全选</a>
+          <a href="javascript:;" class="new-btn outline sm" onclick="checkAllFn(false)">全不选</a>
+        </div>
+        {foreach $functionGroups as $groupName => $functions}
+        <div class="fn-group">
+          <h5 class="fn-group-title">{$groupName}</h5>
+          <div class="fn-list">
+            {foreach $functions as $action => $cn}
+            <label class="fn-item" id="fn-item-{:md5($action)}">
+              <input type="checkbox" name="fn_{:md5($action)}" value="1" {if !isset($disabledMap[$action])}checked{/if} onchange="toggleFnStyle(this)">
+              <span>{$cn}</span>
+              <span class="fn-code">{$action}</span>
+            </label>
+            {/foreach}
+          </div>
+        </div>
+        {/foreach}
+        <div style="padding:8px 0 0;">
+          <button type="button" class="new-btn primary" onclick="saveSettings()"><i class="mdi mdi-content-save"></i> 保存设置</button>
+        </div>
+      </div>
+    </div>
+    {/if}
+
+    {if $tab == 'keys'}
+    <!-- ================= 密钥管理 ================= -->
+    <div class="content-card">
+      <div class="content-card-body">
+        <form method="get" action="">
+          <input type="hidden" name="tab" value="keys"/>
+          <div class="search-box" style="margin-bottom:16px;">
+            <input class="form-input" type="text" name="search" placeholder="搜索用户/密钥名/API密钥..." value="{$search|default=''}"/>
+            <button class="new-btn primary" type="submit"><i class="mdi mdi-magnify"></i> 搜索</button>
+            {if $search}<a href="?tab=keys" class="new-btn outline">清除</a>{/if}
+          </div>
+        </form>
+        <div class="table-responsive">
+          <table class="new-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>用户</th><th>密钥名称</th><th>API 密钥</th><th>密钥状态</th><th>用户API</th><th>最后使用</th><th>创建时间</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+{foreach $keys as $k}
+              <tr>
+                <td data-label="ID">{$k.id}</td>
+                <td data-label="用户">
+                  <strong style="color:#1a1a2e;">{if $k.nickname}{$k.nickname}{elseif $k.username}{$k.username}{else}用户#{$k.userid}{/if}</strong>
+                  {if $k.username}<div style="font-size:11px;color:#94a3b8;">账号：{$k.username}（ID:{$k.userid}）</div>{/if}
+                </td>
+                <td data-label="密钥名称">{$k.name}</td>
+                <td data-label="API密钥"><span class="mono">{:substr($k.api_key,0,10)}****{:substr($k.api_key,-6)}</span></td>
+                <td data-label="密钥状态">
+                  {if $k.status==1}<span class="new-badge success">启用</span>{else}<span class="new-badge gray">停用</span>{/if}
+                </td>
+                <td data-label="用户API">
+                  {if isset($k.api_disabled) && $k.api_disabled==1}<span class="new-badge danger">已禁用</span>{else}<span class="new-badge info">正常</span>{/if}
+                </td>
+                <td data-label="最后使用">{if $k.last_used_at>0}{:date('Y-m-d H:i:s',$k.last_used_at)}{else}-{/if}</td>
+                <td data-label="创建时间">{:date('Y-m-d H:i:s',$k.created_at)}</td>
+                <td data-label="操作">
+                  {if $k.status==1}
+                  <button onclick="toggleKey({$k.id},0)" class="new-btn warn sm">停用密钥</button>
+                  {else}
+                  <button onclick="toggleKey({$k.id},1)" class="new-btn success sm">启用密钥</button>
+                  {/if}
+                  {if isset($k.api_disabled) && $k.api_disabled==1}
+                  <button onclick="disableUser({$k.userid},0)" class="new-btn success sm">启用用户API</button>
+                  {else}
+                  <button onclick="disableUser({$k.userid},1)" class="new-btn danger sm">禁用用户API</button>
+                  {/if}
+                </td>
+              </tr>
+{/foreach}
+{if empty($keys->items())}
+              <tr><td colspan="9" style="text-align:center;padding:40px;color:#94a3b8;"><i class="mdi mdi-key-variant" style="font-size:40px;display:block;margin-bottom:10px;"></i>暂无密钥</td></tr>
+{/if}
+            </tbody>
+          </table>
+        </div>
+        {if !empty($keys) && !empty($keys->items())}
+        <div style="text-align:center;margin-top:16px;">{$keys->render()}</div>
+        {/if}
+      </div>
+    </div>
+    {/if}
+
+    {if $tab == 'stats'}
+    <!-- ================= 调用统计 ================= -->
+    <div class="search-box" style="margin-bottom:16px;">
+      <form method="get" action="" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <input type="hidden" name="tab" value="stats"/>
+        <select class="form-select" name="range" onchange="this.form.submit()">
+          <option value="1" {if $range=='1'}selected{/if}>最近1天</option>
+          <option value="7" {if $range=='7'}selected{/if}>最近7天</option>
+          <option value="30" {if $range=='30'}selected{/if}>最近30天</option>
+          <option value="0" {if $range=='0'}selected{/if}>全部</option>
+        </select>
+      </form>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat-card c-blue"><div class="num">{$stats.total_shown}</div><div class="lbl">当前范围调用次数</div></div>
+      <div class="stat-card"><div class="num">{$stats.total}</div><div class="lbl">累计总调用次数</div></div>
+      <div class="stat-card"><div class="num">{$stats.today}</div><div class="lbl">今日调用次数</div></div>
+      <div class="stat-card c-green"><div class="num">{$stats.success}</div><div class="lbl">成功</div></div>
+      <div class="stat-card c-red"><div class="num">{$stats.fail}</div><div class="lbl">失败</div></div>
+      <div class="stat-card c-orange"><div class="num">{$stats.blocked}</div><div class="lbl">被拦截(超限/封禁)</div></div>
+      <div class="stat-card c-purple"><div class="num">{$stats.denied}</div><div class="lbl">被拒绝(禁用/关闭)</div></div>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-header">功能调用频率</div>
+      <div class="content-card-body">
+        <div class="table-responsive">
+          <table class="new-table">
+            <thead><tr><th>功能 (action)</th><th>中文名</th><th>调用次数</th><th>成功次数</th><th>平均耗时</th><th>占比</th></tr></thead>
+            <tbody>
+{foreach $stats.by_action as $a}
+              <tr>
+                <td data-label="功能"><span class="mono">{$a.action}</span></td>
+                <td data-label="中文名">{$a.cn_name}</td>
+                <td data-label="调用次数"><strong>{$a.cnt}</strong></td>
+                <td data-label="成功次数">{$a.ok}</td>
+                <td data-label="平均耗时">{:round($a.avg_ms)}ms</td>
+                <td data-label="占比" style="min-width:160px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div class="bar-wrap" style="flex:1;"><div class="bar-inner" style="width:{$a.percent}%;"></div></div>
+                    <span style="font-size:11px;color:#64748b;white-space:nowrap;">{$a.percent}%</span>
+                  </div>
+                </td>
+              </tr>
+{/foreach}
+{if empty($stats.by_action)}
+              <tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">暂无调用数据</td></tr>
+{/if}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-header">调用用户统计</div>
+      <div class="content-card-body">
+        <div class="table-responsive">
+          <table class="new-table">
+            <thead><tr><th>用户</th><th>用户ID</th><th>调用次数</th><th>成功次数</th><th>失败/拒绝</th><th>最近调用</th></tr></thead>
+            <tbody>
+{foreach $stats.by_user as $u}
+              <tr>
+                <td data-label="用户"><strong style="color:#1a1a2e;">{$u.name}</strong></td>
+                <td data-label="用户ID">{$u.userid}</td>
+                <td data-label="调用次数"><strong>{$u.cnt}</strong></td>
+                <td data-label="成功次数">{$u.ok}</td>
+                <td data-label="失败/拒绝">{:intval($u.cnt)-intval($u.ok)}</td>
+                <td data-label="最近调用">{if $u.last_time>0}{:date('Y-m-d H:i:s',$u.last_time)}{else}-{/if}</td>
+              </tr>
+{/foreach}
+{if empty($stats.by_user)}
+              <tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8;">暂无用户调用数据</td></tr>
+{/if}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {/if}
+
+    {if $tab == 'bans'}
+    <!-- ================= 封禁IP ================= -->
+    <div class="content-card">
+      <div class="content-card-header">API 自动封禁 IP（频率超限触发）</div>
+      <div class="content-card-body">
+        <div class="table-responsive">
+          <table class="new-table">
+            <thead><tr><th>ID</th><th>IP</th><th>封禁原因</th><th>触发次数</th><th>封禁时间</th><th>解封时间</th><th>状态</th><th>操作</th></tr></thead>
+            <tbody>
+{foreach $autoBans as $b}
+              <tr>
+                <td data-label="ID">{$b.id}</td>
+                <td data-label="IP"><span class="mono" style="font-weight:600;color:#1a1a2e;">{$b.ip}</span></td>
+                <td data-label="封禁原因">{$b.reason|default='-'}</td>
+                <td data-label="触发次数"><strong>{$b.trigger_count}</strong>次</td>
+                <td data-label="封禁时间">{if $b.banned_at>0}{:date('Y-m-d H:i:s',$b.banned_at)}{else}-{/if}</td>
+                <td data-label="解封时间">{if $b.unban_at>0}{:date('Y-m-d H:i:s',$b.unban_at)}{else}<span class="new-badge danger">永久</span>{/if}</td>
+                <td data-label="状态">
+                  {if $b.status==1 && ($b.unban_at==0 || $b.unban_at>time())}<span class="new-badge danger">封禁中</span>
+                  {else}<span class="new-badge gray">已失效</span>{/if}
+                </td>
+                <td data-label="操作">
+                  {if $b.status==1}<button onclick="unbanIp({$b.id},'{$b.ip}')" class="new-btn success sm">解封</button>{/if}
+                </td>
+              </tr>
+{/foreach}
+{if empty($autoBans)}
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;"><i class="mdi mdi-shield-check-outline" style="font-size:40px;display:block;margin-bottom:10px;"></i>暂无自动封禁记录</td></tr>
+{/if}
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:12px;">提示：手动封禁的 IP 请前往「IP封禁」菜单查看与管理。</div>
+      </div>
+    </div>
+    {/if}
+  </div>
+</main>
+{include file="default/footer" /}
+<script>
+function token(){ return $('input[name="__token__"]').val(); }
+
+// 功能开关样式切换
+function toggleFnStyle(el){
+    var item = $(el).closest('.fn-item');
+    if(el.checked){ item.removeClass('off'); } else { item.addClass('off'); }
+}
+function checkAllFn(on){
+    $('.fn-item input').prop('checked', on).each(function(){ toggleFnStyle(this); });
+}
+
+// 保存设置
+function saveSettings(){
+    var load = layer.load(1, {time: false});
+    var data = $('#settingsForm').serialize();
+    // 功能开关复选框位于独立卡片中，需手动附加（勾选=开启）
+    $('input[name^="fn_"]:checked').each(function(){
+        data += '&' + encodeURIComponent(this.name) + '=1';
+    });
+    $.ajax({
+        type:'POST', url: window.location.pathname + '/saveSettings', data: data, dataType:'json',
+        success:function(res){
+            layer.close(load);
+            if(res.code == 1){ layer.msg(res.msg, {icon:1}, function(){ location.reload(); }); }
+            else { GlassTip.error(res.msg); }
+        },
+        error:function(){ layer.close(load); GlassTip.error('请求异常'); }
+    });
+}
+
+// 禁用/启用用户 API
+function disableUser(userid, disabled){
+    var txt = disabled ? '禁用该用户' : '启用该用户';
+    layer.confirm('确定要 <strong style="color:#dc2626;">' + txt + '的开发者 API</strong> 吗？', function(){
+        var load = layer.load(1, {time:false});
+        $.ajax({
+            type:'POST', url: window.location.pathname + '/disableUser',
+            data: { userid:userid, disabled:disabled, __token__:token() }, dataType:'json',
+            success:function(res){
+                layer.close(load);
+                if(res.code == 1){ layer.msg(res.msg, {icon:1}, function(){ location.reload(); }); }
+                else { GlassTip.error(res.msg); }
+            },
+            error:function(){ layer.close(load); GlassTip.error('请求异常'); }
+        });
+    });
+}
+
+// 启用/停用密钥
+function toggleKey(id, status){
+    var load = layer.load(1, {time:false});
+    $.ajax({
+        type:'POST', url: window.location.pathname + '/toggleKey',
+        data: { id:id, status:status, __token__:token() }, dataType:'json',
+        success:function(res){
+            layer.close(load);
+            if(res.code == 1){ layer.msg(res.msg, {icon:1}, function(){ location.reload(); }); }
+            else { GlassTip.error(res.msg); }
+        },
+        error:function(){ layer.close(load); GlassTip.error('请求异常'); }
+    });
+}
+
+// 解封 IP
+function unbanIp(id, ip){
+    layer.confirm('确定要解除 <strong style="color:#059669;">' + ip + '</strong> 的封禁吗？', function(){
+        var load = layer.load(1, {time:false});
+        $.ajax({
+            type:'POST', url: window.location.pathname + '/unban',
+            data: { id:id, __token__:token() }, dataType:'json',
+            success:function(res){
+                layer.close(load);
+                if(res.code == 1){ layer.msg(res.msg, {icon:1}, function(){ location.reload(); }); }
+                else { GlassTip.error(res.msg); }
+            },
+            error:function(){ layer.close(load); GlassTip.error('请求异常'); }
+        });
+    });
+}
+</script>

@@ -13,8 +13,10 @@
 return [
     // 应用初始化
     'app_init'     => [],
-    // 应用开始
-    'app_begin'    => [],
+    // 应用调度（路由检测之前：安装向导强制调度，绕过伪静态/PATH_INFO 异常）
+    'app_dispatch' => ['app\\behavior\\InstallDispatch'],
+    // 应用开始（全局安装状态守卫：未安装/数据库不可用时所有请求跳转安装向导）
+    'app_begin'    => ['app\\behavior\\InstallCheck'],
     // 模块初始化
     'module_init'  => [],
     // 操作开始执行

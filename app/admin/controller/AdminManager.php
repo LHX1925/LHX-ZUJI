@@ -13,88 +13,24 @@ class AdminManager extends Controller
         $this->user = Db::name('admin')->where('id', session("adminid"))->find();
 		$this->web = web_config();
 
-		// 确保 admin 表字段完整（role_id/is_super/status/created_at）
+		// 确保 admin 表字段完整（role_id/is_super/status/created_at/permissions）
 		ensure_admin_columns();
 
-		// 确保 admin_role 表存在（防止直接访问 admin_manager 时表未创建）
-		try {
-			Db::name('admin_role')->count();
-		} catch (\Exception $e) {
-			$tableName = Db::name('admin_role')->getTable();
-			Db::execute("CREATE TABLE IF NOT EXISTS `{$tableName}` (
-				`id` int(11) NOT NULL AUTO_INCREMENT,
-				`name` varchar(50) NOT NULL COMMENT '角色名称',
-				`permissions` text COMMENT '权限JSON',
-				`description` varchar(255) DEFAULT '' COMMENT '角色描述',
-				`created_at` int(11) DEFAULT 0,
-				PRIMARY KEY (`id`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8");
-			Db::name('admin_role')->insertAll([
-				[
-					'id'          => 1,
-					'name'        => '站长',
-					'permissions' => json_encode(['all']),
-					'description' => '网站最高管理，拥有所有权限',
-					'created_at'  => time(),
-				],
-				[
-					'id'          => 2,
-					'name'        => '超级管理员',
-					'permissions' => json_encode(['user', 'product', 'classification', 'server', 'order', 'ticket', 'announcement', 'pay', 'aff', 'set', 'admin_manager', 'sq', 'transaction', 'transferrecord', 'op_log']),
-			'description' => '除支付配置外所有功能',
-			'created_at'  => time(),
-		],
-		[
-			'id'          => 3,
-			'name'        => '普通管理员',
-				'permissions' => json_encode(['user']),
-				'description' => '仅能使用概览和用户管理',
-				'created_at'  => time(),
-				],
-			]);
-		}
+		// 确保 admin_role 表存在且为两角色体系（超级管理员/普通管理员），含旧版自动迁移
+		ensure_admin_role_table();
 
-		// 确保三个默认角色始终存在（兼容旧版升级）
-		try {
-			$existingRoles = Db::name('admin_role')->column('id');
-			$defaultRoles = [
-				['id' => 1, 'name' => '站长', 'permissions' => json_encode(['all']), 'description' => '网站最高管理，拥有所有权限', 'created_at' => time()],
-				['id' => 2, 'name' => '超级管理员', 'permissions' => json_encode(['user', 'product', 'classification', 'server', 'order', 'ticket', 'announcement', 'pay', 'aff', 'set', 'admin_manager', 'sq', 'transaction', 'transferrecord', 'op_log']), 'description' => '除支付配置外所有功能', 'created_at' => time()],
-				['id' => 3, 'name' => '普通管理员', 'permissions' => json_encode(['user']), 'description' => '仅能使用概览和用户管理', 'created_at' => time()],
-			];
-			foreach ($defaultRoles as $role) {
-				if (!in_array($role['id'], $existingRoles)) {
-					Db::name('admin_role')->insert($role);
-				}
-			}
-			// 修复旧版：将 ID=1 的 "超级管理员" 重命名为 "站长"
-			$oldRole = Db::name('admin_role')->where('id', 1)->find();
-			if ($oldRole && $oldRole['name'] == '超级管理员') {
-				Db::name('admin_role')->where('id', 1)->update(['name' => '站长', 'description' => '网站最高管理，拥有所有权限']);
-			}
-		} catch (\Exception $e) {
-			// 角色修复失败，不影响后续流程
-		}
+		// 字段补全后重新读取当前管理员信息
+		$this->user = Db::name('admin')->where('id', session("adminid"))->find();
+
 		// 如果数据库中仍配置为旧版 layui 后台主题，强制使用已重构的 default 主题
 		if($this->web["admintemplate"]=="layui"){
 			$this->web["admintemplate"]="default";
 		}
 
 		// 计算当前管理员权限
-        $this->isFounder = ($this->user['is_super'] == 1); // 站长（创始人）
-        $this->hasFullAccess = ($this->isFounder || $this->user['role_id'] == 1); // 站长或超级管理员角色
-        $adminPermissions = $this->hasFullAccess ? ['all'] : [];
-        if (!$this->hasFullAccess && $this->user['role_id']) {
-            try {
-                $role = Db::name('admin_role')->where('id', $this->user['role_id'])->find();
-                if ($role) {
-                    $adminPermissions = json_decode($role['permissions'], true) ?: [];
-                }
-            } catch (\Exception $e) {
-                // 查询异常时默认无额外权限，确保权限限制生效
-                $adminPermissions = [];
-            }
-        }
+        $this->isFounder = ($this->user['is_super'] == 1); // 创始人（超级管理员）
+        $this->hasFullAccess = ($this->isFounder || $this->user['role_id'] == 1); // 超级管理员
+        $adminPermissions = get_admin_permissions($this->user);
 
         // 仅超级管理员或拥有 admin_manager 权限的角色可访问
         if (!$this->hasFullAccess && !in_array('admin_manager', $adminPermissions)) {
@@ -106,6 +42,7 @@ class AdminManager extends Controller
         
         $this->assign([
             'webname' => $this->web['name'],
+            'web'     => $this->web,
             'user' => $this->user,
             'templateset' => $templateset,
             'adminPermissions' => $adminPermissions,
@@ -140,7 +77,8 @@ class AdminManager extends Controller
             $name = input('name', '');
             $mail = input('mail', '');
             $qq = input('qq', '');
-            $role_id = input('role_id', 0);
+            $role_id = intval(input('role_id', 2));
+            $permissions = input('permissions/a', []);
             
             if (empty($user) || empty($password) || empty($name)) {
                 $array['code'] = '-1';
@@ -148,10 +86,15 @@ class AdminManager extends Controller
                 return json($array);
             }
             
-            // 非站长不可创建站长
-            if (!$this->isFounder && in_array($role_id, [1, 2])) {
+            // 仅两个角色：1=超级管理员 2=普通管理员
+            if (!in_array($role_id, [1, 2])) {
+                $role_id = 2;
+            }
+            
+            // 非超级管理员不可创建超级管理员
+            if (!$this->hasFullAccess && $role_id == 1) {
                 $array['code'] = '-1';
-                $array['msg'] = '仅站长可以创建站长级别的管理员';
+                $array['msg'] = '仅超级管理员可以创建超级管理员';
                 return json($array);
             }
             
@@ -162,6 +105,9 @@ class AdminManager extends Controller
                 return json($array);
             }
             
+            // 超级管理员固定全权限；普通管理员存单个勾选的权限
+            $permsJson = ($role_id == 1) ? '' : json_encode(array_values($permissions));
+            
             $data = [
                 'user' => $user,
                 'password' => password_hash($password, PASSWORD_DEFAULT),
@@ -169,6 +115,7 @@ class AdminManager extends Controller
                 'mail' => $mail,
                 'qq' => $qq,
                 'role_id' => $role_id,
+                'permissions' => $permsJson,
                 'is_super' => 0,
                 'status' => 1,
                 'created_at' => time(),
@@ -186,12 +133,10 @@ class AdminManager extends Controller
             return json($array);
         }
         
-        $roles = $this->isFounder
-            ? Db::name('admin_role')->order('id asc')->select()
-            : Db::name('admin_role')->where('id', 'not in', [1, 2])->order('id asc')->select();
+        $roles = Db::name('admin_role')->order('id asc')->select();
         return $this->fetch('/'.$this->web["admintemplate"]."/admin_add", [
             'roles' => $roles,
-            'isCurrentSuper' => $this->isFounder,
+            'isCurrentSuper' => $this->hasFullAccess,
         ]);
     }
 
@@ -207,8 +152,8 @@ class AdminManager extends Controller
             $this->redirect('/admin/admin_manager');
         }
         
-        // 当前操作者是否为站长
-        $isCurrentSuper = $this->isFounder;
+        // 当前操作者是否为超级管理员
+        $isCurrentSuper = $this->hasFullAccess;
         
         if (Request::instance()->isPost()) {
             $array = ["code" => "-1", "msg" => ""];
@@ -217,7 +162,8 @@ class AdminManager extends Controller
             $mail = input('mail', '');
             $qq = input('qq', '');
             $password = input('password', '');
-            $role_id = input('role_id', 0);
+            $role_id = intval(input('role_id', 2));
+            $permissions = input('permissions/a', []);
             $status = input('status', 1);
             
             if (empty($user) || empty($name)) {
@@ -234,11 +180,21 @@ class AdminManager extends Controller
                 return json($array);
             }
             
-            // 非站长不可提升他人为站长
-            if (!$this->isFounder && in_array($role_id, [1, 2])) {
+            // 仅两个角色：1=超级管理员 2=普通管理员
+            if (!in_array($role_id, [1, 2])) {
+                $role_id = 2;
+            }
+            
+            // 非超级管理员不可设置他人为超级管理员
+            if (!$this->hasFullAccess && $role_id == 1) {
                 $array['code'] = '-1';
-                $array['msg'] = '仅站长可以设置站长权限';
+                $array['msg'] = '仅超级管理员可以设置超级管理员';
                 return json($array);
+            }
+            
+            // 创始人（is_super=1）不可被降级，固定为超级管理员
+            if (intval($admin['is_super']) == 1) {
+                $role_id = 1;
             }
             
             // 禁止非超级管理员修改自己的角色（防止自我降权导致无法管理）
@@ -246,8 +202,8 @@ class AdminManager extends Controller
                 $role_id = $this->user['role_id'];
             }
 
-            // 根据角色自动设置 is_super：role_id=1 即为站长
-            $is_super = ($role_id == 1) ? 1 : 0;
+            // 超级管理员固定全权限；普通管理员存单个勾选的权限
+            $permsJson = ($role_id == 1) ? '' : json_encode(array_values($permissions));
 
             $update = [
                 'user' => $user,
@@ -255,8 +211,8 @@ class AdminManager extends Controller
                 'mail' => $mail,
                 'qq' => $qq,
                 'role_id' => $role_id,
+                'permissions' => $permsJson,
                 'status' => $status,
-                'is_super' => $is_super,
             ];
             
             if (!empty($password)) {
@@ -275,14 +231,13 @@ class AdminManager extends Controller
             return json($array);
         }
         
-        // 站长可看到所有角色，其他人只能分配非站长/非超级管理员角色
-        $roles = $this->isFounder
-            ? Db::name('admin_role')->order('id asc')->select()
-            : Db::name('admin_role')->where('id', 'not in', [1, 2])->order('id asc')->select();
+        $roles = Db::name('admin_role')->order('id asc')->select();
+        $admin['perm_list'] = json_decode(isset($admin['permissions']) ? $admin['permissions'] : '', true);
+        if (!is_array($admin['perm_list'])) $admin['perm_list'] = [];
         return $this->fetch('/'.$this->web["admintemplate"]."/admin_edit", [
             'admin' => $admin,
             'roles' => $roles,
-            'isCurrentSuper' => $this->isFounder,
+            'isCurrentSuper' => $this->hasFullAccess,
         ]);
     }
 
@@ -305,10 +260,10 @@ class AdminManager extends Controller
                 return json($array);
             }
             
-            // 仅站长可以删除管理员，但站长不能删除自己
-            if (!$this->isFounder) {
+            // 仅超级管理员可以删除管理员，但不能删除自己
+            if (!$this->hasFullAccess) {
                 $array['code'] = '-1';
-                $array['msg'] = '仅站长可以删除管理员';
+                $array['msg'] = '仅超级管理员可以删除管理员';
                 return json($array);
             }
             if ($id == session('adminid')) {
@@ -389,7 +344,7 @@ class AdminManager extends Controller
             $this->redirect('/admin/admin_manager/roles');
         }
         
-        // 仅站长可编辑系统默认角色
+        // 仅超级管理员可编辑系统默认角色
         $isCurrentSuper = ($this->user['is_super'] == 1 || $this->user['role_id'] == 1);
         if (in_array($id, [1, 2]) && !$isCurrentSuper) {
             $this->error('您没有权限编辑系统默认角色', '/admin/admin_manager/roles');

@@ -1,0 +1,350 @@
+{include file="default/header" title="系统重要记录"/}
+<style>
+.sr-tip {
+  background: linear-gradient(135deg, #deebff 0%, #f0f7ff 100%);
+  border: 1px solid #b3d4ff; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px;
+  font-size: 13px; color: #0747a6; line-height: 1.7;
+}
+.sr-tip strong { display:block; margin-bottom:6px; font-size:14px; color:#0052cc; }
+.sr-tip ul { margin:6px 0 0; padding-left:18px; }
+.sr-tip li { margin:2px 0; }
+.sr-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:18px; }
+.sr-stat {
+  background: var(--glass-bg, rgba(255,255,255,.12)); border:1px solid var(--glass-border, rgba(255,255,255,.25));
+  border-radius:14px; padding:14px 16px; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+}
+.sr-stat .k { font-size:12px; color:#64748B; }
+.sr-stat .v { font-size:24px; font-weight:800; color:var(--glass-text,#1E293B); line-height:1.25; margin-top:4px; }
+.sr-stat .s { font-size:11px; color:#94A3B8; margin-top:2px; }
+.sr-cat-badge { display:inline-block; font-size:11px; padding:3px 9px; border-radius:999px; font-weight:600; white-space:nowrap; }
+.sr-cat-user      { background:rgba(79,124,255,.14); color:#4F7CFF; }
+.sr-cat-admin_login { background:rgba(16,185,129,.14); color:#0E9F6E; }
+.sr-cat-admin_op  { background:rgba(139,92,246,.14); color:#7C3AED; }
+.sr-cat-config    { background:rgba(245,158,11,.16); color:#B45309; }
+.sr-cat-order     { background:rgba(6,182,212,.14); color:#0891B2; }
+.sr-cat-finance   { background:rgba(234,179,8,.16); color:#A16207; }
+.sr-cat-security  { background:rgba(239,68,68,.14); color:#DC2626; }
+.sr-cat-stats     { background:rgba(100,116,139,.16); color:#475569; }
+.sr-lv { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+.sr-lv-1 { background:#94A3B8; }
+.sr-lv-2 { background:#4F7CFF; }
+.sr-lv-3 { background:#EF4444; box-shadow:0 0 0 3px rgba(239,68,68,.18); }
+.sr-table th { white-space:nowrap; font-size:13px; }
+.sr-table td { vertical-align:middle; font-size:13px; }
+.sr-summary { font-size:12px; color:#64748B; margin-top:3px; word-break:break-all; }
+.sr-mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:12px; }
+.sr-empty { text-align:center; padding:36px 0; color:#94A3B8; }
+.sr-switch-item {
+  display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:10px;
+  background:rgba(100,116,139,.06); margin-bottom:8px;
+}
+.sr-switch-item .txt { flex:1; min-width:0; }
+.sr-switch-item .nm { font-size:13px; font-weight:600; color:var(--glass-text,#1E293B); }
+.sr-switch-item .ds { font-size:11.5px; color:#64748B; line-height:1.5; margin-top:2px; }
+.sr-detail-box {
+  position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:9999;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.sr-detail-inner {
+  background:#fff; border-radius:14px; max-width:640px; width:100%; max-height:80vh; overflow:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.28);
+}
+.sr-detail-hd { padding:16px 20px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:10px; }
+.sr-detail-bd { padding:16px 20px; font-size:13px; color:#334155; line-height:1.7; }
+.sr-kv { display:flex; gap:10px; padding:5px 0; border-bottom:1px dashed #eef2f7; }
+.sr-kv .k { width:92px; flex:none; color:#64748B; }
+.sr-kv .val { flex:1; word-break:break-all; }
+.sr-raw { background:#0f172a; color:#e2e8f0; border-radius:8px; padding:12px; font-size:12px;
+          font-family:ui-monospace,Menlo,Consolas,monospace; white-space:pre-wrap; word-break:break-all; }
+</style>
+
+<main class="lyear-layout-content">
+  <div class="container-fluid glass-animate-in" style="max-width:1400px;margin:0 auto;">
+
+    <div class="sr-tip">
+      <strong>系统重要记录 · 只写有追溯价值的数据</strong>
+      <ul>
+        <li><b>记录：</b>用户信息变更、后台登录、后台修改、功能配置、订单交易、资金变动、安全事件、每日数据统计。</li>
+        <li><b>不记录：</b>前台用户的登录 IP、登录设备、浏览器 UA 等无关信息（默认已关闭，可在下方设置中开启）。</li>
+        <li>后台的每一次修改 / 配置操作会自动同步到这里；每日核心数据每天只写一条快照，不会产生垃圾数据。</li>
+      </ul>
+    </div>
+
+    <!-- 概览 -->
+    <div class="sr-stats">
+      <div class="sr-stat"><div class="k">记录总数</div><div class="v">{$stats.total}</div><div class="s">全部重要记录</div></div>
+      <div class="sr-stat"><div class="k">今日新增</div><div class="v">{$stats.today}</div><div class="s">{:date('Y-m-d')}</div></div>
+      <div class="sr-stat"><div class="k">近 7 天</div><div class="v">{$stats.week}</div><div class="s">滚动统计</div></div>
+      <div class="sr-stat"><div class="k">重要级</div><div class="v">{$stats.by_level[1]|default=0}</div><div class="s">需关注的操作</div></div>
+      <div class="sr-stat"><div class="k">警告级</div><div class="v" style="color:#DC2626;">{$stats.by_level[2]|default=0}</div><div class="s">异常 / 失败事件</div></div>
+    </div>
+
+    <!-- 记录设置 -->
+    <div class="card admin-card" style="margin-bottom:18px;">
+      <header class="card-header">
+        <div class="card-title">记录设置</div>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm btn-info" id="srSnapshotBtn"><i class="mdi mdi-chart-box"></i> 生成今日快照</button>
+          <button type="button" class="btn btn-sm btn-danger" id="srClearBtn"><i class="mdi mdi-delete-sweep"></i> 清理旧记录</button>
+          <button type="button" class="btn btn-sm btn-primary" id="srSaveOptBtn"><i class="mdi mdi-content-save"></i> 保存设置</button>
+        </div>
+      </header>
+      <div class="card-body">
+        <form id="srOptForm" novalidate>
+          <input type="hidden" name="__token__" value="{$csrf_token|default=''}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;">
+            {foreach $cats as $k=>$c}
+            <div class="sr-switch-item">
+              <input type="checkbox" class="form-check-input" style="margin-top:3px;" id="opt_{$k}" name="rec_{$k}" value="1" {if $c.ck}checked{/if}>
+              <div class="txt">
+                <label class="nm" for="opt_{$k}">{$c.name}</label>
+                <div class="ds">{$c.desc}</div>
+              </div>
+            </div>
+            {/foreach}
+            <div class="sr-switch-item">
+              <input type="checkbox" class="form-check-input" style="margin-top:3px;" id="opt_user_login" name="rec_user_login" value="1" {if $extraOpts.rec_user_login.ck}checked{/if}>
+              <div class="txt">
+                <label class="nm" for="opt_user_login">前台用户登录（不推荐）</label>
+                <div class="ds">记录所有用户的登录 IP 等无关信息，默认关闭；登录失败始终记录（安全拦截需要）</div>
+              </div>
+            </div>
+            <div class="sr-switch-item">
+              <input type="checkbox" class="form-check-input" style="margin-top:3px;" id="opt_ua" name="rec_ua" value="1" {if $extraOpts.rec_ua.ck}checked{/if}>
+              <div class="txt">
+                <label class="nm" for="opt_ua">浏览器 UA / 设备采集（不推荐）</label>
+                <div class="ds">记录用户设备与浏览器标识，属于无关数据，默认关闭</div>
+              </div>
+            </div>
+            <div class="sr-switch-item">
+              <input type="checkbox" class="form-check-input" style="margin-top:3px;" id="opt_geo" name="rec_geo" value="1" {if $extraOpts.rec_geo.ck}checked{/if}>
+              <div class="txt">
+                <label class="nm" for="opt_geo">IP 地理位置自动采集</label>
+                <div class="ds">调用外部接口补全用户地区，默认关闭（耗时且属于无关数据）</div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 筛选 + 列表 -->
+    <div class="card admin-card">
+      <header class="card-header">
+        <div class="card-title">记录列表</div>
+      </header>
+      <div class="card-body">
+        <form method="get" class="row g-2" style="margin-bottom:14px;" novalidate>
+          <div class="col-md-2">
+            <select name="category" class="form-select">
+              <option value="">全部类别</option>
+              {foreach $cats as $k=>$c}
+              <option value="{$k}" {if $category==$k}selected{/if}>{$c.name}</option>
+              {/foreach}
+            </select>
+          </div>
+          <div class="col-md-2">
+            <select name="level" class="form-select">
+              <option value="0" {if $level==0}selected{/if}>全部级别</option>
+              <option value="1" {if $level==1}selected{/if}>普通</option>
+              <option value="2" {if $level==2}selected{/if}>重要</option>
+              <option value="3" {if $level==3}selected{/if}>警告</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <select name="operator_type" class="form-select">
+              <option value="">全部来源</option>
+              <option value="admin" {if $opType=='admin'}selected{/if}>后台管理员</option>
+              <option value="user" {if $opType=='user'}selected{/if}>前台用户</option>
+              <option value="system" {if $opType=='system'}selected{/if}>系统</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <input type="date" name="date" class="form-control" value="{$date}">
+          </div>
+          <div class="col-md-3">
+            <input type="text" name="search" class="form-control" placeholder="搜索标题 / 操作者 / IP" value="{$search}">
+          </div>
+          <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100">筛选</button>
+          </div>
+        </form>
+
+        <div class="table-responsive">
+          <table class="table table-hover sr-table align-middle">
+            <thead>
+              <tr>
+                <th style="width:60px;">ID</th>
+                <th style="width:96px;">类别</th>
+                <th>内容</th>
+                <th style="width:140px;">操作者</th>
+                <th style="width:130px;">IP</th>
+                <th style="width:92px;">级别</th>
+                <th style="width:150px;">时间</th>
+                <th style="width:80px;">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {empty name="list"}
+              <tr><td colspan="8"><div class="sr-empty"><i class="mdi mdi-file-document-outline" style="font-size:34px;display:block;margin-bottom:8px;"></i>暂无记录</div></td></tr>
+              {/empty}
+              {volist name="list" id="r"}
+              <tr>
+                <td>{$r.id}</td>
+                <td><span class="sr-cat-badge sr-cat-{$r.category}">{$r.category_name}</span></td>
+                <td>
+                  <b>{$r.title}</b>
+                  {if $r.summary}<div class="sr-summary">{$r.summary}</div>{/if}
+                </td>
+                <td>
+                  {if $r.operator_name}{$r.operator_name}{else}-{/if}
+                  <div style="font-size:11px;color:#94A3B8;">{if $r.operator_type=='admin'}后台{elseif $r.operator_type=='user'}前台用户{else}系统{/if}</div>
+                </td>
+                <td class="sr-mono">{$r.ip|default='-'}</td>
+                <td>
+                  <span class="sr-lv sr-lv-{$r.level}"></span>
+                  {if $r.level==3}警告{elseif $r.level==2}重要{else}普通{/if}
+                </td>
+                <td>{$r.time_fmt}</td>
+                <td><button type="button" class="btn btn-sm btn-secondary js-detail" data-id="{$r.id}">详情</button></td>
+              </tr>
+              {/volist}
+            </tbody>
+          </table>
+        </div>
+        <div style="text-align:center;margin-top:10px;">{$list->render()}</div>
+      </div>
+    </div>
+  </div>
+</main>
+{literal}
+<div id="srDetailBox" class="sr-detail-box" style="display:none;">
+  <div class="sr-detail-inner">
+    <div class="sr-detail-hd">
+      <b id="srDetailTitle" style="font-size:15px;flex:1;">记录详情</b>
+      <button type="button" class="btn btn-sm btn-secondary" id="srDetailClose">关闭</button>
+    </div>
+    <div class="sr-detail-bd" id="srDetailBody"></div>
+  </div>
+</div>
+{/literal}
+
+{include file="default/footer"/}
+{literal}
+<script>
+(function () {
+  var token = document.querySelector('#srOptForm input[name="__token__"]');
+  var TOKEN = token ? token.value : '';
+  var base = window.location.pathname.replace(/\/index(\?|$)/, '/');
+
+  function post(action, data, cb) {
+    var fd = new FormData();
+    fd.append('__token__', TOKEN);
+    for (var k in data) { if (Object.prototype.hasOwnProperty.call(data, k)) fd.append(k, data[k]); }
+    fetch(base + '/' + action, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body: fd
+    }).then(function (r) { return r.json(); })
+      .then(function (j) { cb(j || {}); })
+      .catch(function (e) { alert('请求失败：' + e.message); });
+  }
+
+  // 保存开关
+  var saveBtn = document.getElementById('srSaveOptBtn');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function () {
+      var fd = new FormData(document.getElementById('srOptForm'));
+      fetch(base + '/setting', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: fd
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        alert((j && j.msg) ? j.msg : '已保存');
+        if (j && j.code == 1) window.location.reload();
+      }).catch(function (e) { alert('保存失败：' + e.message); });
+    });
+  }
+
+  // 生成今日快照
+  var snapBtn = document.getElementById('srSnapshotBtn');
+  if (snapBtn) {
+    snapBtn.addEventListener('click', function () {
+      post('snapshot', {}, function (j) {
+        alert((j && j.msg) ? j.msg : '完成');
+        if (j && j.code == 1) window.location.reload();
+      });
+    });
+  }
+
+  // 清理旧记录
+  var clearBtn = document.getElementById('srClearBtn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function () {
+      var d = prompt('清理多少天以前的记录？', '90');
+      if (d === null) return;
+      d = parseInt(d, 10);
+      if (!d || d < 1) { alert('请输入有效天数'); return; }
+      if (!confirm('确定要清理 ' + d + ' 天前的记录吗？此操作不可恢复。')) return;
+      post('clear', { days: d }, function (j) {
+        alert((j && j.msg) ? j.msg : '完成');
+        if (j && j.code == 1) window.location.reload();
+      });
+    });
+  }
+
+  // 详情
+  var box = document.getElementById('srDetailBox');
+  var body = document.getElementById('srDetailBody');
+  var title = document.getElementById('srDetailTitle');
+  document.getElementById('srDetailClose').addEventListener('click', function () { box.style.display = 'none'; });
+  box.addEventListener('click', function (e) { if (e.target === box) box.style.display = 'none'; });
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('.js-detail') : null;
+    if (!btn) return;
+    var id = btn.getAttribute('data-id');
+    body.innerHTML = '<div style="color:#94A3B8;">加载中…</div>';
+    box.style.display = 'flex';
+    fetch(base + '/detail?id=' + id, {
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || j.code != 1) {
+        body.innerHTML = '<div style="color:#DC2626;">' + ((j && j.msg) || '加载失败') + '</div>';
+        return;
+      }
+      var d = j.data;
+      var html = '';
+      html += '<div class="sr-kv"><div class="k">类别</div><div class="val">' + (d.category || '-') + '</div></div>';
+      html += '<div class="sr-kv"><div class="k">操作者</div><div class="val">' + (d.operator || '-') + '</div></div>';
+      html += '<div class="sr-kv"><div class="k">IP</div><div class="val">' + (d.ip || '-') + '</div></div>';
+      html += '<div class="sr-kv"><div class="k">时间</div><div class="val">' + (d.time || '-') + '</div></div>';
+      if (d.summary) html += '<div class="sr-kv"><div class="k">摘要</div><div class="val">' + d.summary + '</div></div>';
+      if (d.detail_obj) {
+        for (var k in d.detail_obj) {
+          if (!Object.prototype.hasOwnProperty.call(d.detail_obj, k)) continue;
+          var v = d.detail_obj[k];
+          if (v === null || v === undefined) v = '';
+          if (typeof v === 'object') v = JSON.stringify(v);
+          v = String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          html += '<div class="sr-kv"><div class="k">' + k + '</div><div class="val">' + v + '</div></div>';
+        }
+      }
+      if (d.detail_raw) {
+        html += '<div style="margin-top:10px;font-size:12px;color:#64748B;">原始内容</div>';
+        html += '<div class="sr-raw">' + String(d.detail_raw).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+      }
+      title.textContent = d.title || '记录详情';
+      body.innerHTML = html;
+    }).catch(function (err) {
+      body.innerHTML = '<div style="color:#DC2626;">加载失败：' + err.message + '</div>';
+    });
+  });
+
+  // 类别数量徽章提示
+  console.log('[sys-record] mounted');
+})();
+</script>
+{/literal}

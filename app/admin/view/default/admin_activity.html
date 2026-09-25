@@ -1,0 +1,181 @@
+{include file="default/header" title="活动中心管理" /}
+<main class="lyear-layout-content">
+  <div class="container-fluid glass-animate-in">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card admin-card">
+          <header class="card-header">
+            <div class="card-title">答题活动管理</div>
+            <a href="__ROOT__/admin/activity/questions" class="btn btn-outline-primary btn-sm">题库管理</a>
+          </header>
+          <div class="card-body">
+            <form id="activity-form" class="admin-form mb-4">
+              <input type="hidden" name="act" value="save">
+              <input type="hidden" name="id" id="act-id" value="0">
+              <div class="row">
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">活动名称</label>
+                  <input type="text" name="name" id="act-name" class="form-control" required placeholder="例如：红色知识答题">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">奖品类型</label>
+                  <select name="type" class="form-select" id="act-type">
+                    <option value="points">答题领积分</option>
+                    <option value="host">答题领主机</option>
+                    <option value="balance">答题领余额</option>
+                  </select>
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">题目数量</label>
+                  <input type="number" name="question_count" class="form-control" value="10" min="1">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">通过答对数</label>
+                  <input type="number" name="pass_count" class="form-control" value="8" min="1">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">每日次数</label>
+                  <input type="number" name="daily_limit" class="form-control" value="1" min="1">
+                </div>
+                <div class="col-md-2 mb-3" id="f-prize-points">
+                  <label class="form-label">奖励积分</label>
+                  <input type="number" name="prize_points" class="form-control" value="100">
+                </div>
+                <div class="col-md-2 mb-3" id="f-prize-balance" style="display:none;">
+                  <label class="form-label">奖励余额（元）</label>
+                  <input type="number" name="prize_balance" class="form-control" value="5" step="0.01">
+                </div>
+                <div class="col-md-2 mb-3" id="f-prize-host" style="display:none;">
+                  <label class="form-label">奖励主机产品</label>
+                  <select name="prize_cartid" class="form-select">
+                    <option value="0">请选择产品</option>
+                    {foreach $carts as $cart}
+                    <option value="{$cart.id}">{$cart.name}</option>
+                    {/foreach}
+                  </select>
+                </div>
+                <div class="col-md-2 mb-3" id="f-prize-days" style="display:none;">
+                  <label class="form-label">主机时长（天）</label>
+                  <input type="number" name="prize_host_days" class="form-control" value="30" min="1">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">排序</label>
+                  <input type="number" name="sort" class="form-control" value="0">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">状态</label>
+                  <select name="status" class="form-select">
+                    <option value="1">启用</option>
+                    <option value="0">禁用</option>
+                  </select>
+                </div>
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-admin-primary" id="act-submit-btn">添加活动</button>
+                  <button type="button" class="btn btn-secondary" id="act-reset-btn">重置表单</button>
+                </div>
+              </div>
+            </form>
+
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>ID</th><th>名称</th><th>类型</th><th>题数/通过</th><th>奖励</th><th>每日次数</th><th>状态</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {foreach $activities as $a}
+                <tr>
+                  <td>{$a.id}</td>
+                  <td>{$a.name}</td>
+                  <td>
+                    {if $a.type=='points'}领积分{elseif $a.type=='host'}领主机{elseif $a.type=='balance'}领余额{/if}
+                  </td>
+                  <td>{$a.question_count} / {$a.pass_count}</td>
+                  <td>
+                    {if $a.type=='points'}{$a.prize_points}积分
+                    {elseif $a.type=='balance'}{$a.prize_balance}元
+                    {elseif $a.type=='host'}主机{$a.prize_host_days}天{/if}
+                  </td>
+                  <td>{$a.daily_limit}</td>
+                  <td>{if $a.status==1}<span class="badge bg-success">启用</span>{else}<span class="badge bg-secondary">禁用</span>{/if}</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-primary btn-edit" data-id="{$a.id}" data-name="{$a.name}" data-type="{$a.type}" data-qc="{$a.question_count}" data-pc="{$a.pass_count}" data-dl="{$a.daily_limit}" data-pp="{$a.prize_points}" data-pb="{$a.prize_balance}" data-cart="{$a.prize_cartid}" data-days="{$a.prize_host_days}" data-sort="{$a.sort}" data-status="{$a.status}">编辑</button>
+                    <button class="btn btn-sm btn-outline-danger btn-del" data-id="{$a.id}">删除</button>
+                  </td>
+                </tr>
+                {/foreach}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{include file="default/footer" /}
+<script>
+$(function(){
+    // 奖品类型切换
+    $('#act-type').on('change', function(){
+        var t = $(this).val();
+        $('#f-prize-points, #f-prize-balance, #f-prize-host, #f-prize-days').hide();
+        if(t == 'points') $('#f-prize-points').show();
+        if(t == 'balance') $('#f-prize-balance').show();
+        if(t == 'host'){ $('#f-prize-host').show(); $('#f-prize-days').show(); }
+    });
+
+    // 提交
+    $('#activity-form').on('submit', function(e){
+        e.preventDefault();
+        $.post('', $(this).serialize(), function(res){
+            if(res.code == 1){ GlassTip.success(res.msg); setTimeout(function(){ location.reload(); }, 800); }
+            else GlassTip.error(res.msg);
+        }, 'json');
+    });
+
+    // 编辑（事件委托，避免 data 属性转义导致的问题）
+    $(document).on('click', '.btn-edit', function(){
+        var $btn = $(this);
+        var $tr = $btn.closest('tr');
+        $('#act-id').val($btn.attr('data-id'));
+        // 名称优先取行内第2列文本（td[1]），避免 data-name 特殊字符转义问题
+        var nameVal = $.trim($tr.find('td').eq(1).text());
+        $('#act-name').val(nameVal || $btn.attr('data-name'));
+        $('#act-type').val($btn.attr('data-type')).trigger('change');
+        $('input[name=question_count]').val($btn.attr('data-qc'));
+        $('input[name=pass_count]').val($btn.attr('data-pc'));
+        $('input[name=daily_limit]').val($btn.attr('data-dl'));
+        $('input[name=prize_points]').val($btn.attr('data-pp'));
+        $('input[name=prize_balance]').val($btn.attr('data-pb'));
+        $('select[name=prize_cartid]').val($btn.attr('data-cart'));
+        $('input[name=prize_host_days]').val($btn.attr('data-days'));
+        $('input[name=sort]').val($btn.attr('data-sort'));
+        $('select[name=status]').val($btn.attr('data-status'));
+        $('#act-submit-btn').text('保存修改');
+        // 高亮提示用户已载入
+        $('#act-name').addClass('is-valid');
+        // 滚动到表单
+        var top = $('#activity-form').offset().top;
+        if (top !== undefined) { $('html,body').animate({scrollTop: top - 80}, 300); }
+    });
+
+    $('#act-reset-btn').on('click', function(){
+        $('#activity-form')[0].reset();
+        $('#act-id').val(0);
+        $('#act-type').val('points').trigger('change');
+        $('#act-submit-btn').text('添加活动');
+    });
+
+    // 删除（事件委托）
+    $(document).on('click', '.btn-del', function(){
+        var id = $(this).attr('data-id');
+        layer.confirm('确认删除该活动？', function(idx){
+            $.post('', {act:'delete', id:id}, function(res){
+                if(res.code == 1){ GlassTip.success(res.msg); setTimeout(function(){ location.reload(); }, 800); }
+                else GlassTip.error(res.msg);
+            }, 'json');
+            layer.close(idx);
+        });
+    });
+});
+</script>

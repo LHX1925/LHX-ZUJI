@@ -29,8 +29,8 @@
             <tr>
               <th>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="check-all">
-                  <label class="form-check-label" for="check-all"></label>
+                  <input class="form-check-input" type="checkbox" id="check-all" title="全选/取消全选">
+                  <label class="form-check-label" for="check-all" title="全选/取消全选"></label>
                 </div>
               </th>
               <th>ID</th>
@@ -44,8 +44,8 @@
             <tr>
               <td data-label="选择">
                 <div class="form-check">
-                  <input type="checkbox" class="form-check-input ids" name="ids" value="{$s.id}">
-                  <label class="form-check-label" for="ids-1"></label>
+                  <input type="checkbox" class="form-check-input ids" name="ids" id="srv-{$s.id}" value="{$s.id}">
+                  <label class="form-check-label" for="srv-{$s.id}"></label>
                 </div>
               </td>
               <td data-label="ID">{$s.id}</td>
@@ -211,6 +211,14 @@
   .new-table tbody td::before{content:attr(data-label);font-weight:600;color:#667eea;font-size:11.5px;text-transform:uppercase;margin-right:12px;white-space:nowrap;flex-shrink:0}
   .new-btn{padding:7px 14px;font-size:12px}
 }
+
+/* 勾选框：Bootstrap 默认把 input 向左浮动到 label 之外，空 label 时容易点不中，这里统一居中并确保可见可点 */
+.new-table .form-check{display:flex;align-items:center;justify-content:center;margin:0;padding-left:0;min-height:auto;position:relative}
+.new-table .form-check-input{float:none;margin:0;position:static;width:17px;height:17px;cursor:pointer;flex:0 0 auto;accent-color:#667eea}
+.new-table .form-check-label{display:none}
+.new-table thead .form-check-input{cursor:pointer}
+.new-table tbody tr.row-selected{background:#eef3ff !important}
+.new-table tbody tr.row-selected:hover{background:#e6edff !important}
 </style>
 <script>
 function add(){
@@ -291,13 +299,14 @@ layer.open({
 }
 
 function add1(){
-             var load = layer.msg('添加中，请稍后...',{icon:16,time:false});
+             var load = layer.msg('添加中，请稍后...', {icon:16, shade:0.8, time:false});
  var form = $('#myform').serializeArray();
        $.ajax({
             type:'POST',
             url:'',
 data:form,
             dataType:'json',
+            timeout: 15000,
             success:function (data){
                 layer.close(load)
                 if(data.code == 1){
@@ -306,7 +315,7 @@ data:form,
                     },1000);
                     layer.alert(data.msg,{icon:1});
                 }else{
-                    layer.msg(data.msg,{icon:2});
+                    GlassTip.error(data.msg);
                 }
             }
         });
@@ -322,15 +331,15 @@ $("input[name='ids']:checked").each(function(i){
       });
 var id = id.join(",");
 if(id==""){
-layer.alert("未选择服务器!",{icon:2,shade:0.8});
+layer.alert("请先勾选要删除的服务器（点击表格最左侧的方框；表头方框可全选当前页）",{icon:2,shade:0.8,title:"未选择服务器"});
 }else{
-        layer.confirm('确定要删除ID为<span style="color:#0b5ed7">'+ id +'</span>的服务器吗？', function (){
+        layer.confirm('确定要删除ID为<span style="color:#0b5ed7">'+ id +'</span>的服务器吗？', {icon:3, title:'删除确认'}, function (){
             del1(id)
         });
     }
 }
 
-    function del1(id){
+    function del1(id, force){
         var load = layer.load('1',{time:false});
 
         $.ajax({
@@ -338,18 +347,42 @@ layer.alert("未选择服务器!",{icon:2,shade:0.8});
             url:'',
             data:{
                 act:'delete',
-                cid:id
+                cid:id,
+                force: force ? 1 : 0
             },
             dataType:'json',
             success:function (data){
                 layer.close(load);
                 if(data.code == 1){
-layer.alert(data.msg,{icon:1},function(){
-                        window.location.href = "";
-                    });
+                    if(parseInt(data.fail||0) > 0){
+                        var blocked = data.blocked || [];
+                        if(blocked.length){
+                            var blockedIds = blocked.map(function(b){ return b.id; }).join(',');
+                            layer.confirm(
+                                data.msg
+                                + '<br><br>是否强制删除这 ' + blocked.length + ' 台被产品引用的服务器？'
+                                + '<br><span style="color:#b45309">强制删除会把这些产品的「默认服务器」清空（产品本身保留，用户购买时可自由改选其它线路）。</span>',
+                                {icon:3, title:'部分服务器被产品引用', shade:0.8},
+                                function(){ del1(blockedIds, 1); }
+                            );
+                        }else{
+                            layer.alert(data.msg,{icon:0,title:'删除结果',shade:0.8},function(){
+                                if(parseInt(data.ok||0) > 0){ window.location.href = ""; }
+                                else { layer.closeAll(); }
+                            });
+                        }
+                    }else{
+                        layer.alert(data.msg,{icon:1,title:'删除结果'},function(){
+                            window.location.href = "";
+                        });
+                    }
                 }else{
-                    layer.alert(data.msg,{icon:2});
+                    layer.alert(data.msg || '删除失败',{icon:2,title:'删除失败',shade:0.8});
                 }
+            },
+            error:function(xhr){
+                layer.close(load);
+                layer.alert('请求失败（HTTP ' + (xhr && xhr.status ? xhr.status : '?') + '），请刷新页面后重试',{icon:2,title:'删除失败'});
             }
         });
     }
@@ -374,13 +407,60 @@ function qbdel(){
             success:function (data){
                 layer.close(load);
                 if(data.code == 1){
-layer.alert(data.msg,{icon:1},function(){
-                        window.location.href = "";
-                    });
+                    if(parseInt(data.fail||0) > 0){
+                        var blocked = data.blocked || [];
+                        if(blocked.length){
+                            var blockedIds = blocked.map(function(b){ return b.id; }).join(',');
+                            layer.confirm(
+                                data.msg
+                                + '<br><br>是否强制删除这 ' + blocked.length + ' 台被产品引用的服务器？'
+                                + '<br><span style="color:#b45309">强制删除会把这些产品的「默认服务器」清空（产品本身保留，用户购买时可自由改选其它线路）。</span>',
+                                {icon:3, title:'部分服务器被产品引用', shade:0.8},
+                                function(){ del1(blockedIds, 1); }
+                            );
+                        }else{
+                            layer.alert(data.msg,{icon:0,title:'删除结果',shade:0.8},function(){
+                                if(parseInt(data.ok||0) > 0){ window.location.href = ""; }
+                                else { layer.closeAll(); }
+                            });
+                        }
+                    }else{
+                        layer.alert(data.msg,{icon:1,title:'删除结果'},function(){
+                            window.location.href = "";
+                        });
+                    }
                 }else{
-                    layer.alert(data.msg,{icon:2});
+                    layer.alert(data.msg || '删除失败',{icon:2,title:'删除失败',shade:0.8});
                 }
+            },
+            error:function(xhr){
+                layer.close(load);
+                layer.alert('请求失败（HTTP ' + (xhr && xhr.status ? xhr.status : '?') + '），请刷新页面后重试',{icon:2,title:'删除失败'});
             }
         });
     }
+
+// ===== 全选 / 单选联动 =====
+function syncCheckAllState(){
+    var $rows = $("input[name='ids']");
+    var total = $rows.length;
+    var checked = $rows.filter(':checked').length;
+    $('#check-all')
+        .prop('checked', total > 0 && checked === total)
+        .prop('indeterminate', checked > 0 && checked < total);
+    $rows.each(function(){
+        $(this).closest('tr').toggleClass('row-selected', this.checked);
+    });
+}
+
+$(function(){
+    // 表头全选：勾上/取消当前页全部
+    $('#check-all').on('change', function(){
+        $("input[name='ids']").prop('checked', this.checked);
+        syncCheckAllState();
+    });
+    // 单行勾选变化时同步表头状态
+    $(document).on('change', "input[name='ids']", syncCheckAllState);
+    syncCheckAllState();
+});
 </script>

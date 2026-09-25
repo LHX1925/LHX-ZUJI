@@ -196,6 +196,8 @@
 </main>
 {include file="default/footer" /}
 <script>
+// CSRF 令牌：后端 AdminHost 接口强制校验 __token__
+var csrfToken = '{$csrf_token}';
 // 单个主机操作
 function hostOperate(id, act) {
     var titles = { stop: '暂停', stopoff: '开启', delete: '删除' };
@@ -210,7 +212,7 @@ function hostOperate(id, act) {
         $.ajax({
             type: 'POST',
             url: '{:url("admin/admin_host/operate")}',
-            data: { id: id, act: act },
+            data: { id: id, act: act, __token__: csrfToken },
             dataType: 'json',
             success: function(data) {
                 layer.close(load);
@@ -219,12 +221,12 @@ function hostOperate(id, act) {
                         window.location.reload();
                     });
                 } else {
-                    layer.msg(data.msg, {icon: 2});
+                    GlassTip.error(data.msg);
                 }
             },
             error: function() {
                 layer.close(load);
-                layer.msg('请求异常，请重试', {icon: 2});
+                GlassTip.error('请求异常，请重试');
             }
         });
     });
@@ -245,12 +247,12 @@ function suspendAll() {
                         window.location.reload();
                     });
                 } else {
-                    layer.msg(data.msg, {icon: 2});
+                    GlassTip.error(data.msg);
                 }
             },
             error: function() {
                 layer.close(load);
-                layer.msg('请求异常，请重试', {icon: 2});
+                GlassTip.error('请求异常，请重试');
             }
         });
     });
@@ -271,12 +273,12 @@ function unsuspendAll() {
                         window.location.reload();
                     });
                 } else {
-                    layer.msg(data.msg, {icon: 2});
+                    GlassTip.error(data.msg);
                 }
             },
             error: function() {
                 layer.close(load);
-                layer.msg('请求异常，请重试', {icon: 2});
+                GlassTip.error('请求异常，请重试');
             }
         });
     });
@@ -292,6 +294,7 @@ function deleteAll() {
         $.ajax({
             type: 'POST',
             url: '{:url("admin/admin_host/deleteAll")}',
+            data: { __token__: csrfToken },
             dataType: 'json',
             success: function(data) {
                 layer.close(load);
@@ -300,12 +303,12 @@ function deleteAll() {
                         window.location.reload();
                     });
                 } else {
-                    layer.msg(data.msg, {icon: 2});
+                    GlassTip.error(data.msg);
                 }
             },
             error: function() {
                 layer.close(load);
-                layer.msg('请求异常，请重试', {icon: 2});
+                GlassTip.error('请求异常，请重试');
             }
         });
     });

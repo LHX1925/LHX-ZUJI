@@ -1,0 +1,18 @@
+{php}$title = '公告详情'; $tab_active = 'home'; $back_url = '/announcements';{/php}
+{include file="default/mobile/header" /}
+
+{php}
+$ann = isset($data) ? $data : (isset($announcement) ? $announcement : []);
+{/php}
+
+<div class="app-card" style="margin-bottom:12px;padding:20px 16px;">
+    <div style="padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--glass-border);">
+        <h1 style="font-size:18px;font-weight:700;color:var(--text);margin:0 0 8px;line-height:1.4;">{$ann.title|default='未命名公告'}</h1>
+        <div class="app-list-sub"><i class="far fa-clock"></i> 发布时间：{:date('Y-m-d H:i', $ann.created_at|default=time())}</div>
+    </div>
+    <div style="font-size:14px;line-height:1.8;color:var(--text-secondary);">
+        {$ann.content|default='<p>暂无内容</p>'}
+    </div>
+</div>
+
+{include file="default/mobile/footer" /}

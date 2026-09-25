@@ -54,12 +54,10 @@
                 <td data-label="用户名">{$admin.user}</td>
                 <td data-label="姓名">{$admin.name}</td>
                 <td data-label="角色">
-                  {if $admin.is_super == 1}
-                  <span class="badge" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;">站长</span>
-                  {elseif $admin.role_id == 1}
+                  {if $admin.is_super == 1 || $admin.role_id == 1}
                   <span class="badge" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;">超级管理员</span>
                   {else}
-                  <span class="badge" style="background:#e2e8f0;color:#475569;">{$roleMap[$admin.role_id]|default='未分配'}</span>
+                  <span class="badge" style="background:#e2e8f0;color:#475569;">普通管理员</span>
                   {/if}
                 </td>
                 <td data-label="状态">
@@ -93,8 +91,8 @@ function deleteAdmin(id) {
   layer.confirm('确定要删除此管理员吗？', function(){
     $.post('/admin/admin_manager/delete', {id: id}, function(res) {
       if (res.code == 1) { location.reload(); }
-      else { layer.msg(res.msg, {icon:2}); }
-    }, 'json').fail(function(){ layer.msg('操作失败', {icon:2}); });
+      else { GlassTip.error(res.msg); }
+    }, 'json').fail(function(){ GlassTip.error('操作失败'); });
   });
 }
 </script>

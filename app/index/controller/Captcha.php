@@ -585,6 +585,430 @@ class Captcha extends Controller
         return true;
     }
 
+    // ============================================================
+    // 极验行为验证 GT3（对应官方文档 server API：
+    //   初始化  api.geetest.com/register.php  -> md5(challenge+key) 下发前端
+    //   二次验证 api.geetest.com/validate.php -> seccode == md5(seccode) 则通过
+    // ============================================================
+
+    /** 极验调试日志（记录逐步校验结果，排查"验证失败"） */
+    private static function gtLog($msg)
+    {
+        try {
+            $dir = PATH . 'runtime/log/';
+            if (!is_dir($dir)) @mkdir($dir, 0755, true);
+            @file_put_contents($dir . 'geetest_debug.log', date('Y-m-d H:i:s') . ' ' . $msg . "\n", FILE_APPEND);
+        } catch (\Throwable $e) {}
+    }
+
+    /**
+     * 读取极验配置，返回 [是否启用, id, key, 版本('3'|'4')]
+     * captcha_type: '0'=本站内置滑块, '1'=极验GT3, '2'=极验GT4
+     */
+    private static function geetestMode()
+    {
+        try {
+            $web = function_exists('web_config') ? web_config() : [];
+            $type = isset($web['captcha_type']) ? trim((string)$web['captcha_type']) : '';
+            $id3  = isset($web['geetest_id']) ? trim($web['geetest_id']) : '';
+            $key3 = isset($web['geetest_key']) ? trim($web['geetest_key']) : '';
+            $id4  = isset($web['geetest4_id']) ? trim($web['geetest4_id']) : '';
+            $key4 = isset($web['geetest4_key']) ? trim($web['geetest4_key']) : '';
+
+            if ($type === '2') {
+                return [($id4 !== '' && $key4 !== ''), $id4, $key4, '4'];
+            }
+            // 默认 GT3（兼容历史配置：填了 ID/Key 即启用）；captcha_type='0' 强制本站内置滑块
+            return [($id3 !== '' && $key3 !== '' && $type !== '0'), $id3, $key3, '3'];
+        } catch (\Throwable $e) {
+            return [false, '', '', '3'];
+        }
+    }
+
+    /**
+     * 兼容旧调用：返回 [是否启用, id, key]
+     */
+    private static function geetestConfig()
+    {
+        list($enabled, $id, $key) = self::geetestMode();
+        return [$enabled, $id, $key];
+    }
+
+    /**
+     * 极验 GT3 验证初始化（客户端轮询本接口获取 gt/challenge）
+     * 正常模式返回 success=1 + md5(challenge+key)；极验宕机时 success=0 进入宕机模式
+     */
+    public function gtregister()
+    {
+        list($enabled, $gtId, $gtKey) = self::geetestConfig();
+        if (!$enabled) {
+            return json(['code' => -1, 'msg' => '未启用极验验证']);
+        }
+        // bypass 状态探活（非阻塞，失败容忍）
+        $ok = false;
+        $challenge = '';
+        try {
+            $qs = http_build_query([
+                'gt' => $gtId,
+                'json_format' => 1,
+                'digestmod' => 'md5',
+                'new_captcha' => 1,
+                'client_type' => 'web',
+                'ip_address' => request()->ip(),
+            ]);
+            // 优先 https，失败再退回 http（部分服务器对外 http 出口被拦截）
+            $resp = self::httpGet('https://api.geetest.com/register.php?' . $qs, 2, 3);
+            if ($resp === '') {
+                $resp = self::httpGet('http://api.geetest.com/register.php?' . $qs, 2, 3);
+            }
+            $obj = json_decode($resp, true);
+            $challenge = is_array($obj) && !empty($obj['challenge']) ? $obj['challenge'] : '';
+            $ok = (is_string($challenge) && strlen($challenge) == 32);
+        } catch (\Throwable $e) {
+            $ok = false;
+        }
+
+        if ($ok) {
+            // 正常模式：challenge 需要用私钥 md5 加密后再下发给前端
+            $finalChallenge = md5($challenge . $gtKey);
+            $status = 1;
+        } else {
+            // 宕机模式（bypass）：本地生成 challenge，前端 offline=1
+            $rnd1 = md5(mt_rand(0, 100));
+            $rnd2 = md5(mt_rand(0, 100));
+            $finalChallenge = $rnd1 . substr($rnd2, 0, 2);
+            $status = 0;
+        }
+        // 按 challenge 分别存储（同页可能存在多个验证组件，不能互相覆盖）
+        $pool = session('geetest_pool');
+        if (!is_array($pool)) $pool = [];
+        // 清理过期项
+        $now = time();
+        foreach ($pool as $c => $info) {
+            if (!isset($info['expire']) || $info['expire'] < $now) unset($pool[$c]);
+        }
+        $pool[$finalChallenge] = ['status' => $status, 'expire' => $now + 300];
+        session('geetest_pool', $pool);
+        self::gtLog('REGISTER challenge=' . $finalChallenge . ' status=' . $status . ' gtId=' . substr($gtId, 0, 8) . '... keyLen=' . strlen($gtKey) . ' keyTail=' . substr($gtKey, -2) . ' poolSize=' . count($pool));
+
+        return json([
+            'success' => $ok ? 1 : 0,
+            'gt' => $gtId,
+            'challenge' => $finalChallenge,
+            'new_captcha' => true,
+        ]);
+    }
+
+    /**
+     * 极验 GT3 二次验证（前端验证通过后回传三要素）
+     * 通过后与内置滑块一样写入 slide_captcha_verified session，所有现有 Captcha::check()
+     * 调用点无需改动即可全部生效。
+     */
+    public function gtvalidate()
+    {
+        list($enabled, $gtId, $gtKey) = self::geetestConfig();
+        if (!$enabled) {
+            return json(['code' => -1, 'msg' => '未启用极验验证']);
+        }
+        if (!self::rateLimitStatic('geetest_validate', 15, 60)) {
+            return json(['code' => -1, 'msg' => '操作过于频繁，请稍后再试']);
+        }
+
+        $challenge = trim(input('geetest_challenge', ''));
+        $validate  = trim(input('geetest_validate', ''));
+        $seccode   = trim(input('geetest_seccode', ''));
+
+        $pool = session('geetest_pool');
+        if (!is_array($pool)) $pool = [];
+        $info = isset($pool[$challenge]) ? $pool[$challenge] : null;
+        // 极验 gt.js 提交时会在 challenge 后追加 2 位随机字符（register 池里存的是原始 32 位）。
+        // 先用前缀匹配找到池记录取 status；验签必须用【提交上来的完整 challenge】，
+        // 因为极验服务器的 validate 就是按带后缀的完整值计算的。
+        $poolKey = $challenge;
+        if (!$info && $challenge !== '') {
+            foreach ($pool as $key => $row) {
+                if ($key !== '' && strpos($challenge, $key) === 0) {
+                    $info = $row;
+                    $poolKey = $key;
+                    self::gtLog('CHALLENGE_PREFIX_MATCH submitted=' . $challenge . ' matched=' . $key);
+                    break;
+                }
+            }
+        }
+
+        if (!$info || empty($challenge)) {
+            self::gtLog('VALIDATE_FAIL challenge_not_found challenge=' . $challenge . ' poolKeys=' . implode(',', array_keys($pool)));
+            return json(['code' => -1, 'msg' => '验证已过期，请刷新重试']);
+        }
+        if (empty($info['expire']) || time() > intval($info['expire'])) {
+            unset($pool[$poolKey]);
+            session('geetest_pool', $pool);
+            return json(['code' => -1, 'msg' => '验证已过期，请刷新重试']);
+        }
+        $status = intval($info['status']);
+
+        $pass = false;
+        try {
+            // challenge 变体：极验 gt.js 提交时可能追加 2 位随机字符，
+            // 这里把「提交值 / 池中值 / 去后缀值」都算一遍，任一命中即视为正确，避免误判
+            $variants = array_values(array_unique(array_filter([
+                $challenge,
+                $poolKey,
+                (strlen($challenge) > 32) ? substr($challenge, 0, 32) : '',
+            ], function ($v) { return $v !== ''; })));
+
+            if ($status == 1) {
+                // 正常模式：本地验签 + 提交极验服务器二次验证（用提交的完整 challenge）
+                $localOk = false;
+                if (strlen($validate) == 32) {
+                    foreach ($variants as $cv) {
+                        if ($validate === md5($gtKey . 'geetest' . $cv)) { $localOk = true; break; }
+                    }
+                }
+                self::gtLog('VALIDATE local: challenge=' . $challenge . ' poolKey=' . $poolKey
+                    . ' validateGot=' . $validate
+                    . ' expect(submitted)=' . md5($gtKey . 'geetest' . $challenge)
+                    . ' expect(pool)=' . md5($gtKey . 'geetest' . $poolKey)
+                    . ' localOk=' . ($localOk ? '1' : '0'));
+
+                if ($localOk) {
+                    $postData = [
+                        'seccode' => $seccode,
+                        'timestamp' => time(),
+                        'challenge' => $challenge,
+                        'captchaid' => $gtId,
+                        'json_format' => 1,
+                        'sdk' => 'php_3.0.0',
+                        'client_type' => 'web',
+                        'ip_address' => request()->ip(),
+                    ];
+                    $resp = self::httpPost('https://api.geetest.com/validate.php', $postData, 4);
+                    if ($resp === '') {
+                        $resp = self::httpPost('http://api.geetest.com/validate.php', $postData, 4);
+                    }
+                    self::gtLog('VALIDATE api resp=' . mb_substr((string)$resp, 0, 200)
+                        . ' seccodeGot=' . $seccode . ' seccodeMd5=' . md5($seccode));
+                    $obj = json_decode((string)$resp, true);
+                    if (is_array($obj) && !empty($obj['seccode']) && $obj['seccode'] === md5($seccode)) {
+                        $pass = true;
+                    } elseif (empty($resp)) {
+                        // 服务器无法访问极验接口（超时/被墙）时，本地验签已通过即放行，
+                        // 避免用户明明滑过了却一直提示验证失败
+                        self::gtLog('VALIDATE api unreachable, trust local sign');
+                        $pass = true;
+                    }
+                }
+            } else {
+                // 宕机模式（bypass）：本地校验 md5(challenge) == validate
+                $bypassOk = false;
+                foreach ($variants as $cv) {
+                    if ($validate === md5($cv)) { $bypassOk = true; break; }
+                }
+                self::gtLog('VALIDATE bypass: challenge=' . $challenge . ' poolKey=' . $poolKey
+                    . ' got=' . $validate . ' ok=' . ($bypassOk ? '1' : '0'));
+                $pass = $bypassOk;
+            }
+        } catch (\Throwable $e) {
+            self::gtLog('VALIDATE exception=' . $e->getMessage());
+            $pass = false;
+        }
+        self::gtLog('VALIDATE result=' . ($pass ? 'PASS' : 'FAIL') . ' challenge=' . $challenge);
+
+        if (!$pass) {
+            return json(['code' => -1, 'msg' => '验证未通过']);
+        }
+
+        // 支持邮箱绑定（与内置滑块一致的语义）
+        $email = input('email', '');
+        if (!empty($email) && function_exists('is_valid_email') && is_valid_email($email)) {
+            session('slide_captcha_email', strtolower(trim($email)));
+        }
+        session('slide_captcha_verified', true);
+        // 该 challenge 一次性使用，验证通过后从池中移除
+        unset($pool[$poolKey], $pool[$challenge]);
+        session('geetest_pool', $pool);
+        return json(['code' => 1, 'msg' => '验证通过']);
+    }
+
+    // ============================================================
+    // 极验行为验证 GT4（第四代）
+    // 官方文档：https://docs.geetest.com/gt4/deploy/server
+    // 二次验证：POST http://gcaptcha4.geetest.com/validate?captcha_id=xxx
+    //   参数 lot_number / captcha_output / pass_token / gen_time / sign_token
+    //   sign_token = HMAC-SHA256(key=captcha_key, message=lot_number)
+    //   返回 {status:'success', result:'success'|'fail', reason:''}
+    // ============================================================
+
+    /**
+     * GT4 二次验证（前端验证通过后回传四要素）
+     * 通过后同样写入 slide_captcha_verified session，现有 Captcha::check() 调用点无需改动。
+     */
+    public function gt4validate()
+    {
+        list($enabled, $captchaId, $captchaKey, $ver) = self::geetestMode();
+        if (!$enabled || $ver !== '4') {
+            return json(['code' => -1, 'msg' => '未启用极验 GT4 验证']);
+        }
+        if (!self::rateLimitStatic('geetest4_validate', 20, 60)) {
+            return json(['code' => -1, 'msg' => '操作过于频繁，请稍后再试']);
+        }
+
+        $lotNumber     = trim((string)input('lot_number', ''));
+        $captchaOutput = trim((string)input('captcha_output', ''));
+        $passToken     = trim((string)input('pass_token', ''));
+        $genTime       = trim((string)input('gen_time', ''));
+
+        if ($lotNumber === '' || $captchaOutput === '' || $passToken === '' || $genTime === '') {
+            self::gtLog('GT4 VALIDATE_FAIL missing_params lot=' . $lotNumber . ' outLen=' . strlen($captchaOutput) . ' tokenLen=' . strlen($passToken) . ' gen=' . $genTime);
+            return json(['code' => -1, 'msg' => '验证数据不完整，请重新验证']);
+        }
+
+        // 防重放：同一个 lot_number 只允许使用一次
+        $used = session('geetest4_used');
+        if (!is_array($used)) $used = [];
+        $lotKey = md5($lotNumber);
+        if (isset($used[$lotKey])) {
+            self::gtLog('GT4 VALIDATE_FAIL replay lot=' . $lotNumber);
+            return json(['code' => -1, 'msg' => '验证已失效，请重新验证']);
+        }
+
+        // 生成签名：HMAC-SHA256，密钥为 captcha_key，消息为 lot_number
+        $signToken = hash_hmac('sha256', $lotNumber, $captchaKey);
+
+        $postData = [
+            'lot_number'     => $lotNumber,
+            'captcha_output' => $captchaOutput,
+            'pass_token'     => $passToken,
+            'gen_time'       => $genTime,
+            'sign_token'     => $signToken,
+        ];
+
+        $pass = false;
+        $reason = '';
+        try {
+            $url = 'https://gcaptcha4.geetest.com/validate?captcha_id=' . urlencode($captchaId);
+            $resp = self::httpPost($url, $postData, 6);
+            if ($resp === '') {
+                $resp = self::httpPost('http://gcaptcha4.geetest.com/validate?captcha_id=' . urlencode($captchaId), $postData, 6);
+            }
+            self::gtLog('GT4 VALIDATE api resp=' . mb_substr((string)$resp, 0, 300) . ' lot=' . $lotNumber . ' sign=' . substr($signToken, 0, 12));
+            $obj = json_decode((string)$resp, true);
+            if (is_array($obj)) {
+                $reason = isset($obj['reason']) ? (string)$obj['reason'] : (isset($obj['msg']) ? (string)$obj['msg'] : '');
+                if (isset($obj['result']) && $obj['result'] === 'success') {
+                    $pass = true;
+                }
+            } elseif ($resp !== '') {
+                // 返回了非 JSON 内容（如 WAF 拦截页），视为接口异常
+                self::gtLog('GT4 VALIDATE non-json resp len=' . strlen((string)$resp));
+            }
+        } catch (\Throwable $e) {
+            self::gtLog('GT4 VALIDATE exception=' . $e->getMessage());
+            $pass = false;
+        }
+        self::gtLog('GT4 VALIDATE result=' . ($pass ? 'PASS' : 'FAIL') . ' lot=' . $lotNumber . ' reason=' . $reason);
+
+        if (!$pass) {
+            if (stripos($reason, 'unsupported node') !== false) {
+                return json(['code' => -1, 'msg' => '验证服务暂时不可用（极验拒绝当前服务器地区），请联系管理员']);
+            }
+            $msg = '验证未通过，请重新验证';
+            if ($reason !== '' && preg_match('/expire/i', $reason)) $msg = '验证已过期，请重新验证';
+            return json(['code' => -1, 'msg' => $msg]);
+        }
+
+        // 记录已使用的 lot_number（只保留最近 30 条）
+        $used[$lotKey] = time();
+        if (count($used) > 30) $used = array_slice($used, -30, null, true);
+        session('geetest4_used', $used);
+
+        $email = input('email', '');
+        if (!empty($email) && function_exists('is_valid_email') && is_valid_email($email)) {
+            session('slide_captcha_email', strtolower(trim($email)));
+        }
+        session('slide_captcha_verified', true);
+        return json(['code' => 1, 'msg' => '验证通过']);
+    }
+
+    /**
+     * 简单 GET 请求（curl 优先，失败降级 file_get_contents）
+     */
+    private static function httpGet($url, $connectTimeout = 1, $timeout = 3)
+    {
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $connectTimeout);
+            curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; GeeTestClient)');
+            $data = curl_exec($ch);
+            $err = curl_errno($ch);
+            curl_close($ch);
+            if ($err) return '';
+            return $data === false ? '' : $data;
+        }
+        $ctx = stream_context_create(['http' => ['timeout' => $connectTimeout + $timeout]]);
+        $data = @file_get_contents($url, false, $ctx);
+        return $data === false ? '' : $data;
+    }
+
+    /**
+     * 简单 POST 请求
+     */
+    private static function httpPost($url, $data, $timeout = 4)
+    {
+        $body = http_build_query($data);
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+            curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            // 部分极验接口对无 User-Agent 的裸请求会直接 403
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; GeeTestClient)');
+            $resp = curl_exec($ch);
+            $err = curl_errno($ch);
+            curl_close($ch);
+            if ($err) return '';
+            return $resp === false ? '' : $resp;
+        }
+        $ctx = stream_context_create(['http' => [
+            'method' => 'POST',
+            'header' => 'Content-type: application/x-www-form-urlencoded',
+            'content' => $body,
+            'timeout' => $timeout,
+        ]]);
+        $resp = @file_get_contents($url, false, $ctx);
+        return $resp === false ? '' : $resp;
+    }
+
+    /**
+     * 静态 IP 频率限制
+     */
+    private static function rateLimitStatic($action, $maxTimes, $windowSec)
+    {
+        $ip = request()->ip();
+        $ipKey = md5($ip . $action);
+        $cacheDir = defined('LOG_PATH') ? LOG_PATH : (defined('PATH') ? PATH . 'runtime/log/' : sys_get_temp_dir() . '/');
+        $rateDir = rtrim($cacheDir, '/\\') . '/rate_limit/';
+        if (!is_dir($rateDir)) @mkdir($rateDir, 0755, true);
+        $file = $rateDir . $ipKey . '.lim';
+        $now = time();
+        $records = [];
+        if (file_exists($file)) {
+            $content = @file_get_contents($file);
+            $records = $content ? (@json_decode($content, true) ?: []) : [];
+        }
+        $records = array_filter($records, function ($t) use ($now, $windowSec) { return ($now - $t) < $windowSec; });
+        if (count($records) >= $maxTimes) return false;
+        $records[] = $now;
+        @file_put_contents($file, json_encode($records), LOCK_EX);
+        return true;
+    }
+
     // Check if captcha is verified (for server-side validation)
     // $email 可选，传入后同时验证绑定邮箱是否匹配
     public static function check($email = '')

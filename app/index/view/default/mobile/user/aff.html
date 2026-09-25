@@ -1,0 +1,103 @@
+{php}$title = '推广中心'; $tab_active = 'profile'; $back_url = '/user';{/php}
+{include file="default/mobile/header" /}
+
+<div class="app-hero" style="margin:-16px -16px 16px;text-align:center;">
+    <div style="width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,0.2);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;">
+        <i class="fas fa-rocket" style="font-size:28px;color:#fff;"></i>
+    </div>
+    <h1 style="font-size:26px;">推广中心</h1>
+    <p>邀请好友购买、续费或升级产品，永久获得推广佣金。</p>
+</div>
+
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:24px 16px;background:linear-gradient(135deg,var(--glass-primary),var(--glass-primary-dark));color:#fff;border:none;">
+    <div style="font-size:13px;opacity:0.9;margin-bottom:6px;">预计收益比例</div>
+    <div style="font-size:32px;font-weight:800;">永久分成</div>
+    <div style="font-size:13px;opacity:0.85;margin-top:6px;">下级消费即自动到账</div>
+</div>
+
+<div class="app-card" style="margin-bottom:12px;">
+    <div class="app-card-title">推广优势</div>
+    <div class="app-grid-2">
+        <div class="app-stat-card" style="padding:16px 12px;">
+            <div class="app-stat-icon"><i class="fas fa-link" style="color:var(--glass-primary);"></i></div>
+            <div class="app-stat-value" style="font-size:15px;">专属链接</div>
+            <div class="app-stat-label">开启后立即获得专属推广链接</div>
+        </div>
+        <div class="app-stat-card" style="padding:16px 12px;">
+            <div class="app-stat-icon"><i class="fas fa-coins" style="color:var(--glass-success);"></i></div>
+            <div class="app-stat-value" style="font-size:15px;">永久收益</div>
+            <div class="app-stat-label">购买、续费、升级均有佣金</div>
+        </div>
+        <div class="app-stat-card" style="padding:16px 12px;">
+            <div class="app-stat-icon"><i class="fas fa-wallet" style="color:var(--glass-warning);"></i></div>
+            <div class="app-stat-value" style="font-size:15px;">灵活提现</div>
+            <div class="app-stat-label">可随时提现到余额或支付宝</div>
+        </div>
+        <div class="app-stat-card" style="padding:16px 12px;">
+            <div class="app-stat-icon"><i class="fas fa-chart-line" style="color:var(--glass-purple);"></i></div>
+            <div class="app-stat-value" style="font-size:15px;">自动统计</div>
+            <div class="app-stat-label">收益数据实时更新</div>
+        </div>
+    </div>
+</div>
+
+<div class="app-card" style="margin-bottom:12px;">
+    <div class="app-card-title">如何开始</div>
+    <div class="app-info-row" style="align-items:flex-start;flex-direction:column;gap:4px;padding:14px 0;">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span style="width:24px;height:24px;border-radius:50%;background:var(--glass-primary);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">1</span>
+            <span style="font-size:15px;font-weight:700;color:var(--text);">开启推广</span>
+        </div>
+        <span style="font-size:13px;color:var(--text-secondary);padding-left:34px;line-height:1.6;">点击下方按钮，立即开启你的推广权限。</span>
+    </div>
+    <div class="app-info-row" style="align-items:flex-start;flex-direction:column;gap:4px;padding:14px 0;">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span style="width:24px;height:24px;border-radius:50%;background:var(--glass-primary);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">2</span>
+            <span style="font-size:15px;font-weight:700;color:var(--text);">分享链接</span>
+        </div>
+        <span style="font-size:13px;color:var(--text-secondary);padding-left:34px;line-height:1.6;">将专属推广链接发送给好友或发布到社交平台。</span>
+    </div>
+    <div class="app-info-row" style="align-items:flex-start;flex-direction:column;gap:4px;padding:14px 0;border-bottom:none;">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span style="width:24px;height:24px;border-radius:50%;background:var(--glass-primary);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;">3</span>
+            <span style="font-size:15px;font-weight:700;color:var(--text);">获得佣金</span>
+        </div>
+        <span style="font-size:13px;color:var(--text-secondary);padding-left:34px;line-height:1.6;">好友通过链接注册并消费，佣金自动计入推广余额。</span>
+    </div>
+</div>
+
+<div class="app-card" style="text-align:center;padding:24px 16px;">
+    <button type="button" class="app-btn app-btn-primary app-btn-block" id="affOpenBtn" onclick="affon()">
+        <i class="fas fa-rocket"></i> 开启推广赚钱
+    </button>
+    <p style="font-size:12px;color:var(--text-muted);margin:12px 0 0;">开启即表示同意推广相关规则</p>
+</div>
+
+<script>
+function affon(){
+    var btn = document.getElementById('affOpenBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 开启中...';
+    $.ajax({
+        type:'POST', url:'', data:{}, dataType:'json',
+        success:function (data){
+            if(data.code == 1){
+                appToast(data.msg || '开启推广成功', 'success');
+                setTimeout(function (){ location.href = ''; },1800);
+            }else{
+                appToast(data.msg || '开启失败', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket"></i> 开启推广赚钱';
+            }
+        },
+        error: function(){
+            appToast('网络错误，请稍后重试', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-rocket"></i> 开启推广赚钱';
+        }
+    });
+    return false;
+}
+</script>
+
+{include file="default/mobile/footer" /}

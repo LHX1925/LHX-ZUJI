@@ -1,621 +1,1199 @@
 <style>
 .slide-captcha-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(15,23,42,0.45);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.slide-captcha-overlay * {
-    box-sizing: border-box;
-}
-.slide-captcha-box {
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.7);
-    border-radius: 20px;
-    padding: 24px 24px 20px;
-    width: 348px;
-    box-shadow: 0 16px 48px rgba(31,38,135,0.18), inset 0 1px 0 rgba(255,255,255,0.5);
-    position: relative;
-}
-.slide-captcha-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-.slide-captcha-header span {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1E293B;
-}
-.slide-captcha-close {
-    width: 28px;
-    height: 28px;
-    border: 1px solid rgba(255,255,255,0.6);
-    background: rgba(255,255,255,0.5);
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 16px;
-    color: #64748B;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    transition: all 0.2s;
-}
-.slide-captcha-close:hover {
-    background: rgba(255,255,255,0.8);
-    color: #1E293B;
-}
-.slide-captcha-image-wrap {
-    position: relative;
-    width: 300px;
-    height: 150px;
-    margin-bottom: 16px;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #f5f5f5;
-}
-.slide-captcha-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 0;
-}
-.slide-captcha-hole {
-    position: absolute;
-    border-radius: 8px;
-    box-shadow: inset 0 0 12px rgba(0,0,0,0.18), 0 0 0 1px rgba(255,255,255,0.35);
-    background: rgba(0,0,0,0.08);
-    z-index: 1;
-}
-.slide-captcha-puzzle {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 50px;
-    width: 50px;
-    cursor: default;
-    z-index: 2;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    transition: none;
-    overflow: hidden;
-}
-.slide-captcha-puzzle img {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
-.slide-captcha-track {
-    position: relative;
-    width: 100%;
-    height: 40px;
-    background: rgba(255,255,255,0.45);
-    border-radius: 20px;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-.slide-captcha-track-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    color: #94A3B8;
-    pointer-events: none;
-    user-select: none;
-    z-index: 1;
-}
-.slide-captcha-track-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: linear-gradient(90deg, rgba(79, 124, 255, 0.2), rgba(79, 124, 255, 0.08));
-    border-radius: 20px 0 0 20px;
-    width: 0;
-    z-index: 0;
-    transition: width 0.05s linear;
-}
-.slide-captcha-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #4F7CFF, #7B9BFF);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(79,124,255,0.35);
-    transition: box-shadow 0.2s;
-    user-select: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15,23,42,0.5);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    z-index: 99999; display: flex; align-items: center; justify-content: center;
     touch-action: none;
 }
-.slide-captcha-slider:hover {
-    box-shadow: 0 2px 14px rgba(79,124,255,0.5);
+.slide-captcha-overlay * { box-sizing: border-box; }
+.slide-captcha-box {
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 0.5px solid rgba(255,255,255,0.5);
+    border-radius: 20px; padding: 24px 20px 20px;
+    width: 340px; max-width: 92vw;
+    box-shadow: 0 16px 48px rgba(31,38,135,0.2), inset 0 1px 0 rgba(255,255,255,0.5);
 }
+.slide-captcha-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+}
+.slide-captcha-header span { font-size: 15px; font-weight: 600; color: #1E293B; }
+.slide-captcha-close {
+    width: 30px; height: 30px; border: none; background: rgba(0,0,0,0.05);
+    border-radius: 50%; cursor: pointer; font-size: 18px; color: #64748B;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+}
+.slide-captcha-close:active { background: rgba(0,0,0,0.1); }
+.slide-captcha-image-wrap {
+    position: relative; width: 300px; height: 150px; max-width: 100%;
+    margin-bottom: 16px; border-radius: 10px; overflow: hidden; background: #f0f0f0;
+}
+.slide-captcha-bg {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    object-fit: cover; z-index: 0; pointer-events: none;
+}
+.slide-captcha-puzzle {
+    position: absolute; top: 0; left: 0; height: 50px; width: 50px;
+    z-index: 2; border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2); overflow: hidden; pointer-events: none;
+}
+.slide-captcha-puzzle img { width: 100%; height: 100%; display: block; }
+.slide-captcha-track {
+    position: relative; width: 100%; height: 44px;
+    background: rgba(0,0,0,0.04); border-radius: 22px; overflow: hidden;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.slide-captcha-track-text {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; color: #94A3B8; pointer-events: none; z-index: 1;
+    letter-spacing: 1px;
+}
+.slide-captcha-track-fill {
+    position: absolute; top: 0; left: 0; height: 100%;
+    background: linear-gradient(90deg, rgba(79,124,255,0.15), rgba(79,124,255,0.06));
+    border-radius: 22px 0 0 22px; width: 0; z-index: 0;
+}
+.slide-captcha-slider {
+    position: absolute; top: 2px; left: 2px;
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #4F7CFF, #6B8FFF);
+    border: none; border-radius: 50%; cursor: pointer; z-index: 3;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #fff;
+    box-shadow: 0 2px 10px rgba(79,124,255,0.4);
+    touch-action: none; user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.slide-captcha-slider:active { box-shadow: 0 2px 16px rgba(79,124,255,0.55); }
 .slide-captcha-slider.slide-captcha-success {
-    color: #fff;
     background: linear-gradient(135deg, #10B981, #34D399);
     box-shadow: 0 2px 12px rgba(16,185,129,0.4);
 }
 .slide-captcha-slider.slide-captcha-error {
-    color: #fff;
     background: linear-gradient(135deg, #EF4444, #F87171);
     box-shadow: 0 2px 12px rgba(239,68,68,0.4);
 }
 .slide-captcha-tip {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 12px;
-    color: #999;
-    min-height: 18px;
+    text-align: center; margin-top: 10px; font-size: 12px; color: #94A3B8; min-height: 18px;
 }
-.slide-captcha-tip.error {
-    color: #f44336;
-}
-.slide-captcha-tip.success {
-    color: #4caf50;
-}
+.slide-captcha-tip.error { color: #EF4444; }
+.slide-captcha-tip.success { color: #10B981; }
 .slide-captcha-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 150px;
-    color: #94A3B8;
-    font-size: 14px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 150px; color: #94A3B8; font-size: 14px; gap: 8px;
 }
 .slide-captcha-retry {
-    margin-left: 10px;
-    padding: 4px 10px;
-    border: 1px solid #4F7CFF;
-    background: rgba(255,255,255,0.6);
-    color: #4F7CFF;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.2s;
+    padding: 6px 16px; border: none; background: #4F7CFF; color: #fff;
+    border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500;
+    -webkit-tap-highlight-color: transparent;
 }
-.slide-captcha-retry:hover {
-    background: #4F7CFF;
-    color: #fff;
+.slide-captcha-retry:active { opacity: 0.8; }
+.gt-captcha-area { min-height: 44px; }
+.geetest-panel-tip { font-size:12px; color:#94A3B8; margin-top:10px; text-align:center; }
+/* 极验模式的触发按钮"中空化"：按钮本体仅作容器，内部渲染极验官方验证按钮 */
+button.gt-rendered, a.gt-rendered, .btn.gt-rendered {
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    cursor: default !important;
 }
+.gt-rendered .geetest_holder,
+.gt-rendered .geetest_widget { margin: 0 auto; }
+/* 修复极验GT4按钮：logo 图标与文字重叠（被站点全局样式干扰） */
+.gt-rendered .geetest_box {
+    position: relative !important;
+    overflow: visible !important;
+}
+.gt-rendered .geetest_box img {
+    max-width: 28px !important;
+    max-height: 28px !important;
+}
+.gt-rendered .geetest_box .geetest_logo,
+.gt-rendered .geetest_box .geetest_btn_logo,
+.gt-rendered .geetest_box img[class*="geetest"] {
+    position: absolute !important;
+    left: 14px !important;
+    right: auto !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    z-index: 2;
+}
+.gt-rendered .geetest_box .geetest_btn_text,
+.gt-rendered .geetest_box .geetest_customButton_content {
+    padding: 0 40px !important;
+    text-align: center !important;
+    white-space: nowrap;
+}
+/* 极验验证状态：全程保留极验专属成功显示，仅用外描边提示通过/失败，不覆盖为通用图标 */
+.gt-verified { outline: 2px solid #10B981 !important; outline-offset: 2px; border-radius: 6px; }
+.gt-error { outline: 2px solid #EF4444 !important; outline-offset: 2px; border-radius: 6px; }
+/* 极验专属"验证成功"标识（无法还原极验官方 widget 成功态时使用，GT3/GT4 通用） */
+.gt-succ {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; width: 100%; min-height: 22px;
+    font-size: 14px; font-weight: 600; line-height: 1;
+    color: #4CAF50 !important; letter-spacing: .3px; white-space: nowrap;
+}
+.gt-succ svg { flex: 0 0 auto; display: block; }
+.gt-succ em { font-style: normal; }
 </style>
 
+{php}
+$__gtWebCfg = function_exists('web_config') ? web_config() : [];
+// 与后端 Captcha::geetestMode() 保持一致
+// captcha_type: '0'=本站内置滑块, '1'=极验GT3, '2'=极验GT4
+$__gtType = isset($__gtWebCfg['captcha_type']) ? trim((string)$__gtWebCfg['captcha_type']) : '';
+$__gtHasKeys  = !empty($__gtWebCfg['geetest_id']) && !empty($__gtWebCfg['geetest_key']);
+$__gt4HasKeys = !empty($__gtWebCfg['geetest4_id']) && !empty($__gtWebCfg['geetest4_key']);
+$__gtVersion  = ($__gtType === '2') ? '4' : '3';
+$__gtEnabled  = ($__gtType === '2')
+    ? $__gt4HasKeys
+    : ($__gtHasKeys && ($__gtType !== '0'));
+$__gt4Id = isset($__gtWebCfg['geetest4_id']) ? trim((string)$__gtWebCfg['geetest4_id']) : '';
+{/php}
 <script>
-var __slideCaptchaBasePath = '__ROOT__';
-if (__slideCaptchaBasePath && __slideCaptchaBasePath.charAt(__slideCaptchaBasePath.length - 1) !== '/') { __slideCaptchaBasePath += '/'; }
-/**
- * Slide Captcha - jQuery Plugin
- * 滑块验证码组件
- *
- * Usage:
- *   $.slideCaptcha({
- *     onSuccess: function(token) { console.log('verified', token); },
- *     onError: function() { console.log('failed'); },
- *     onClose: function() { console.log('closed'); }
- *   });
- */
-(function($, window, document) {
+// 极验配置（由服务端注入）
+window.__CAPTCHA_TYPE = '{$__gtEnabled ? "geetest" : "slide"}';
+window.__GT_ENABLED = {$__gtEnabled ? 'true' : 'false'};
+window.__GT_VERSION = '{$__gtVersion}';
+window.__GT4_ID = '{$__gt4Id}';
+</script>
+
+<script>
+(function() {
     'use strict';
+    // 防止重复初始化
+    if (window.__slideCaptchaInited) return;
+    window.__slideCaptchaInited = true;
 
-    if (typeof $ === 'undefined' || !$ || typeof $.fn !== 'object') {
-        if (typeof console !== 'undefined' && console.error) {
-            console.error('SlideCaptcha: jQuery is required but not loaded.');
+    // ---- 极验专属"验证成功"显示 ----
+    // 全程使用极验自己的验证成功显示（GT3/GT4 通用）：
+    //   1) 优先还原极验官方 widget 的成功态快照（GT4 官方按钮的"验证成功"态）；
+    //   2) 无法还原时使用极验品牌样式的成功标识（绿底对勾 + 极验验证成功）；
+    // 绝不退回本站通用的 FontAwesome 对勾，避免把极验官方成功显示覆盖掉。
+    var GT_SUCC_HTML = '<span class="gt-succ">' +
+        '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="11" fill="#4CAF50"></circle>' +
+        '<path d="M6.6 12.5l3.3 3.3 7-7.1" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '</svg><em>极验验证成功</em></span>';
+
+    function __gtSuccess(btn) {
+        if (!btn) return;
+        var st = btn.__gtState;
+        // 1) 极验官方成功态快照（仅 GT4 官方按钮会产生）
+        if (st && st.gtSnap && st.gtSnap.indexOf('验证成功') >= 0) {
+            btn.innerHTML = st.gtSnap;
+            return;
         }
-        return;
+        // 2) 极验专属成功标识
+        btn.innerHTML = GT_SUCC_HTML;
     }
 
-    var pluginName = 'slideCaptcha';
-    var activeInstance = null;
-
-    // 自动探测站点根路径，支持子目录部署
-    function getBasePath() {
-        var scripts = document.getElementsByTagName('script');
-        for (var i = 0; i < scripts.length; i++) {
-            var src = scripts[i].src;
-            if (src && src.indexOf('slide-captcha.js') !== -1) {
-                var idx = src.indexOf('static/js/slide-captcha.js');
-                if (idx !== -1) {
-                    var path = src.substring(0, idx);
-                    return path || '/';
-                }
-            }
-        }
-        // 兜底：尝试取当前页面 base href 或根路径
-        var base = document.querySelector('base[href]');
-        if (base) {
-            var href = base.getAttribute('href') || '/';
-            return href.charAt(href.length - 1) === '/' ? href : href + '/';
-        }
-        // 再兜底：根据当前 URL 路径推测根路径
-        var path = window.location.pathname || '/';
-        if (path.indexOf('/index/') !== -1) {
-            return path.substring(0, path.indexOf('/index/')) + '/';
-        }
-        return '/';
+    function __gtRestore(btn) {
+        if (!btn || window.__GT_ENABLED !== true) return;
+        if (btn.classList) { btn.classList.add('gt-verified'); btn.classList.remove('gt-error'); }
+        __gtSuccess(btn);
     }
 
-    var basePath = (typeof __slideCaptchaBasePath !== 'undefined' && __slideCaptchaBasePath) ? __slideCaptchaBasePath : getBasePath();
-    if (basePath && basePath.charAt(basePath.length - 1) !== '/') {
-        basePath += '/';
-    }
-
-    function log(msg) {
-        if (typeof console !== 'undefined' && console.log) {
-            console.log('[SlideCaptcha] ' + msg);
+    function __gtRestoreErr(btn) {
+        if (!btn || window.__GT_ENABLED !== true) return;
+        var st = btn.__gtState;
+        if (btn.classList) { btn.classList.add('gt-error'); btn.classList.remove('gt-verified'); }
+        // 失败：把极验官方组件挂回，便于直接重试
+        if (st && st.captchaObj && typeof st.captchaObj.appendTo === 'function') {
+            var fb = btn.innerHTML;
+            try { btn.innerHTML = ''; st.captchaObj.appendTo(btn); } catch (e) { btn.innerHTML = fb; }
         }
     }
-
-    function Plugin(options) {
-        this.options = $.extend({}, $.fn[pluginName].defaults, options);
-        this.init();
+    function wrapGtSucc(fn, btn) {
+        return function (token) {
+            if (typeof fn === 'function') fn(token);
+            __gtRestore(btn);
+        };
     }
-
-    Plugin.prototype.init = function() {
-        var self = this;
-
-        // 关闭已存在的实例，防止重复弹窗
-        if (activeInstance && activeInstance.$overlay) {
-            activeInstance.close();
-        }
-        activeInstance = self;
-
-        // Create overlay
-        this.$overlay = $('<div class="slide-captcha-overlay"></div>');
-        this.$box = $('<div class="slide-captcha-box"></div>');
-
-        // Header
-        var $header = $('<div class="slide-captcha-header">' +
-            '<span>请完成安全验证</span>' +
-            '<button class="slide-captcha-close">&times;</button>' +
-        '</div>');
-
-        // Image area
-        this.$imageWrap = $('<div class="slide-captcha-image-wrap">' +
-            '<div class="slide-captcha-loading">加载中...</div>' +
-        '</div>');
-
-        // Track
-        this.$track = $('<div class="slide-captcha-track">' +
-            '<div class="slide-captcha-track-fill"></div>' +
-            '<div class="slide-captcha-track-text">拖动滑块完成验证</div>' +
-            '<div class="slide-captcha-slider">&rarr;</div>' +
-        '</div>');
-
-        // Tip
-        this.$tip = $('<div class="slide-captcha-tip"></div>');
-
-        this.$box.append($header, this.$imageWrap, this.$track, this.$tip);
-        this.$overlay.append(this.$box);
-        $('body').append(this.$overlay);
-
-        // Events
-        this.$box.on('click.slideCaptcha', '.slide-captcha-close', function() {
-            self.close();
-        });
-
-        this.$overlay.on('click.slideCaptcha', function(e) {
-            if (e.target === this) {
-                self.close();
-            }
-        });
-
-        // Prevent click on box from closing
-        this.$box.on('click.slideCaptcha', function(e) {
-            e.stopPropagation();
-        });
-
-        // Load captcha
-        this.loadCaptcha();
-
-        // Bind slider events
-        this.bindSlider();
+    function wrapGtErr(fn, btn) {
+        return function (msg) {
+            if (typeof fn === 'function') fn(msg);
+            __gtRestoreErr(btn);
+        };
+    }
+    window.__gtEnabled = function () { return window.__GT_ENABLED === true; };
+    window.__gtResetCaptcha = function (btn) {
+        if (!btn) return;
+        if (btn.classList) btn.classList.remove('gt-verified', 'gt-error');
+        btn.__gtState = null;
+        if (typeof window.__createGtWidget === 'function') window.__createGtWidget(btn);
     };
 
-    Plugin.prototype.loadCaptcha = function(retryCount) {
-        var self = this;
-        retryCount = retryCount || 0;
-        this.verified = false;
-        this.dragging = false;
+    function initSlideCaptcha($) {
+        if (window.slideCaptcha && window.slideCaptcha._initialized) return;
 
-        this.$imageWrap.html('<div class="slide-captcha-loading">加载中...</div>');
-        this.$track.find('.slide-captcha-track-fill').css('width', '0');
-        this.$track.find('.slide-captcha-slider').css('left', '0').removeClass('slide-captcha-success slide-captcha-error');
-        this.$track.find('.slide-captcha-track-text').text('拖动滑块完成验证');
-        this.$tip.text('').removeClass('success error');
+        function getBasePath() {
+            // 根路径由框架在渲染时注入为字符串字面量（避免直接引用 window.__ROOT__ 被全局替换破坏）
+            var root = "__ROOT__";
+            if (!root) root = '/';
+            if (root.charAt(root.length - 1) !== '/') root += '/';
+            return root;
+        }
+        var basePath = getBasePath();
 
-        var apiUrl = basePath + 'captcha/generate';
-        log('loading captcha from: ' + apiUrl);
-
-        $.ajax({
-            url: apiUrl,
-            type: 'GET',
-            dataType: 'json',
-            cache: false,
-            timeout: 15000,
-            success: function(res) {
-                if (res.code === 1 && res.puzzle) {
-                    self.captchaToken = res.token || '';
-                    self.bgData = res.bg_gradient || null;
-                    self.puzzleData = res.puzzle;
-                    self.puzzleWidth = res.puzzle_width;
-                    self.bgWidth = res.bg_width;
-                    self.puzzleY = res.y;
-                    self.maxLeft = self.bgWidth - self.puzzleWidth;
-
-                    var bgStyle = '';
-                    if (res.bg) {
-                        bgStyle = 'background:url(' + res.bg + ') no-repeat center center;background-size:cover;';
-                    } else if (res.bg_gradient) {
-                        bgStyle = 'background:' + res.bg_gradient + ';';
-                    }
-                    self.$imageWrap.attr('style', 'position:relative;width:300px;height:150px;margin-bottom:16px;border-radius:8px;overflow:hidden;' + bgStyle);
-                    self.$imageWrap.html(
-                        (res.bg ? '<img class="slide-captcha-bg" src="' + res.bg + '" alt="" onerror="this.style.display=\'none\'">' : '') +
-                        '<div class="slide-captcha-puzzle" style="top:' + (res.y || 50) + 'px;width:' + res.puzzle_width + 'px;height:' + res.puzzle_height + 'px;">' +
-                            '<img src="' + res.puzzle + '" alt="" onerror="this.parentNode.style.display=\'none\'">' +
-                        '</div>'
-                    );
-                    self.$puzzle = self.$imageWrap.find('.slide-captcha-puzzle');
-                } else {
-                    if (retryCount < 2) {
-                        log('captcha data invalid, retrying (' + (retryCount + 1) + ')');
-                        setTimeout(function() { self.loadCaptcha(retryCount + 1); }, 600);
-                    } else {
-                        self.showLoadError('加载失败，请重试');
-                    }
-                }
-            },
-            error: function(xhr, status, err) {
-                log('load captcha error: ' + status + ' ' + (err || ''));
-                if (retryCount < 2) {
-                    setTimeout(function() { self.loadCaptcha(retryCount + 1); }, 600);
-                } else {
-                    self.showLoadError('加载失败 (' + (status || 'error') + ')，请重试');
-                }
-            }
-        });
-    };
-
-    Plugin.prototype.showLoadError = function(msg) {
-        var self = this;
-        this.$imageWrap.html(
-            '<div class="slide-captcha-loading">' +
-                '<span>' + msg + '</span>' +
-                '<button type="button" class="slide-captcha-retry">重试</button>' +
-            '</div>'
-        );
-        this.$imageWrap.find('.slide-captcha-retry').on('click', function() {
-            self.loadCaptcha(0);
-        });
-    };
-
-    Plugin.prototype.bindSlider = function() {
-        var self = this;
-        var $slider = this.$track.find('.slide-captcha-slider');
-        var $fill = this.$track.find('.slide-captcha-track-fill');
-        var $text = this.$track.find('.slide-captcha-track-text');
-        var trackWidth, startX, sliderStartLeft;
-        var isDragging = false;
-
-        function getEventX(e) {
-            var oe = e.originalEvent || e;
-            if (oe && oe.touches && oe.touches.length > 0) {
-                return oe.touches[0].clientX;
-            }
-            if (oe && oe.changedTouches && oe.changedTouches.length > 0) {
-                return oe.changedTouches[0].clientX;
-            }
-            if (oe && typeof oe.clientX !== 'undefined') {
-                return oe.clientX;
-            }
-            return e.clientX || 0;
+        function Plugin(options) {
+            this.options = $.extend({}, Plugin.defaults, options);
+            this._init();
         }
 
-        function onStart(e) {
-            if (self.verified) return;
-            if (self.dragging) return;
-            if (e && e.preventDefault) e.preventDefault();
-            isDragging = true;
-            self.dragging = true;
-            trackWidth = self.$track.width();
-            startX = getEventX(e);
-            sliderStartLeft = $slider.position().left;
-            $slider.addClass('slide-captcha-active');
-        }
-
-        function onMove(e) {
-            if (!isDragging) return;
-            if (e && e.preventDefault) e.preventDefault();
-            var currentX = getEventX(e);
-            var deltaX = currentX - startX;
-            var newLeft = sliderStartLeft + deltaX;
-            var maxLeft = trackWidth - $slider.outerWidth();
-
-            if (newLeft < 0) newLeft = 0;
-            if (newLeft > maxLeft) newLeft = maxLeft;
-
-            $slider.css('left', newLeft + 'px');
-            $fill.css('width', (newLeft + $slider.outerWidth() / 2) + 'px');
-
-            // Move puzzle piece proportionally
-            if (self.$puzzle && self.puzzleWidth) {
-                var ratio = newLeft / maxLeft;
-                var puzzleLeft = ratio * self.maxLeft;
-                self.$puzzle.css('left', puzzleLeft + 'px');
+        Plugin.prototype._init = function() {
+            var self = this;
+            // 关闭上一个实例
+            if (window.__slideCaptchaActive && window.__slideCaptchaActive.destroy) {
+                window.__slideCaptchaActive.destroy(true);
             }
-        }
+            window.__slideCaptchaActive = self;
 
-        function onEnd(e) {
-            if (!isDragging) return;
-            isDragging = false;
-            self.dragging = false;
-            $slider.removeClass('slide-captcha-active');
+            this.$overlay = $('<div class="slide-captcha-overlay"></div>');
+            this.$box = $('<div class="slide-captcha-box"></div>');
 
-            var sliderLeft = $slider.position().left;
-            var maxLeft = trackWidth - $slider.outerWidth();
-            var ratio = sliderLeft / maxLeft;
-            var guessX = Math.round(ratio * self.maxLeft);
+            var $header = $('<div class="slide-captcha-header"><span>请完成安全验证</span><button type="button" class="slide-captcha-close">&times;</button></div>');
+            this.$imageWrap = $('<div class="slide-captcha-image-wrap"><div class="slide-captcha-loading">加载中...</div></div>');
+            this.$track = $('<div class="slide-captcha-track"><div class="slide-captcha-track-fill"></div><div class="slide-captcha-track-text">拖动滑块完成验证</div><div class="slide-captcha-slider">&rarr;</div></div>');
+            this.$tip = $('<div class="slide-captcha-tip"></div>');
 
-            if (sliderLeft < 2) {
-                // Didn't really drag
-                return;
-            }
+            this.$box.append($header, this.$imageWrap, this.$track, this.$tip);
+            this.$overlay.append(this.$box);
+            $('body').append(this.$overlay);
 
-            // Verify
-            var verifyUrl = basePath + 'captcha/verify';
-            log('verifying captcha at: ' + verifyUrl + ' x=' + guessX);
+            // 关闭按钮
+            this.$box.on('click.slideCaptcha', '.slide-captcha-close', function(e) { e.stopPropagation(); self.close(); });
+            // 点击遮罩关闭
+            this.$overlay.on('click.slideCaptcha', function(e) {
+                if (e.target === self.$overlay[0]) self.close();
+            });
+            // 阻止弹窗内点击冒泡
+            this.$box.on('click.slideCaptcha', function(e) { e.stopPropagation(); });
+
+            this._loadCaptcha();
+            this._bindSlider();
+        };
+
+        Plugin.prototype._loadCaptcha = function(retryCount) {
+            var self = this;
+            retryCount = retryCount || 0;
+            this.verified = false;
+            this.dragging = false;
+
+            this.$imageWrap.html('<div class="slide-captcha-loading">加载中...</div>');
+            this.$track.find('.slide-captcha-track-fill').css('width', '0');
+            this.$track.find('.slide-captcha-slider').css('left', '2px').removeClass('slide-captcha-success slide-captcha-error');
+            this.$track.find('.slide-captcha-track-text').text('拖动滑块完成验证');
+            this.$tip.text('').removeClass('success error');
 
             $.ajax({
-                url: verifyUrl,
-                type: 'POST',
-                data: { slide_x: guessX, captcha_token: self.captchaToken || '' },
-                dataType: 'json',
-                cache: false,
+                url: basePath + 'captcha/generate',
+                type: 'GET', dataType: 'json', cache: false, timeout: 15000,
                 success: function(res) {
-                    if (res.code === 1) {
-                        // Success
-                        self.verified = true;
-                        $slider.addClass('slide-captcha-success');
-                        $fill.css({
-                            'width': '100%',
-                            'border-radius': '20px',
-                            'background': 'linear-gradient(90deg, rgba(37, 99, 235, 0.25), rgba(37, 99, 235, 0.10))'
-                        });
-                        $text.text('验证通过');
-                        self.$tip.text('验证通过').addClass('success').removeClass('error');
+                    if (res && res.code === 1 && res.puzzle) {
+                        self.captchaToken = res.token || '';
+                        self.puzzleWidth = res.puzzle_width || 50;
+                        self.bgWidth = res.bg_width || 300;
+                        self.puzzleY = res.y || 50;
+                        self.maxLeft = self.bgWidth - self.puzzleWidth;
 
-                        // Generate token
-                        var token = 'captcha_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
-
-                        if (typeof self.options.onSuccess === 'function') {
-                            self.options.onSuccess(token);
-                        }
-
-                        // Auto close after delay
-                        setTimeout(function() {
-                            self.close();
-                        }, 800);
+                        var bgStyle = res.bg ? 'background:url(' + res.bg + ') no-repeat center center;background-size:cover;' : (res.bg_gradient ? 'background:' + res.bg_gradient + ';' : '');
+                        self.$imageWrap.attr('style', 'position:relative;width:300px;max-width:100%;height:150px;margin-bottom:16px;border-radius:10px;overflow:hidden;' + bgStyle);
+                        self.$imageWrap.html(
+                            (res.bg ? '<img class="slide-captcha-bg" src="' + res.bg + '" alt="">' : '') +
+                            '<div class="slide-captcha-puzzle" style="top:' + (res.y || 50) + 'px;width:' + (res.puzzle_width || 50) + 'px;height:' + (res.puzzle_height || 50) + 'px;">' +
+                                '<img src="' + res.puzzle + '" alt="">' +
+                            '</div>'
+                        );
+                        self.$puzzle = self.$imageWrap.find('.slide-captcha-puzzle');
                     } else {
-                        // Failed
-                        self.$tip.text(res.msg || '验证失败，请重试').addClass('error').removeClass('success');
-                        $slider.addClass('slide-captcha-error');
-
-                        if (typeof self.options.onError === 'function') {
-                            self.options.onError();
+                        if (retryCount < 2) {
+                            setTimeout(function() { self._loadCaptcha(retryCount + 1); }, 600);
+                        } else {
+                            self._showError('加载失败，请重试');
                         }
-
-                        // Reset after delay
-                        setTimeout(function() {
-                            self.resetSlider();
-                            self.loadCaptcha();
-                        }, 600);
                     }
                 },
-                error: function(xhr, status, err) {
-                    log('verify captcha error: ' + status + ' ' + (err || ''));
-                    self.$tip.text('网络错误，请重试').addClass('error').removeClass('success');
-                    $slider.addClass('slide-captcha-error');
-                    setTimeout(function() {
-                        self.resetSlider();
-                        self.loadCaptcha();
-                    }, 600);
+                error: function(xhr, status) {
+                    if (retryCount < 2) {
+                        setTimeout(function() { self._loadCaptcha(retryCount + 1); }, 600);
+                    } else {
+                        self._showError('加载失败，请重试');
+                    }
+                }
+            });
+        };
+
+        Plugin.prototype._showError = function(msg) {
+            var self = this;
+            this.$imageWrap.html('<div class="slide-captcha-loading"><span>' + msg + '</span><button type="button" class="slide-captcha-retry">重试</button></div>');
+            this.$imageWrap.find('.slide-captcha-retry').on('click', function(e) { e.stopPropagation(); self._loadCaptcha(0); });
+        };
+
+        Plugin.prototype._bindSlider = function() {
+            var self = this;
+            var $slider = this.$track.find('.slide-captcha-slider');
+            var $fill = this.$track.find('.slide-captcha-track-fill');
+            var $text = this.$track.find('.slide-captcha-track-text');
+            var trackWidth, startX, sliderStartLeft;
+            var isDragging = false;
+
+            // 统一获取客户端X坐标（兼容鼠标和触摸）
+            function getClientX(e) {
+                // 原生TouchEvent
+                if (window.TouchEvent && e.originalEvent instanceof TouchEvent) {
+                    var t = e.originalEvent;
+                    if (t.touches && t.touches.length > 0) return t.touches[0].clientX;
+                    if (t.changedTouches && t.changedTouches.length > 0) return t.changedTouches[0].clientX;
+                    if (t.targetTouches && t.targetTouches.length > 0) return t.targetTouches[0].clientX;
+                }
+                // jQuery规范化的事件
+                if (typeof e.clientX === 'number' && e.clientX > 0) return e.clientX;
+                // 从原始事件获取
+                if (e.originalEvent && typeof e.originalEvent.clientX === 'number') return e.originalEvent.clientX;
+                // 兜底pageX
+                if (typeof e.pageX === 'number') return e.pageX;
+                return 0;
+            }
+
+            function onStart(e) {
+                if (self.verified || self.dragging) return;
+                e.preventDefault();
+                e.stopPropagation();
+                isDragging = true;
+                self.dragging = true;
+                trackWidth = self.$track.width();
+                if (!trackWidth || trackWidth <= 0) trackWidth = 296;
+                startX = getClientX(e);
+                sliderStartLeft = $slider.position().left;
+                if (sliderStartLeft < 0) sliderStartLeft = 0;
+            }
+
+            function onMove(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                var currentX = getClientX(e);
+                if (!currentX || currentX <= 0) return;
+                var deltaX = currentX - startX;
+                var sliderW = $slider.outerWidth() || 40;
+                var maxLeft = trackWidth - sliderW - 2;
+                if (maxLeft <= 0) maxLeft = 254;
+                var newLeft = Math.max(0, Math.min(sliderStartLeft + deltaX, maxLeft));
+                $slider.css('left', newLeft + 'px');
+                $fill.css('width', (newLeft + sliderW / 2) + 'px');
+                if (self.$puzzle && self.$puzzle.length && self.maxLeft) {
+                    var ratio = maxLeft > 0 ? (newLeft / maxLeft) : 0;
+                    self.$puzzle.css('left', (ratio * self.maxLeft) + 'px');
+                }
+            }
+
+            function onEnd(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                self.dragging = false;
+
+                var sliderLeft = $slider.position().left;
+                var sliderW = $slider.outerWidth() || 40;
+                var maxLeft = trackWidth - sliderW - 2;
+                if (maxLeft <= 0 || sliderLeft < 4) {
+                    $slider.css('left', '2px');
+                    $fill.css('width', '0');
+                    return;
+                }
+
+                var guessX = Math.round((sliderLeft / maxLeft) * self.maxLeft);
+
+                $.ajax({
+                    url: basePath + 'captcha/verify',
+                    type: 'POST',
+                    data: { slide_x: guessX, captcha_token: self.captchaToken || '' },
+                    dataType: 'json', cache: false,
+                    success: function(res) {
+                        if (res && res.code === 1) {
+                            self.verified = true;
+                            $slider.addClass('slide-captcha-success').css('left', maxLeft + 'px');
+                            $fill.css({ width: '100%', borderRadius: '22px', background: 'linear-gradient(90deg, rgba(16,185,129,0.2), rgba(16,185,129,0.08))' });
+                            $text.text('验证通过');
+                            self.$tip.text('验证通过').addClass('success').removeClass('error');
+                            var token = 'captcha_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+                            if (typeof self.options.onSuccess === 'function') self.options.onSuccess(token);
+                            setTimeout(function() { self.close(); }, 600);
+                        } else {
+                            self.$tip.text((res && res.msg) || '验证失败，请重试').addClass('error').removeClass('success');
+                            $slider.addClass('slide-captcha-error');
+                            if (typeof self.options.onError === 'function') self.options.onError();
+                            setTimeout(function() { self._resetSlider(); self._loadCaptcha(); }, 500);
+                        }
+                    },
+                    error: function() {
+                        self.$tip.text('网络错误，请重试').addClass('error').removeClass('success');
+                        $slider.addClass('slide-captcha-error');
+                        setTimeout(function() { self._resetSlider(); self._loadCaptcha(); }, 500);
+                    }
+                });
+            }
+
+            // 同时绑定鼠标和触摸事件
+            $slider.on('mousedown.slideCaptcha touchstart.slideCaptcha', onStart);
+            // 允许从track区域开始拖动（更友好的移动端体验）
+            self.$track.on('mousedown.slideCaptcha touchstart.slideCaptcha', function(e) {
+                if (self.verified || self.dragging) return;
+                var target = e.target;
+                if (target === $slider[0] || $(target).closest('.slide-captcha-slider').length) return;
+                onStart(e);
+            });
+            $(document).on('mousemove.slideCaptcha touchmove.slideCaptcha', onMove);
+            $(document).on('mouseup.slideCaptcha touchend.slideCaptcha touchcancel.slideCaptcha', onEnd);
+        };
+
+        Plugin.prototype._resetSlider = function() {
+            var $slider = this.$track.find('.slide-captcha-slider');
+            var $fill = this.$track.find('.slide-captcha-track-fill');
+            var $text = this.$track.find('.slide-captcha-track-text');
+            $slider.css('left', '2px').removeClass('slide-captcha-success slide-captcha-error');
+            $fill.css({ width: '0', borderRadius: '22px 0 0 22px', background: 'linear-gradient(90deg, rgba(79,124,255,0.15), rgba(79,124,255,0.06))' });
+            $text.text('拖动滑块完成验证');
+        };
+
+        Plugin.prototype.close = function() {
+            if (typeof this.options.onClose === 'function') this.options.onClose();
+            this.destroy();
+        };
+
+        Plugin.prototype.destroy = function(silent) {
+            if (this.$overlay) {
+                this.$overlay.remove();
+                this.$overlay = null;
+            }
+            $(document).off('.slideCaptcha');
+            if (window.__slideCaptchaActive === this) window.__slideCaptchaActive = null;
+            if (!silent && typeof this.options.onClose === 'function') this.options.onClose();
+        };
+
+        Plugin.defaults = { onSuccess: function(){}, onError: function(){}, onClose: function(){} };
+
+        window.slideCaptcha = function(options) {
+            return new Plugin(options || {});
+        };
+        window.slideCaptcha._initialized = true;
+        window.slideCaptcha.close = function() {
+            if (window.__slideCaptchaActive && window.__slideCaptchaActive.close) {
+                window.__slideCaptchaActive.close();
+            }
+        };
+    }
+
+    // ============ 极验 GT3 行为验证实现 ============
+    // 核心设计：把各页面的"点击进行验证"按钮直接替换为极验官方按钮（appendTo 进按钮内），
+    // 点击一次即弹出验证面板，验证成功后在 onSuccess 回调里通知页面，与内置滑块接口完全兼容。
+    function initGeetestCaptcha($) {
+        function getBasePath() {
+            var root = "__ROOT__";
+            if (!root) root = '/';
+            if (root.charAt(root.length - 1) !== '/') root += '/';
+            return root;
+        }
+        var basePath = getBasePath();
+        window.__createGtWidget = createWidget;
+        var gtJsLoading = null;
+        var gtFailCount = 0;
+
+        // 极验不可用时自动降级为本站内置滑块，保证业务不被卡死
+        function fallbackToLocal() {
+            if (window.__gtFallbacked) return;
+            window.__gtFallbacked = true;
+            try {
+                var rendered = document.querySelectorAll('.gt-rendered');
+                for (var i = 0; i < rendered.length; i++) {
+                    var b = rendered[i];
+                    b.classList.remove('gt-rendered');
+                    if (b.__gtOriginalHTML !== undefined) { b.innerHTML = b.__gtOriginalHTML; }
+                    b.__gtState = null;
+                }
+            } catch (e) {}
+            try { window.slideCaptcha = undefined; } catch (e) {}
+            try { delete window.slideCaptcha; } catch (e) {}
+            try { initSlideCaptcha($); } catch (e) {}
+        }
+
+        function gtFail(btn, msg) {
+            gtFailCount++;
+            if (btn && btn.__gtState) btn.__gtState.phase = 'failed';
+            if (gtFailCount >= 2) { fallbackToLocal(); return; }
+            if (btn) {
+                btn.innerHTML = '<div style="font-size:13px;color:#ef4444;cursor:pointer;">' + msg + '，点击重试</div>';
+            }
+        }
+
+        function loadGtJs(cb) {
+            if (window.initGeetest) { cb(); return; }
+            if (gtJsLoading) { gtJsLoading.push(cb); return; }
+            gtJsLoading = [cb];
+            var done = false;
+            var finish = function(err) {
+                if (done) return;
+                done = true;
+                var q = gtJsLoading; gtJsLoading = null;
+                q.forEach(function(f) { f(err); });
+            };
+            // 兜底超时：script 卡住时既不 onload 也不 onerror，这里主动判失败
+            var timer = setTimeout(function() { finish(new Error('gt.js timeout')); }, 8000);
+            var s = document.createElement('script');
+            s.src = 'https://static.geetest.com/static/tools/gt.js';
+            s.onload = function() { clearTimeout(timer); finish(window.initGeetest ? null : new Error('gt.js invalid')); };
+            s.onerror = function() { clearTimeout(timer); finish(new Error('gt.js load failed')); };
+            document.head.appendChild(s);
+        }
+
+        // ---- 触发按钮识别与状态管理 ----
+        function isTrigger(el) {
+            if (!el || !el.getAttribute) return false;
+            var id = el.id || '';
+            if (id === 'slide-captcha-btn' || id === 'slide-captcha-btn-code') return true;
+            if (el.getAttribute('data-slide-captcha') !== null) return true;
+            var cls = el.className;
+            if (typeof cls === 'string' && cls.indexOf('btn-slide-captcha') >= 0) return true;
+            return false;
+        }
+        var lastTrigger = null;
+        document.addEventListener('click', function(e) {
+            var el = e.target;
+            while (el && el !== document.documentElement) {
+                if (el.nodeType === 1 && isTrigger(el)) { lastTrigger = el; break; }
+                el = el.parentNode;
+            }
+        }, true);
+
+        function getState(btn) { return btn.__gtState || null; }
+        function setState(btn, st) { btn.__gtState = st; }
+
+        // ---- 在按钮内渲染极验官方按钮 ----
+        function createWidget(btn) {
+            var oldSt = getState(btn);
+            if (oldSt && (oldSt.phase === 'loading' || oldSt.phase === 'ready')) return;
+            var st = oldSt || { opts: null, verified: false };
+            st.phase = 'loading';
+            st.verifying = false;
+            st.gtSnap = null;
+            setState(btn, st);
+            if (btn.__gtOriginalHTML === undefined) btn.__gtOriginalHTML = btn.innerHTML;
+
+            btn.innerHTML = '<div class="gt-widget-holder" style="width:100%;min-height:40px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#94A3B8;">验证组件加载中…</div>';
+
+            // 整体超时兜底：任何一步卡住都不会永远停在"加载中"
+            var hardTimer = setTimeout(function() {
+                if (st.phase === 'verified' || st.phase === 'ready') return;
+                gtFail(btn, '验证加载超时');
+            }, 12000);
+
+            loadGtJs(function(err) {
+                if (err || !window.initGeetest) {
+                    clearTimeout(hardTimer);
+                    gtFail(btn, '验证组件加载失败');
+                    return;
+                }
+                $.ajax({
+                    url: basePath + 'captcha/gtregister',
+                    type: 'GET', dataType: 'json', cache: false, timeout: 10000,
+                    success: function(reg) {
+                        if (!reg || !reg.gt || !reg.challenge || reg.code === -1) {
+                            clearTimeout(hardTimer);
+                            gtFail(btn, (reg && reg.msg) ? reg.msg : '验证初始化失败');
+                            return;
+                        }
+                        // 极验回调有可能永远不触发（ID/Key 与 gt.js 版本不匹配时最典型），
+                        // 这里单独计时，6 秒内没回调就判失败，避免一直停在"加载中"
+                        var readyTimer = setTimeout(function() {
+                            if (st.phase !== 'ready' && st.phase !== 'verified') gtFail(btn, '验证组件初始化超时');
+                        }, 6000);
+                        try {
+                        window.initGeetest({
+                            gt: reg.gt,
+                            challenge: reg.challenge,
+                            offline: !reg.success,
+                            new_captcha: true,
+                            product: 'popup',
+                            width: '100%'
+                        }, function(captchaObj) {
+                            clearTimeout(readyTimer);
+                            clearTimeout(hardTimer);
+                            st.phase = 'ready';
+                            st.captchaObj = captchaObj;
+                            btn.innerHTML = '';
+                            // 按钮"中空化"，极验官方按钮直接取代原按钮的观感
+                            if (btn.classList && !btn.classList.contains('gt-rendered')) btn.classList.add('gt-rendered');
+                            try { captchaObj.appendTo(btn); } catch (e) {}
+
+                            captchaObj.onSuccess(function() {
+                                if (st.verifying || st.verified) return;
+                                st.verifying = true;
+                                var r = captchaObj.getValidate();
+                                if (!r) { st.verifying = false; return; }
+                                var postData = {
+                                    geetest_challenge: r.geetest_challenge,
+                                    geetest_validate: r.geetest_validate,
+                                    geetest_seccode: r.geetest_seccode
+                                };
+                                if (st.opts && st.opts.email) postData.email = st.opts.email;
+                                $.ajax({
+                                    url: basePath + 'captcha/gtvalidate',
+                                    type: 'POST', dataType: 'json', cache: false,
+                                    data: postData,
+                                    success: function(res) {
+                                        if (res && res.code == 1) {
+                                            st.verified = true;
+                                            st.phase = 'verified';
+                                            if (btn.classList) btn.classList.add('gt-verified');
+                                            var token = 'captcha_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+                                            if (st.opts && typeof st.opts.onSuccess === 'function') st.opts.onSuccess(token);
+                                        } else {
+                                            st.verifying = false;
+                                            var msg = (res && res.msg) || '验证失败，请重试';
+                                            if (st.opts && typeof st.opts.onError === 'function') st.opts.onError(msg);
+                                            // 重新生成一次全新的验证组件，避免"已过期"
+                                            setTimeout(function() { st.phase = 'idle'; createWidget(btn); }, 300);
+                                        }
+                                    },
+                                    error: function() {
+                                        st.verifying = false;
+                                        if (st.opts && typeof st.opts.onError === 'function') st.opts.onError('网络错误，请重试');
+                                        setTimeout(function() { st.phase = 'idle'; createWidget(btn); }, 300);
+                                    }
+                                });
+                            });
+                            captchaObj.onError(function() {
+                                st.phase = 'idle';
+                                setTimeout(function() { if (!st.verified) createWidget(btn); }, 300);
+                            });
+                            captchaObj.onClose(function() {
+                                // 用户关闭了验证面板且未完成验证：通知页面，并重建组件保持极验按钮原位
+                                if (!st.verified) {
+                                    if (st.opts && typeof st.opts.onClose === 'function') {
+                                        try { st.opts.onClose(); } catch (e) {}
+                                    }
+                                    setTimeout(function() { if (!st.verified) { st.phase = 'idle'; createWidget(btn); } }, 350);
+                                }
+                            });
+                        });
+                        } catch (e) {
+                            clearTimeout(readyTimer);
+                            clearTimeout(hardTimer);
+                            gtFail(btn, '验证组件异常');
+                        }
+                    },
+                    error: function() {
+                        clearTimeout(hardTimer);
+                        gtFail(btn, '验证初始化失败');
+                    }
+                });
+            });
+        }
+
+        // 按钮内是否还存在极验组件节点（按类名含 geetest 判断，兼容 GT3/GT4 各版本）
+        function hasGtNode(btn) {
+            if (btn.querySelector('.gt-widget-holder, .gt-succ')) return true;
+            var kids = btn.getElementsByTagName('*');
+            for (var i = 0; i < kids.length; i++) {
+                var c = kids[i].className;
+                if (typeof c === 'string' && c.indexOf('geetest') >= 0) return true;
+            }
+            return false;
+        }
+        // 页面把按钮重置回了本站通用文案（关闭面板 / 提交失败 / resetCaptcha）→ 需要重建极验组件
+        function isPageReset(btn) {
+            if (hasGtNode(btn)) return false;
+            return /fa-shield-alt|fa-check-circle|fa-times-circle|fa-exclamation-circle|点击进行滑块验证|验证通过|验证失败|滑块验证/.test(btn.innerHTML || '');
+        }
+        function attachAll() {
+            if (window.__gtFallbacked) return;
+            var btns = document.querySelectorAll('#slide-captcha-btn, #slide-captcha-btn-code, [data-slide-captcha], .btn-slide-captcha');
+            for (var i = 0; i < btns.length; i++) {
+                var btn = btns[i];
+                var stt = getState(btn);
+                if (!stt) {
+                    createWidget(btn);
+                } else if (isPageReset(btn)) {
+                    stt.rebuilds = (stt.rebuilds || 0) + 1;
+                    if (stt.rebuilds > 3) continue;
+                    // 极验显示被页面覆盖/移除：自动重建，保证可再次验证且全程都是极验专属显示
+                    stt.phase = 'idle';
+                    stt.gtSnap = null;
+                    createWidget(btn);
+                }
+            }
+        }
+        attachAll();
+        // 页面按钮可能是后渲染的，兜底多次尝试
+        var attachTries = 0;
+        var attachTimer = setInterval(function() {
+            attachTries++;
+            attachAll();
+            if (attachTries >= 10) clearInterval(attachTimer);
+        }, 600);
+        if (typeof MutationObserver !== 'undefined' && document.body) {
+            try {
+                var mo = new MutationObserver(function() { attachAll(); });
+                mo.observe(document.body, { childList: true, subtree: true });
+            } catch (e) {}
+        }
+
+        // ---- 页面兼容层：window.slideCaptcha(opts) ----
+        // 各页面的点击处理器会调用它，这里只做"回调注册"；面板弹出由极验按钮原生完成。
+        window.slideCaptcha = function(options) {
+            options = options || {};
+            if (window.__gtFallbacked) {
+                try { delete window.slideCaptcha; } catch (e) {}
+                try { initSlideCaptcha($); } catch (e) {}
+                if (window.slideCaptcha) return window.slideCaptcha(options);
+                return { close: function() {}, destroy: function() {} };
+            }
+            var btn = lastTrigger || document.getElementById('slide-captcha-btn');
+            if (btn && isTrigger(btn)) {
+                var st = getState(btn);
+                if (!st) { st = { phase: 'idle' }; setState(btn, st); }
+                if (typeof options.onSuccess === 'function') options.onSuccess = wrapGtSucc(options.onSuccess, btn);
+                if (typeof options.onError === 'function') options.onError = wrapGtErr(options.onError, btn);
+                st.opts = options;
+                // 按钮上还没有组件（例如失败重试、或被页面重置过）→ 立即重建并直接弹出面板
+                if (st.phase === 'failed') {
+                    st.phase = 'idle';
+                    createWidget(btn);
+                } else if (st.phase === undefined || st.phase === 'idle') {
+                    createWidget(btn);
+                }
+                return {
+                    close: function() {},
+                    destroy: function() {}
+                };
+            }
+            // 页面上没有触发按钮（程序化调用场景）：用一个隐藏容器挂组件并直接弹出面板
+            var holder = document.createElement('div');
+            holder.style.cssText = 'position:fixed;left:-9999px;top:0;';
+            document.body.appendChild(holder);
+            var progSt = { opts: options, verified: false, verifying: false };
+            loadGtJs(function(err) {
+                if (err || !window.initGeetest) {
+                    if (typeof options.onError === 'function') options.onError('验证组件加载失败');
+                    return;
+                }
+                $.ajax({
+                    url: basePath + 'captcha/gtregister',
+                    type: 'GET', dataType: 'json', cache: false, timeout: 10000,
+                    success: function(reg) {
+                        if (!reg || !reg.gt || !reg.challenge) {
+                            if (typeof options.onError === 'function') options.onError('验证初始化失败');
+                            return;
+                        }
+                        window.initGeetest({
+                            gt: reg.gt, challenge: reg.challenge, offline: !reg.success,
+                            new_captcha: true, product: 'popup', width: '100%'
+                        }, function(captchaObj) {
+                            try { captchaObj.appendTo(holder); } catch (e) {}
+                            captchaObj.onSuccess(function() {
+                                if (progSt.verifying || progSt.verified) return;
+                                progSt.verifying = true;
+                                var r = captchaObj.getValidate();
+                                if (!r) { progSt.verifying = false; return; }
+                                var postData = {
+                                    geetest_challenge: r.geetest_challenge,
+                                    geetest_validate: r.geetest_validate,
+                                    geetest_seccode: r.geetest_seccode
+                                };
+                                if (options.email) postData.email = options.email;
+                                $.ajax({
+                                    url: basePath + 'captcha/gtvalidate',
+                                    type: 'POST', dataType: 'json', cache: false, data: postData,
+                                    success: function(res) {
+                                        if (res && res.code == 1) {
+                                            progSt.verified = true;
+                                            var token = 'captcha_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+                                            if (typeof options.onSuccess === 'function') options.onSuccess(token);
+                                        } else {
+                                            progSt.verifying = false;
+                                            if (typeof options.onError === 'function') options.onError((res && res.msg) || '验证失败，请重试');
+                                            if (captchaObj.reset) captchaObj.reset();
+                                        }
+                                    },
+                                    error: function() {
+                                        progSt.verifying = false;
+                                        if (typeof options.onError === 'function') options.onError('网络错误，请重试');
+                                        if (captchaObj.reset) captchaObj.reset();
+                                    }
+                                });
+                            });
+                            captchaObj.onClose(function() {
+                                if (!progSt.verified && typeof options.onClose === 'function') {
+                                    try { options.onClose(); } catch (e) {}
+                                }
+                            });
+                            setTimeout(function() { try { captchaObj.verify(); } catch (e) {} }, 50);
+                        });
+                    },
+                    error: function() {
+                        if (typeof options.onError === 'function') options.onError('验证初始化失败，请检查网络');
+                    }
+                });
+            });
+            return { close: function() {}, destroy: function() {} };
+        };
+        window.slideCaptcha._initialized = true;
+        window.slideCaptcha.close = function() {};
+    }
+
+    // ============ 极验 GT4（第四代）行为验证实现 ============
+    // 官方 Web API：initGeetest4({captchaId, product:'popup'}, cb)
+    // cb 拿到实例后 appendTo(容器)，onSuccess 里 getValidate()
+    // 得到 lot_number / captcha_output / pass_token / gen_time，交给服务端做二次验证。
+    function initGeetest4Captcha($) {
+        function getBasePath() {
+            var root = "__ROOT__";
+            if (!root) root = '/';
+            if (root.charAt(root.length - 1) !== '/') root += '/';
+            return root;
+        }
+        var basePath = getBasePath();
+        window.__createGtWidget = createWidget;
+        var jsLoading = null;
+        var failCount = 0;
+        var captchaId = window.__GT4_ID || '';
+
+        function fallbackToLocal() {
+            if (window.__gtFallbacked) return;
+            window.__gtFallbacked = true;
+            try {
+                var rendered = document.querySelectorAll('.gt-rendered');
+                for (var i = 0; i < rendered.length; i++) {
+                    var b = rendered[i];
+                    b.classList.remove('gt-rendered');
+                    if (b.__gtOriginalHTML !== undefined) { b.innerHTML = b.__gtOriginalHTML; }
+                    b.__gtState = null;
+                }
+            } catch (e) {}
+            try { window.slideCaptcha = undefined; } catch (e) {}
+            try { delete window.slideCaptcha; } catch (e) {}
+            try { initSlideCaptcha($); } catch (e) {}
+        }
+
+        function gtFail(btn, msg) {
+            failCount++;
+            if (btn && btn.__gtState) btn.__gtState.phase = 'failed';
+            if (failCount >= 2) { fallbackToLocal(); return; }
+            if (btn) {
+                btn.innerHTML = '<div style="font-size:13px;color:#ef4444;cursor:pointer;">' + msg + '，点击重试</div>';
+            }
+        }
+
+        function loadGt4Js(cb) {
+            if (window.initGeetest4) { cb(); return; }
+            if (jsLoading) { jsLoading.push(cb); return; }
+            jsLoading = [cb];
+            var done = false;
+            var finish = function(err) {
+                if (done) return;
+                done = true;
+                var q = jsLoading; jsLoading = null;
+                q.forEach(function(f) { f(err); });
+            };
+            var timer = setTimeout(function() { finish(new Error('gt4.js timeout')); }, 8000);
+            var s = document.createElement('script');
+            s.src = 'https://static.geetest.com/v4/gt4.js';
+            s.onload = function() { clearTimeout(timer); finish(window.initGeetest4 ? null : new Error('gt4.js invalid')); };
+            s.onerror = function() { clearTimeout(timer); finish(new Error('gt4.js load failed')); };
+            document.head.appendChild(s);
+        }
+
+        function isTrigger(el) {
+            if (!el || !el.getAttribute) return false;
+            var id = el.id || '';
+            if (id === 'slide-captcha-btn' || id === 'slide-captcha-btn-code') return true;
+            if (el.getAttribute('data-slide-captcha') !== null) return true;
+            var cls = el.className;
+            if (typeof cls === 'string' && cls.indexOf('btn-slide-captcha') >= 0) return true;
+            return false;
+        }
+        var lastTrigger = null;
+        document.addEventListener('click', function(e) {
+            var el = e.target;
+            while (el && el !== document.documentElement) {
+                if (el.nodeType === 1 && isTrigger(el)) { lastTrigger = el; break; }
+                el = el.parentNode;
+            }
+        }, true);
+
+        function getState(btn) { return btn.__gtState || null; }
+        function setState(btn, st) { btn.__gtState = st; }
+
+        // 验证成功后统一提交服务端二次验证
+        function submitValidate(res, opts, onDone) {
+            var postData = {
+                lot_number: res.lot_number || '',
+                captcha_output: res.captcha_output || '',
+                pass_token: res.pass_token || '',
+                gen_time: res.gen_time || ''
+            };
+            if (opts && opts.email) postData.email = opts.email;
+            $.ajax({
+                url: basePath + 'captcha/gt4validate',
+                type: 'POST', dataType: 'json', cache: false, data: postData,
+                success: function(r) {
+                    if (r && r.code == 1) {
+                        onDone(null);
+                    } else {
+                        onDone((r && r.msg) || '验证失败，请重试');
+                    }
+                },
+                error: function() { onDone('网络错误，请重试'); }
+            });
+        }
+
+        function createWidget(btn) {
+            var oldSt = getState(btn);
+            if (oldSt && (oldSt.phase === 'loading' || oldSt.phase === 'ready')) return;
+            var st = oldSt || { opts: null, verified: false };
+            st.phase = 'loading';
+            st.verifying = false;
+            st.gtSnap = null;
+            setState(btn, st);
+            if (btn.__gtOriginalHTML === undefined) btn.__gtOriginalHTML = btn.innerHTML;
+
+            btn.innerHTML = '<div class="gt-widget-holder" style="width:100%;min-height:40px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#94A3B8;">验证组件加载中…</div>';
+
+            var hardTimer = setTimeout(function() {
+                if (st.phase === 'verified' || st.phase === 'ready') return;
+                gtFail(btn, '验证加载超时');
+            }, 12000);
+
+            loadGt4Js(function(err) {
+                if (err || !window.initGeetest4 || !captchaId) {
+                    clearTimeout(hardTimer);
+                    gtFail(btn, captchaId ? '验证组件加载失败' : '未配置极验 GT4 验证ID');
+                    return;
+                }
+                var readyTimer = setTimeout(function() {
+                    if (st.phase !== 'ready' && st.phase !== 'verified') gtFail(btn, '验证组件初始化超时');
+                }, 8000);
+                try {
+                    window.initGeetest4({
+                        captchaId: captchaId,
+                        product: 'popup',
+                        language: 'zho',
+                        protocol: (location.protocol === 'https:' ? 'https://' : 'http://'),
+                        nativeButton: { width: '100%' },
+                        timeout: 10000
+                    }, function(captchaObj) {
+                        clearTimeout(readyTimer);
+                        clearTimeout(hardTimer);
+                        st.phase = 'ready';
+                        st.captchaObj = captchaObj;
+                        btn.innerHTML = '';
+                        if (btn.classList && !btn.classList.contains('gt-rendered')) btn.classList.add('gt-rendered');
+                        try { captchaObj.appendTo(btn); } catch (e) {}
+
+                        captchaObj.onReady(function() { st.phase = 'ready'; });
+                        captchaObj.onSuccess(function() {
+                            if (st.verifying) return;
+                            st.verifying = true;
+                            var r = captchaObj.getValidate();
+                            if (!r) { st.verifying = false; return; }
+                            submitValidate(r, st.opts, function(err2) {
+                                st.verifying = false;
+                                if (!err2) {
+                                    var token = 'captcha_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+                                    st.verified = true;
+                                    st.phase = 'verified';
+                                    if (btn.classList) btn.classList.add('gt-verified');
+                                    // 记录极验官方按钮的"验证成功"态，页面回调跑完后原样还原，保证全程是极验专属显示
+                                    try { st.gtSnap = btn.innerHTML; } catch (e) {}
+                                    // 成功：保留极验专属成功图标，不重置组件
+                                    if (st.opts && typeof st.opts.onSuccess === 'function') st.opts.onSuccess(token);
+                                } else {
+                                    if (st.opts && typeof st.opts.onError === 'function') st.opts.onError(err2);
+                                    // 失败才重置，保证可以再次点击验证
+                                    st.verified = false;
+                                    st.phase = 'ready';
+                                    if (btn.classList) btn.classList.remove('gt-verified');
+                                    setTimeout(function() {
+                                        try { captchaObj.reset(); } catch (e) {}
+                                    }, 400);
+                                }
+                            });
+                        });
+                        captchaObj.onError(function() {
+                            if (st.phase === 'ready') return;
+                            st.phase = 'idle';
+                            gtFail(btn, '验证组件出错');
+                        });
+                        captchaObj.onClose(function() {
+                            if (!st.verified && st.opts && typeof st.opts.onClose === 'function') {
+                                try { st.opts.onClose(); } catch (e) {}
+                            }
+                        });
+                    });
+                } catch (e) {
+                    clearTimeout(readyTimer);
+                    clearTimeout(hardTimer);
+                    gtFail(btn, '验证组件异常');
                 }
             });
         }
 
-        $slider.on('mousedown.slideCaptcha', onStart);
-        $(document).on('mousemove.slideCaptcha', function(e) {
-            onMove({ originalEvent: e, preventDefault: function(){} });
-        });
-        $(document).on('mouseup.slideCaptcha', function(e) {
-            onEnd({ originalEvent: e });
-        });
-
-        $slider.on('touchstart.slideCaptcha', function(e) {
-            onStart(e);
-        });
-        $(document).on('touchmove.slideCaptcha', function(e) {
-            onMove({ originalEvent: e, preventDefault: function(){} });
-        });
-        $(document).on('touchend.slideCaptcha', function(e) {
-            onEnd({ originalEvent: e });
-        });
-    };
-
-    Plugin.prototype.resetSlider = function() {
-        var $slider = this.$track.find('.slide-captcha-slider');
-        var $fill = this.$track.find('.slide-captcha-track-fill');
-        var $text = this.$track.find('.slide-captcha-track-text');
-
-        $slider.css('left', '0').removeClass('slide-captcha-success slide-captcha-error');
-        $fill.css({ 'width': '0', 'border-radius': '20px 0 0 20px', 'background': 'linear-gradient(90deg, rgba(79, 124, 255, 0.2), rgba(79, 124, 255, 0.08))' });
-        $text.text('拖动滑块完成验证');
-    };
-
-    Plugin.prototype.close = function() {
-        if (typeof this.options.onClose === 'function') {
-            this.options.onClose();
+        // 按钮内是否还存在极验组件节点（按类名含 geetest 判断，兼容 GT3/GT4 各版本）
+        function hasGtNode(btn) {
+            if (btn.querySelector('.gt-widget-holder, .gt-succ')) return true;
+            var kids = btn.getElementsByTagName('*');
+            for (var i = 0; i < kids.length; i++) {
+                var c = kids[i].className;
+                if (typeof c === 'string' && c.indexOf('geetest') >= 0) return true;
+            }
+            return false;
         }
-        this.destroy();
-    };
-
-    Plugin.prototype.destroy = function() {
-        if (this.$overlay) {
-            this.$overlay.remove();
-            this.$overlay = null;
+        // 页面把按钮重置回了本站通用文案（关闭面板 / 提交失败 / resetCaptcha）→ 需要重建极验组件
+        function isPageReset(btn) {
+            if (hasGtNode(btn)) return false;
+            return /fa-shield-alt|fa-check-circle|fa-times-circle|fa-exclamation-circle|点击进行滑块验证|验证通过|验证失败|滑块验证/.test(btn.innerHTML || '');
         }
-        $(document).off('.slideCaptcha');
-        if (activeInstance === this) {
-            activeInstance = null;
+        function attachAll() {
+            if (window.__gtFallbacked) return;
+            var btns = document.querySelectorAll('#slide-captcha-btn, #slide-captcha-btn-code, [data-slide-captcha], .btn-slide-captcha');
+            for (var i = 0; i < btns.length; i++) {
+                var btn = btns[i];
+                var stt = getState(btn);
+                if (!stt) {
+                    createWidget(btn);
+                } else if (isPageReset(btn)) {
+                    stt.rebuilds = (stt.rebuilds || 0) + 1;
+                    if (stt.rebuilds > 3) continue;
+                    // 极验显示被页面覆盖/移除：自动重建，保证可再次验证且全程都是极验专属显示
+                    stt.phase = 'idle';
+                    stt.gtSnap = null;
+                    createWidget(btn);
+                }
+            }
         }
-    };
+        attachAll();
+        var attachTries = 0;
+        var attachTimer = setInterval(function() {
+            attachTries++;
+            attachAll();
+            if (attachTries >= 10) clearInterval(attachTimer);
+        }, 600);
+        if (typeof MutationObserver !== 'undefined' && document.body) {
+            try {
+                var mo = new MutationObserver(function() { attachAll(); });
+                mo.observe(document.body, { childList: true, subtree: true });
+            } catch (e) {}
+        }
 
-    $.fn[pluginName] = function(options) {
-        var plugin = new Plugin(options || {});
-        return plugin;
-    };
+        // ---- 页面兼容层：window.slideCaptcha(opts) ----
+        window.slideCaptcha = function(options) {
+            options = options || {};
+            if (window.__gtFallbacked) {
+                try { delete window.slideCaptcha; } catch (e) {}
+                try { initSlideCaptcha($); } catch (e) {}
+                if (window.slideCaptcha) return window.slideCaptcha(options);
+                return { close: function() {}, destroy: function() {} };
+            }
+            var btn = lastTrigger || document.getElementById('slide-captcha-btn');
+            if (btn && isTrigger(btn)) {
+                var st = getState(btn);
+                if (!st) { st = { phase: 'idle' }; setState(btn, st); }
+                if (typeof options.onSuccess === 'function') options.onSuccess = wrapGtSucc(options.onSuccess, btn);
+                if (typeof options.onError === 'function') options.onError = wrapGtErr(options.onError, btn);
+                st.opts = options;
+                if (st.phase === 'failed' || st.phase === undefined || st.phase === 'idle') {
+                    st.phase = 'idle';
+                    createWidget(btn);
+                }
+                return { close: function() {}, destroy: function() {} };
+            }
+            // 没有触发按钮（程序化调用）：bind 模式 + 立即弹出
+            var holder = document.createElement('div');
+            holder.style.cssText = 'position:fixed;left:-9999px;top:0;';
+            document.body.appendChild(holder);
+            var progSt = { verified: false, verifying: false, ready: false };
+            loadGt4Js(function(err) {
+                if (err || !window.initGeetest4 || !captchaId) {
+                    if (typeof options.onError === 'function') options.onError('验证组件加载失败');
+                    return;
+                }
+                window.initGeetest4({
+                    captchaId: captchaId,
+                    product: 'bind',
+                    language: 'zho',
+                    protocol: (location.protocol === 'https:' ? 'https://' : 'http://'),
+                    timeout: 10000
+                }, function(captchaObj) {
+                    try { captchaObj.appendTo(holder); } catch (e) {}
+                    captchaObj.onReady(function() {
+                        progSt.ready = true;
+                        try { captchaObj.showCaptcha(); } catch (e) {}
+                    });
+                    captchaObj.onSuccess(function() {
+                        if (progSt.verifying || progSt.verified) return;
+                        progSt.verifying = true;
+                        var r = captchaObj.getValidate();
+                        if (!r) { progSt.verifying = false; return; }
+                        submitValidate(r, options, function(err2) {
+                            if (!err2) {
+                                progSt.verified = true;
+                                var token = 'captcha_' + Date.now() + '_' + Math.random().toString(36).substr(2, 8);
+                                if (typeof options.onSuccess === 'function') options.onSuccess(token);
+                            } else {
+                                progSt.verifying = false;
+                                if (typeof options.onError === 'function') options.onError(err2);
+                                try { captchaObj.reset(); } catch (e) {}
+                            }
+                        });
+                    });
+                    captchaObj.onClose(function() {
+                        if (!progSt.verified && typeof options.onClose === 'function') {
+                            try { options.onClose(); } catch (e) {}
+                        }
+                    });
+                    captchaObj.onError(function() {
+                        if (typeof options.onError === 'function') options.onError('验证组件出错，请重试');
+                    });
+                });
+            });
+            return { close: function() {}, destroy: function() {} };
+        };
+        window.slideCaptcha._initialized = true;
+        window.slideCaptcha.close = function() {};
+    }
 
-    $.fn[pluginName].defaults = {
-        onSuccess: function(token) {},
-        onError: function() {},
-        onClose: function() {}
-    };
+    function tryInit() {
+        var $ = window.jQuery || window.$;
+        if ($ && typeof $ === 'function') {
+            if (window.__GT_ENABLED === true || window.__CAPTCHA_TYPE === 'geetest') {
+                if (window.__GT_VERSION === '4') {
+                    initGeetest4Captcha($);
+                } else {
+                    initGeetestCaptcha($);
+                }
+            } else {
+                initSlideCaptcha($);
+            }
+            return true;
+        }
+        return false;
+    }
 
-    // Also expose as static method for convenience: $.slideCaptcha({...})
-    $.slideCaptcha = $.fn.slideCaptcha;
-    window.slideCaptcha = $.slideCaptcha;
-
-    log('initialized, basePath=' + basePath);
-
-})(window.jQuery || window.$, window, document);
-
+    if (!tryInit()) {
+        var checkCount = 0;
+        var checkInterval = setInterval(function() {
+            checkCount++;
+            if (tryInit()) { clearInterval(checkInterval); }
+            else if (checkCount > 50) { clearInterval(checkInterval); }
+        }, 100);
+    }
+})();
 </script>

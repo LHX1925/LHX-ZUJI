@@ -1,0 +1,161 @@
+{include file="default/header" title="题库管理" /}
+<main class="lyear-layout-content">
+  <div class="container-fluid glass-animate-in">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card admin-card">
+          <header class="card-header">
+            <div class="card-title">题库管理</div>
+            <div>
+              <a href="__ROOT__/admin/activity/quiz" class="btn btn-outline-primary btn-sm">返回活动管理</a>
+              <button class="btn btn-warning btn-sm" id="btn-import-default">导入默认题库</button>
+            </div>
+          </header>
+          <div class="card-body">
+            <form id="question-form" class="admin-form mb-4">
+              <input type="hidden" name="act" value="save">
+              <input type="hidden" name="id" id="q-id" value="0">
+              <div class="row">
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">分类</label>
+                  <select name="category" class="form-select">
+                    <option value="history">红色历史</option>
+                    <option value="modern">现代知识</option>
+                    <option value="other">其他</option>
+                  </select>
+                </div>
+                <div class="col-md-9 mb-3">
+                  <label class="form-label">题目</label>
+                  <input type="text" name="question" id="q-question" class="form-control" required placeholder="请输入题目内容">
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">选项A</label>
+                  <input type="text" class="form-control q-opt" data-opt="0" placeholder="选项A">
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">选项B</label>
+                  <input type="text" class="form-control q-opt" data-opt="1" placeholder="选项B">
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">选项C</label>
+                  <input type="text" class="form-control q-opt" data-opt="2" placeholder="选项C">
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">选项D</label>
+                  <input type="text" class="form-control q-opt" data-opt="3" placeholder="选项D">
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">正确答案</label>
+                  <select name="answer" class="form-select" id="q-answer">
+                    <option value="0">A</option>
+                    <option value="1">B</option>
+                    <option value="2">C</option>
+                    <option value="3">D</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">答案解析（可选）</label>
+                  <input type="text" name="analysis" id="q-analysis" class="form-control" placeholder="答案解析">
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">状态</label>
+                  <select name="status" class="form-select">
+                    <option value="1">启用</option>
+                    <option value="0">禁用</option>
+                  </select>
+                </div>
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-admin-primary" id="q-submit-btn">添加题目</button>
+                  <button type="button" class="btn btn-secondary" id="q-reset-btn">重置</button>
+                </div>
+              </div>
+            </form>
+
+            <div class="mb-3">
+              <span class="me-2">筛选分类：</span>
+              <a href="__ROOT__/admin/activity/questions" class="btn btn-sm {if $category==''}btn-primary{else}btn-outline-primary{/if}">全部</a>
+              <a href="__ROOT__/admin/activity/questions?category=history" class="btn btn-sm {if $category=='history'}btn-primary{else}btn-outline-primary{/if}">红色历史</a>
+              <a href="__ROOT__/admin/activity/questions?category=modern" class="btn btn-sm {if $category=='modern'}btn-primary{else}btn-outline-primary{/if}">现代知识</a>
+              <a href="__ROOT__/admin/activity/questions?category=other" class="btn btn-sm {if $category=='other'}btn-primary{else}btn-outline-primary{/if}">其他</a>
+            </div>
+
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>ID</th><th>分类</th><th>题目</th><th>答案</th><th>状态</th><th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {foreach $questions as $q}
+                <tr>
+                  <td>{$q.id}</td>
+                  <td>{if $q.category=='history'}红色历史{elseif $q.category=='modern'}现代知识{else}其他{/if}</td>
+                  <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{$q.question}</td>
+                  <td>{php}echo chr(65+intval($q['answer']));{/php}</td>
+                  <td>{if $q.status==1}<span class="badge bg-success">启用</span>{else}<span class="badge bg-secondary">禁用</span>{/if}</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-danger btn-del" data-id="{$q.id}">删除</button>
+                  </td>
+                </tr>
+                {/foreach}
+              </tbody>
+            </table>
+            {$questions->render()}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{include file="default/footer" /}
+<script>
+$(function(){
+    // 构建选项JSON
+    function buildOptions(){
+        var opts = [];
+        $('.q-opt').each(function(){
+            opts.push($(this).val() || '');
+        });
+        return JSON.stringify(opts);
+    }
+
+    $('#question-form').on('submit', function(e){
+        e.preventDefault();
+        var opts = buildOptions();
+        var hasEmpty = false;
+        $('.q-opt').each(function(){ if(!$(this).val()) hasEmpty = true; });
+        if(hasEmpty){ GlassTip.error('请填写所有选项'); return; }
+        var data = $(this).serialize() + '&options=' + encodeURIComponent(opts);
+        $.post('', data, function(res){
+            if(res.code == 1){ GlassTip.success(res.msg); setTimeout(function(){ location.reload(); }, 800); }
+            else GlassTip.error(res.msg);
+        }, 'json');
+    });
+
+    $('#q-reset-btn').on('click', function(){
+        $('#question-form')[0].reset();
+        $('#q-id').val(0);
+        $('#q-submit-btn').text('添加题目');
+    });
+
+    $('.btn-del').on('click', function(){
+        var id = $(this).data('id');
+        layer.confirm('确认删除该题目？', function(idx){
+            $.post('', {act:'delete', id:id}, function(res){
+                if(res.code == 1){ GlassTip.success(res.msg); setTimeout(function(){ location.reload(); }, 800); }
+                else GlassTip.error(res.msg);
+            }, 'json');
+            layer.close(idx);
+        });
+    });
+
+    $('#btn-import-default').on('click', function(){
+        layer.confirm('将导入默认红色历史/现代知识题库（去重），确认？', function(idx){
+            $.post('', {act:'import_default'}, function(res){
+                GlassTip.success(res.msg); setTimeout(function(){ location.reload(); }, 1000);
+            }, 'json');
+            layer.close(idx);
+        });
+    });
+});
+</script>

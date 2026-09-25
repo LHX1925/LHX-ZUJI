@@ -1,0 +1,10 @@
+{php}$title = '充值结果'; $tab_active = 'order';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="text-align:center;padding:40px 20px;">
+    <div style="font-size:56px;color:var(--glass-primary);margin-bottom:16px;">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    <h1 style="font-size:20px;color:var(--glass-text);margin-bottom:20px;">{$msg|default='操作成功'}</h1>
+    <a href="__ROOT__/user/pay" class="app-btn" style="display:inline-flex;">返回充值</a>
+</div>
+{include file="default/mobile/footer" /}

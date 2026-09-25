@@ -1,0 +1,118 @@
+{include file="default/user/header" title="上架域名" /}
+<main id="main-container">
+<div class="content">
+<style>
+    .da-page { max-width: 640px; margin: 0 auto; padding: 20px 16px 40px; }
+    .da-card { background: var(--glass-bg, #fff); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-radius: 16px; padding: 28px; box-shadow: var(--glass-shadow-sm, 0 4px 20px rgba(0,0,0,0.06)); border: 1px solid var(--glass-border, #eef2f7); position: relative; overflow: hidden; }
+    .da-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #0ea5e9, #2563eb, #4f7cff); }
+    .da-card h3 { font-size: 18px; font-weight: 700; color: var(--glass-text, #1e293b); margin: 0 0 20px; display: flex; align-items: center; gap: 8px; }
+    .da-card h3 i { color: #2563eb; }
+    .da-field { margin-bottom: 18px; }
+    .da-field label { display: block; font-size: 14px; font-weight: 600; color: var(--glass-text, #334155); margin-bottom: 6px; }
+    .da-field label .req { color: #ef4444; }
+    .da-field input, .da-field select, .da-field textarea { width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; outline: none; box-sizing: border-box; background: var(--glass-bg-input, #fff); color: var(--glass-text, #1e293b); }
+    .da-field input:focus, .da-field select:focus, .da-field textarea:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .verify-row { display: flex; gap: 10px; }
+    .verify-row input { flex: 1; }
+    .verify-row .btn { white-space: nowrap; }
+    .da-tip { font-size: 12px; color: var(--glass-text-muted, #94a3b8); margin-top: 6px; }
+    .da-alert { background: linear-gradient(135deg, rgba(255,251,235,0.9), rgba(254,243,199,0.9)); border: 1px solid #fde68a; border-left: 4px solid #f59e0b; color: #92400e; border-radius: 10px; padding: 14px 16px; font-size: 13px; line-height: 1.7; margin-bottom: 20px; }
+    .da-alert i { color: #f59e0b; margin-right: 4px; }
+    .da-submit { width: 100%; padding: 13px; background: linear-gradient(135deg, #4f7cff, #2563eb); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all .2s; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+    .da-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(37,99,235,0.4); }
+    .da-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+</style>
+
+<div class="da-page">
+    <div class="da-card">
+        <h3><i class="fas fa-tag"></i> 上架域名</h3>
+        {if !isset($apiConfigured) || !$apiConfigured}
+        <div class="da-alert">
+            <i class="fas fa-exclamation-triangle"></i>
+            域名注册商 API 尚未配置，当前无法上架域名。请联系管理员在后台「域名商城管理」完成阿里云万网 / 腾讯云 DNSPod 的 API 对接后再试。
+        </div>
+        {/if}
+        <div class="da-field">
+            <label>域名 <span class="req">*</span></label>
+            <input type="text" id="domainInput" placeholder="例如：example.com">
+            <div class="da-tip">请输入完整域名，系统将通过注册商 API 验证域名归属</div>
+        </div>
+        <div class="da-field">
+            <label>注册商 <span class="req">*</span></label>
+            <select id="registrarInput">
+                <option value="aliyun">阿里云万网</option>
+                <option value="dnspod">腾讯云 DNSPod</option>
+            </select>
+            <div class="da-tip">必须选择域名实际所在的注册商，系统将对接接口验证</div>
+        </div>
+        <div class="da-field">
+            <label>出售价格（元）<span class="req">*</span></label>
+            <input type="number" id="priceInput" placeholder="例如：500" min="0.01" step="0.01">
+        </div>
+        <div class="da-field">
+            <label>域名描述</label>
+            <textarea id="descInput" rows="3" placeholder="简要描述域名含义、优势等"></textarea>
+        </div>
+        <div class="da-field">
+            <label>邮箱验证 <span class="req">*</span></label>
+            <div class="verify-row">
+                <input type="text" id="verifyInput" placeholder="输入邮箱验证码" maxlength="6">
+                <button type="button" class="btn btn-primary" id="btnSendVerify">获取验证码</button>
+            </div>
+            <div class="da-tip">验证码将发送至您绑定的邮箱 {$user.mail|default='（未绑定）'}</div>
+        </div>
+        <button type="button" class="da-submit" id="btnSubmit">确认上架</button>
+    </div>
+</div>
+</div>
+</main>
+{include file="default/user/footer" /}
+<script>
+$(function(){
+    var countdown = 0;
+    $('#btnSendVerify').on('click', function(){
+        if(countdown > 0) return;
+        var btn = $(this);
+        btn.prop('disabled', true);
+        $.post('__ROOT__/domain/add', {act:'send_verify'}, function(res){
+            if(res.code == 1){
+                showToast(res.msg, 'success', 2500);
+                countdown = 60;
+                var timer = setInterval(function(){
+                    countdown--;
+                    if(countdown <= 0){ clearInterval(timer); btn.text('获取验证码').prop('disabled', false); }
+                    else btn.text(countdown + 's后重发');
+                }, 1000);
+            } else {
+                showToast(res.msg, 'danger', 2500);
+                btn.prop('disabled', false);
+            }
+        }, 'json');
+    });
+
+    $('#btnSubmit').on('click', function(){
+        var domain = $.trim($('#domainInput').val());
+        var registrar = $('#registrarInput').val();
+        var price = $('#priceInput').val();
+        var desc = $('#descInput').val();
+        var verify = $.trim($('#verifyInput').val());
+        if(!domain){ showToast('请输入域名', 'warning', 2500); return; }
+        if(!price || price <= 0){ showToast('请输入有效的价格', 'warning', 2500); return; }
+        if(!verify){ showToast('请输入邮箱验证码', 'warning', 2500); return; }
+        var btn = $(this);
+        btn.prop('disabled', true).text('提交中...');
+        $.post('__ROOT__/domain/add', {
+            act:'submit', domain:domain, registrar:registrar, price:price, description:desc, verify_code:verify
+        }, function(res){
+            if(res.code == 1){
+                showToast(res.msg, 'success', 2500);
+                setTimeout(function(){ location.href = '__ROOT__/domain/mine'; }, 1500);
+            } else {
+                showToast(res.msg, 'danger', 3000);
+                btn.prop('disabled', false).text('确认上架');
+            }
+        }, 'json');
+    });
+});
+</script>

@@ -97,7 +97,7 @@ layer.open({
 }
 
 function add1(){
-             var load = layer.msg('添加中，请稍后...',{icon:16,time:false});
+             var load = layer.msg('添加中，请稍后...', {icon:16, shade:0.8, time:false});
         var domain = $("textarea[name='domain']").val();
         var ip = $("input[name='ip']").val();
         var qq = $("input[name='qq']").val();
@@ -111,6 +111,7 @@ ip:ip,
 qq:qq,
             },
             dataType:'json',
+            timeout: 15000,
             success:function (data){
                 layer.close(load)
                 if(data.code == 1){
@@ -119,7 +120,7 @@ qq:qq,
                     },1000);
                     layer.alert(data.msg,{icon:1});
                 }else{
-                    layer.msg(data.msg,{icon:2});
+                    GlassTip.error(data.msg);
                 }
             }
         });

@@ -308,7 +308,7 @@
 
             <div class="info-layout">
                 <div class="profile-card">
-                    <img src="https://q1.qlogo.cn/g?b=qq&nk={$user.qq}&s=100" alt="avatar">
+                    <img src="{:get_user_avatar($user)}" alt="avatar">
                     <div class="info">
                         <div class="username">用户名：{$user.name}</div>
                         <div class="userid">运营名称：{$user.id}</div>
@@ -331,12 +331,15 @@
 
                         <div class="form-row-modern">
                             <label>联系邮箱</label>
-                            <input type="text" class="form-control" value="{$user.mail|default=''}" readonly>
+                            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+                                <input type="text" class="form-control" value="{if $user.mail}{$user.mail}{else}未绑定{/if}" readonly style="flex:1;">
+                                <a href="__ROOT__/user/mail" style="flex-shrink:0;padding:8px 16px;border-radius:8px;background:linear-gradient(135deg,#3B82F6,#2563EB);color:#fff;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;">{if $user.mail}修改邮箱{else}绑定邮箱{/if}</a>
+                            </div>
                         </div>
 
                         <div class="form-row-modern">
                             <label>QQ号码</label>
-                            <input type="text" name="qq" class="form-control" value="{$user.qq}" placeholder="请输入QQ号码">
+                            <input type="text" name="qq" class="form-control" value="{:get_user_qq($user)}" placeholder="请输入QQ号码">
                         </div>
 
                         <div class="form-row-modern">

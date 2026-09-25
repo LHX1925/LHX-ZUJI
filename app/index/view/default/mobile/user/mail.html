@@ -1,0 +1,203 @@
+{php}$title = '修改邮箱'; $tab_active = 'profile'; $back_url = '/user';{/php}
+{include file="default/mobile/header" /}
+<main id="main-container">
+    <div class="content">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-xl-5">
+                <div class="block glass-card glass-reveal">
+                    <div class="block-header glass-user-card-header">
+                        <h3 class="block-title glass-user-card-title">修改邮箱</h3>
+                    </div>
+                    <div class="block-content">
+                        <form id="modifyForm">
+                            <div class="form-group">
+                                <label style="display:block;margin-bottom:6px;font-size:14px;font-weight:500;color:var(--text);">当前邮箱</label>
+                                <input type="text" name="oldmail" value="{$user.mail}" class="form-control" readonly style="height:46px;font-size:14px;background:#f1f5f9;">
+                            </div>
+                            <div class="form-group">
+                                <button type="button" id="slide-captcha-btn" style="width:100%;height:46px;border:1.5px dashed #2563EB;border-radius:8px;background:#EFF6FF;color:#2563EB;font-size:14px;cursor:pointer;font-weight:500;transition:all 0.2s;text-align:left;padding-left:16px;">
+                                    <i class="fas fa-shield-alt"></i> 点击进行滑块验证
+                                </button>
+                                <input type="hidden" name="captcha" id="captcha-verified" value="">
+                                <div id="captcha-status" style="margin-top:5px;font-size:12px;min-height:18px;"></div>
+                            </div>
+
+                            <div id="send-link-area" style="margin-bottom:16px;">
+                                <button type="button" class="btn btn-primary btn-block" onclick="sendVerifyLink()" style="width:100%;padding:12px;font-size:15px;font-weight:600;border-radius:8px;background:linear-gradient(135deg,#3B82F6,#2563EB);border:none;color:#fff;cursor:pointer;">发送验证链接</button>
+                            </div>
+                            <div id="email-verify-status" style="display:none;"></div>
+                            <div id="backup-code-area" style="display:none;">
+                                <div style="text-align:center;font-size:12px;color:#dc2626;margin-bottom:8px;">
+                                    <i class="fas fa-exclamation-triangle"></i> 链接验证超时，请使用备用验证码
+                                </div>
+                                <div class="form-group" style="display:flex;gap:10px;">
+                                    <input type="text" class="form-control" id="code" name="code" placeholder="请输入邮箱验证码" style="flex:1;height:46px;">
+                                    <button class="btn btn-outline-primary" type="button" onclick="resendVerify()" style="white-space:nowrap;height:46px;border-radius:8px;border:1px solid #2563EB;background:#EFF6FF;color:#2563EB;font-weight:500;padding:0 16px;">重新发送</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label style="display:block;margin-bottom:6px;font-size:14px;font-weight:500;color:var(--text);">新邮箱</label>
+                                <input type="email" name="newmail" value="" placeholder="请输入新的邮箱地址" class="form-control" style="height:46px;font-size:14px;">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block" style="width:100%;padding:12px;font-size:15px;font-weight:600;border-radius:8px;background:linear-gradient(135deg,#3B82F6,#2563EB);border:none;color:#fff;cursor:pointer;">修改邮箱</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{include file="index@default/captcha_assets" /}
+<script>
+$(function() {
+var captchaVerified = false;
+var linkVerified = false;
+var linkVerifyTimer = null;
+var linkVerifyTimeout = null;
+
+if (typeof window.slideCaptcha !== 'function') {
+    $('#slide-captcha-btn').html('<i class="fas fa-exclamation-circle"></i> 验证组件加载失败，请刷新').css({'border-color':'#f44336','background':'#FFEBEE','color':'#f44336'});
+}
+
+function resetCaptcha() {
+    captchaVerified = false;
+    $('#captcha-verified').val('');
+    $('#slide-captcha-btn').css({'border-color':'','background':'','color':''}).html('<i class="fas fa-shield-alt"></i> 点击进行滑块验证');
+}
+
+$('#slide-captcha-btn').on('click', function() {
+    if (typeof window.slideCaptcha !== 'function') return;
+    var mail = $("input[name='oldmail']").val().trim();
+    window.slideCaptcha({
+        email: mail,
+        onSuccess: function(token) {
+            captchaVerified = true;
+            $('#captcha-verified').val(token);
+            $('#slide-captcha-btn').css({'border-color':'#10b981','background':'#ecfdf5','color':'#10b981'}).html('<i class="fas fa-check-circle"></i> 验证通过');
+        },
+        onError: function() {
+            captchaVerified = false;
+            $('#captcha-verified').val('');
+            $('#slide-captcha-btn').css({'border-color':'#ef4444','background':'#fef2f2','color':'#ef4444'}).html('<i class="fas fa-times-circle"></i> 验证失败，点击重试');
+        },
+        onClose: function() { if (!captchaVerified) resetCaptcha(); }
+    });
+});
+
+function startLinkVerifyPolling(mail) {
+    if (linkVerifyTimer) clearInterval(linkVerifyTimer);
+    if (linkVerifyTimeout) clearTimeout(linkVerifyTimeout);
+    linkVerifyTimeout = setTimeout(function() {
+        if (!linkVerified) {
+            $('#backup-code-area').slideDown(300);
+            showToast('链接验证超时，请使用备用验证码','warning',3000);
+        }
+    }, 20000);
+    linkVerifyTimer = setInterval(function() {
+        $.ajax({
+            type:'POST', url:'', data:{mail:mail, act:"check_link_verify"}, dataType:'json',
+            success:function(res) {
+                if (res.code == 1 && res.verified) {
+                    linkVerified = true;
+                    if (linkVerifyTimer) { clearInterval(linkVerifyTimer); linkVerifyTimer = null; }
+                    if (linkVerifyTimeout) { clearTimeout(linkVerifyTimeout); linkVerifyTimeout = null; }
+                    $('#send-link-area').hide();
+                    $('#backup-code-area').hide();
+                    $('#email-verify-status').html(
+                        '<div style="text-align:center;padding:10px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;margin-bottom:16px;">' +
+                            '<i class="fas fa-check-circle" style="color:#059669;font-size:18px;"></i> ' +
+                            '<span style="color:#065f46;font-size:14px;font-weight:600;">旧邮箱已验证通过，请输入新邮箱并点击「修改邮箱」</span>' +
+                        '</div>'
+                    ).show();
+                }
+            }
+        });
+    }, 3000);
+}
+
+function sendVerifyLink() {
+    if (!captchaVerified) { showToast('请先完成滑块验证','warning',2500); return false; }
+    var btn = $('#send-link-area button');
+    btn.prop('disabled', true).text('发送中...');
+    $.ajax({
+        type:'POST', url:'', data:{ act:"yxvalidate", captcha:$('#captcha-verified').val() }, dataType:'json',
+        success:function(data){
+            if(data.code == 1){
+                showToast(data.msg || '验证邮件已发送','success',2000);
+                btn.text('已发送');
+                linkVerified = false;
+                var oldMail = $("input[name='oldmail']").val().trim();
+                startLinkVerifyPolling(oldMail);
+                $('#email-verify-status').html(
+                    '<div style="text-align:center;padding:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:16px;font-size:13px;color:#1e40af;">' +
+                        '<i class="fas fa-spinner fa-pulse"></i> 等待邮件链接验证中...<br>' +
+                        '<span style="font-size:12px;color:#64748b;">请检查邮箱并点击邮件中的验证链接，页面将自动检测</span>' +
+                    '</div>'
+                ).show();
+            }else{
+                btn.prop('disabled', false).text('发送验证链接');
+                resetCaptcha();
+                showToast(data.msg || '发送失败','danger',2500);
+            }
+        },
+        error: function(){ btn.prop('disabled', false).text('发送验证链接'); resetCaptcha(); showToast('网络错误，请稍后重试','danger',2500); }
+    });
+    return false;
+}
+
+function resendVerify() {
+    linkVerified = false;
+    $('#backup-code-area').hide();
+    $('#email-verify-status').hide();
+    $('#send-link-area button').prop('disabled', false).text('发送验证链接');
+    sendVerifyLink();
+}
+
+// 供模板内联 onclick 调用（$(function(){}) 内的函数不在全局作用域）
+window.sendVerifyLink = sendVerifyLink;
+window.resendVerify = resendVerify;
+
+function doModify(newmail, code) {
+    var load = layer.load(1,{time:false});
+    $.ajax({
+        type:'POST', url:'', data:{ act:"modify", code:code, newmail:newmail }, dataType:'json',
+        success:function(data){
+            layer.close(load);
+            if(data.code == 1){
+                showToast(data.msg || '修改成功','success',1800);
+                setTimeout(function(){ location.href = '__ROOT__/user/information'; },1800);
+            }else{ showToast(data.msg,'danger',2500); }
+        },
+        error: function(){ layer.close(load); showToast('网络错误，请稍后重试','danger',2500); }
+    });
+}
+
+$("#modifyForm").submit(function (){
+    var newmail = $("input[name='newmail']").val().trim();
+    var code = $("input[name='code']").val().trim();
+    if(newmail.length < 1){ showToast('请输入新邮箱地址','danger',2500); return false; }
+    // 已通过链接验证或已输入备用验证码，直接提交
+    if (linkVerified || code.length > 0) { doModify(newmail, code); return false; }
+    // 未输入备用码：先确认旧邮箱里的验证链接是否已被点击
+    var oldMail = $("input[name='oldmail']").val().trim();
+    var load = layer.load(1,{time:false});
+    $.ajax({
+        type:'POST', url:'', data:{mail:oldMail, act:"check_link_verify"}, dataType:'json',
+        success:function(res){
+            layer.close(load);
+            if(res.code == 1 && res.verified){
+                linkVerified = true;
+                doModify(newmail, '');
+            }else{
+                showToast('请先完成旧邮箱验证（点击邮件链接或输入备用验证码）','warning',2500);
+            }
+        },
+        error: function(){ layer.close(load); showToast('网络错误，请稍后重试','danger',2500); }
+    });
+    return false;
+});
+});
+</script>
+{include file="default/mobile/footer" /}

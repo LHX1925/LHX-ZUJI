@@ -1,0 +1,153 @@
+{php}$title = $webname; $tab_active = 'home';{/php}
+{include file="default/mobile/header" /}
+<style>
+    /* 首页：去掉顶部标题栏，hero 内已有 logo */
+    .app-topbar { display:none !important; }
+    .app-page { padding-top:0 !important; }
+</style>
+
+<!-- 首页 Hero：品牌 + 质量保障（与电脑端一致） -->
+<section class="app-hero">
+    {if isset($web.logo) && $web.logo}
+    <div class="app-hero-logo">
+        <img src="{if strpos($web.logo, 'http') === 0}{$web.logo}{else}__ROOT__/{:ltrim($web.logo, '/')}{/if}" alt="logo">
+    </div>
+    {/if}
+    <h1>高速稳定的虚拟主机服务</h1>
+    <p>一键部署网站，畅享稳定云端算力</p>
+    <div class="app-hero-actions">
+        <a href="__ROOT__/register" class="app-hero-btn app-hero-btn-primary">立即注册</a>
+        <a href="__ROOT__/cart" class="app-hero-btn app-hero-btn-outline">查看套餐</a>
+    </div>
+    <div class="app-hero-features">
+        <div class="app-hero-feature"><i class="fas fa-bolt"></i><span>极速开通</span></div>
+        <div class="app-hero-feature"><i class="fas fa-shield-alt"></i><span>安全防护</span></div>
+        <div class="app-hero-feature"><i class="fas fa-expand-arrows-alt"></i><span>弹性扩容</span></div>
+    </div>
+</section>
+
+<!-- 宣传卖点 -->
+<section class="app-promo">
+    <div class="app-promo-head">
+        <div class="app-promo-title">为什么选择我们</div>
+        <div class="app-promo-sub">专业 · 稳定 · 安全 · 极速</div>
+    </div>
+    <div class="app-promo-grid">
+        <div class="app-promo-item">
+            <i class="fas fa-headset" style="color:var(--glass-primary);"></i>
+            <div class="app-promo-info"><b>7×24 小时服务</b><span>专业团队随时响应</span></div>
+        </div>
+        <div class="app-promo-item">
+            <i class="fas fa-shield-alt" style="color:var(--glass-success);"></i>
+            <div class="app-promo-info"><b>安全防护</b><span>多重备份数据无忧</span></div>
+        </div>
+        <div class="app-promo-item">
+            <i class="fas fa-bolt" style="color:var(--glass-warning);"></i>
+            <div class="app-promo-info"><b>极速部署</b><span>分钟级开通即开即用</span></div>
+        </div>
+        <div class="app-promo-item">
+            <i class="fas fa-expand-arrows-alt" style="color:var(--glass-danger);"></i>
+            <div class="app-promo-info"><b>弹性扩容</b><span>按需升级灵活配置</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- 热门套餐 -->
+{if !empty($cart)}
+<div class="app-section-header">
+    <div class="app-section-title">热门套餐</div>
+    <a href="__ROOT__/cart" class="app-section-more">查看全部 <i class="fas fa-chevron-right"></i></a>
+</div>
+<div class="app-carousel" id="productCarousel">
+    {foreach $cart as $i=>$c}
+    <a href="__ROOT__/product/{$c.id}" class="app-carousel-card {if $i==0}featured{/if}">
+        <div class="app-carousel-badge">{if $i==0}推荐{else}热销{/if}</div>
+        <div class="app-carousel-name">{$c.name}</div>
+        <div class="app-carousel-desc">{$c.content|default='稳定可靠的虚拟主机服务'}</div>
+        <div class="app-carousel-specs">
+            {if isset($c.capacity_show) && $c.capacity_show}<span><i class="fas fa-hdd"></i> {$c.capacity_show}</span>{/if}
+            {if isset($c.data3) && $c.data3}<span><i class="fas fa-database"></i> {:formatSizeM($c.data3)}</span>{/if}
+        </div>
+        <div class="app-carousel-price {if $c.money=='0'}free{/if}">
+            {if $c.money=='0'}免费{else}&yen;{$c.money}{/if}
+            <small>/月</small>
+        </div>
+    </a>
+    {/foreach}
+</div>
+<div class="app-carousel-dots" id="carouselDots"></div>
+{/if}
+
+<!-- 公告 -->
+{if !empty($announcement)}
+<div class="app-card" style="margin-top:8px;">
+    <div class="app-card-title">
+        <i class="fas fa-bullhorn" style="color:var(--glass-primary);margin-right:6px;"></i> 最新公告
+        <a href="__ROOT__/announcements" class="app-card-more">全部 <i class="fas fa-chevron-right"></i></a>
+    </div>
+    {foreach $announcement as $an}
+    <a href="__ROOT__/announcement/{$an.id}" class="app-notice-item">
+        <div class="app-notice-title">{$an.title}</div>
+        <div class="app-notice-time">{:date('Y-m-d', $an.created_at)}</div>
+    </a>
+    {/foreach}
+</div>
+{/if}
+
+<!-- 产品列表 -->
+<div class="app-card" style="margin-top:8px;">
+    <div class="app-card-title">
+        <i class="fas fa-fire" style="color:var(--glass-danger);margin-right:6px;"></i> 全部套餐
+        <a href="__ROOT__/cart" class="app-card-more">更多 <i class="fas fa-chevron-right"></i></a>
+    </div>
+    {if !empty($cart)}
+    {foreach $cart as $i=>$c}
+    <a href="__ROOT__/product/{$c.id}" class="app-product-mini">
+        <div class="app-product-mini-info">
+            <div class="app-product-mini-name">{$c.name}</div>
+            <div class="app-product-mini-specs">
+                {if isset($c.capacity_show) && $c.capacity_show}<span><i class="fas fa-hdd"></i> {$c.capacity_show}</span>{/if}
+                {if isset($c.data3) && $c.data3}<span><i class="fas fa-database"></i> {:formatSizeM($c.data3)}</span>{/if}
+            </div>
+        </div>
+        <div class="app-product-mini-price {if $c.money=='0'}free{/if}">
+            {if $c.money=='0'}免费{else}&yen;{$c.money}{/if}
+        </div>
+    </a>
+    {/foreach}
+    {else}
+    <div class="app-empty">
+        <i class="fas fa-box-open"></i>
+        <h3>暂无产品</h3>
+        <p>请联系管理员添加产品套餐</p>
+    </div>
+    {/if}
+</div>
+
+<script>
+(function(){
+    var carousel = document.getElementById('productCarousel');
+    var dots = document.getElementById('carouselDots');
+    if (!carousel || !dots) return;
+    var cards = carousel.querySelectorAll('.app-carousel-card');
+    if (cards.length === 0) return;
+    for (var i = 0; i < cards.length; i++) {
+        var dot = document.createElement('span');
+        dot.className = 'app-carousel-dot' + (i === 0 ? ' active' : '');
+        dots.appendChild(dot);
+    }
+    function updateDots() {
+        var maxScroll = carousel.scrollWidth - carousel.clientWidth;
+        var index = maxScroll > 0 ? Math.round((carousel.scrollLeft / maxScroll) * (cards.length - 1)) : 0;
+        if (index < 0) index = 0;
+        if (index >= cards.length) index = cards.length - 1;
+        var dotList = dots.querySelectorAll('.app-carousel-dot');
+        for (var i = 0; i < dotList.length; i++) {
+            dotList[i].classList.toggle('active', i === index);
+        }
+    }
+    carousel.addEventListener('scroll', updateDots, { passive: true });
+})();
+</script>
+
+{include file="default/mobile/footer" /}

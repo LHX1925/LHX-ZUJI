@@ -1,0 +1,25 @@
+{php}$title = '过户记录'; $tab_active = 'order';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">过户记录</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">查看您的产品过户历史</p>
+</div>
+{if isset($data) && count($data) > 0}
+<div class="app-card" style="overflow:hidden;padding:0;">
+    {foreach $data as $d}
+    <div class="app-list-item" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;font-weight:600;color:var(--glass-text);">#{$d.id}</span>
+            <span style="font-size:11px;color:var(--glass-text-muted);">{:date('Y-m-d H:i:s', $d.time)}</span>
+        </div>
+        <div style="font-size:13px;color:var(--glass-text-secondary);">{$d.record}</div>
+    </div>
+    {/foreach}
+</div>
+{if method_exists($data, 'render')}
+<div style="padding:16px;text-align:center;">{$data->render()}</div>
+{/if}
+{else}
+<div class="app-empty"><i class="fas fa-exchange-alt"></i><p>暂无过户记录</p></div>
+{/if}
+{include file="default/mobile/footer" /}

@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN" data-page-node-id="NOM9nk9skGA2hQxoYBK8Ir">
+<head data-page-node-id="TQDWQjeoBly9WEGv2zfWWT">
     <title>{$webname} - 专业虚拟主机服务</title>
     {include file="default/index/header" /}
+    {include file="default/loading_splash" /}
     <style>
         /* ========== Hero Section ========== */
         .hero {
@@ -877,189 +878,676 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ========== 服务器状态（宝塔 API） ========== */
+        .serverstatus { padding: 72px 0; }
+
+        .ss-summary {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            padding: 18px 20px;
+            margin-bottom: 26px;
+        }
+
+        .ss-sum-item { text-align: center; padding: 4px 6px; }
+
+        .ss-sum-val {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--glass-text);
+            line-height: 1.25;
+            word-break: break-all;
+        }
+
+        .ss-sum-label {
+            font-size: 12px;
+            color: var(--glass-text-secondary);
+            margin-top: 2px;
+        }
+
+        .ss-sum-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .ss-updated { font-size: 12px; color: var(--glass-text-secondary); }
+        .ss-updated b { color: var(--glass-text); font-weight: 600; }
+
+        .ss-refresh-btn {
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg-light);
+            color: var(--glass-text);
+            border-radius: var(--glass-radius-sm);
+            padding: 6px 14px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all .2s ease;
+            white-space: nowrap;
+        }
+
+        .ss-refresh-btn:hover {
+            border-color: var(--glass-primary);
+            color: var(--glass-primary);
+            background: var(--glass-bg-hover);
+        }
+
+        .ss-refresh-btn.loading i { animation: ss-spin 1s linear infinite; }
+
+        @keyframes ss-spin { to { transform: rotate(360deg); } }
+
+        /* 卡片填满整行：只接一台服务器时卡片自动铺满，不会留出大片空白 */
+        .ss-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 20px;
+        }
+
+        /* 卡片内部明细（网络/内存/磁盘）自适应多列，宽卡片不再拉成长条 */
+        .ss-cols {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 0 24px;
+            align-items: start;
+        }
+
+        .ss-card {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ss-card-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .ss-card-title { min-width: 0; }
+
+        .ss-card-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--glass-text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ss-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex: 0 0 9px;
+            background: var(--glass-text-muted);
+        }
+
+        .ss-dot.on { background: #10B981; box-shadow: 0 0 0 3px rgba(16, 185, 129, .2); }
+        .ss-dot.off { background: #EF4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, .2); }
+
+        .ss-card-sub {
+            font-size: 12px;
+            color: var(--glass-text-secondary);
+            margin-top: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .ss-card-tag {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: var(--glass-radius-full);
+            background: var(--glass-bg-light);
+            border: 1px solid var(--glass-border-subtle);
+            color: var(--glass-primary);
+            white-space: nowrap;
+        }
+
+        .ss-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .ss-metric {
+            background: var(--glass-bg-subtle);
+            border: 1px solid var(--glass-border-subtle);
+            border-radius: var(--glass-radius-sm);
+            padding: 10px 8px;
+            text-align: center;
+        }
+
+        .ss-metric-val {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--glass-text);
+            line-height: 1.2;
+        }
+
+        .ss-metric-label {
+            font-size: 11px;
+            color: var(--glass-text-secondary);
+            margin: 2px 0 6px;
+        }
+
+        .ss-bar {
+            height: 5px;
+            border-radius: 4px;
+            background: rgba(148, 163, 184, .22);
+            overflow: hidden;
+        }
+
+        .ss-bar > i {
+            display: block;
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #4F7CFF, #7AA2FF);
+            transition: width .5s ease;
+        }
+
+        .ss-bar.warn > i { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+        .ss-bar.danger > i { background: linear-gradient(90deg, #EF4444, #F87171); }
+
+        /* 环形指标（与后台实时状态卡片一致：CPU/内存/负载） */
+        .ss-ring-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 2px 0 12px; text-align: center; }
+        .ss-ring .v { font-size: 18px; font-weight: 800; color: var(--glass-text); line-height: 1.2; }
+        .ss-ring .lbl { font-size: 11px; color: var(--glass-text-secondary); margin: 2px 0 6px; }
+        .ss-sec-title {
+            font-size: 11px; font-weight: 700; color: var(--glass-text-secondary);
+            margin: 12px 0 6px; text-transform: uppercase; letter-spacing: .5px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .ss-sec-title i { color: var(--glass-primary); }
+
+        .ss-sec {
+            border-top: 1px dashed var(--glass-border-subtle);
+            padding-top: 10px;
+        }
+
+        .ss-kv {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--glass-text-secondary);
+            padding: 2px 0;
+        }
+
+        .ss-kv b {
+            color: var(--glass-text);
+            font-weight: 600;
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .ss-kv .up { color: #F59E0B; }
+        .ss-kv .down { color: #10B981; }
+
+        .ss-spark {
+            width: 100%;
+            height: 34px;
+            display: block;
+            margin: 2px 0 4px;
+            background: var(--glass-bg-subtle);
+            border-radius: var(--glass-radius-xs);
+        }
+
+        .ss-disk-row { margin-bottom: 8px; }
+
+        .ss-disk-row .ss-kv { padding: 1px 0; }
+
+        .ss-ifaces {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px 12px;
+        }
+
+        .ss-err {
+            font-size: 12px;
+            color: #EF4444;
+            background: rgba(239, 68, 68, .08);
+            border-radius: var(--glass-radius-sm);
+            padding: 10px 12px;
+            word-break: break-all;
+            line-height: 1.6;
+        }
+
+        .ss-empty {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--glass-text-muted);
+            font-size: 14px;
+        }
+
+        @media (max-width: 1100px) {
+            .ss-summary { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .serverstatus { padding: 48px 0; }
+            .ss-summary { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 14px; }
+            .ss-sum-val { font-size: 18px; }
+            .ss-grid { grid-template-columns: 1fr; }
+            .ss-metric-val { font-size: 17px; }
+        }
     </style>
 
-    <section class="hero">
-        <div class="container">
-            <div class="hero-grid">
-                <div class="hero-content">
-                    <div class="hero-badge">
-                        <i class="fas fa-bolt"></i> 即开即用，分钟级部署
+    <section class="hero" data-page-node-id="95eUsGU53WNQRFvD99Hdqy">
+        <div class="container" data-page-node-id="e6QCCgMgDmvmTtwfpOACqE">
+            <div class="hero-grid" data-page-node-id="WUKQLidDQ7ErFLVGGm5FJH">
+                <div class="hero-content" data-page-node-id="GAaP4FqEGQLMkSxY43iK5z">
+                    <div class="hero-badge" data-page-node-id="78EohXEtQG7E0RfTfPJxpK">
+                        <i class="fas fa-bolt" data-page-node-id="PWYRbCxnj2WvL9QMSzBA9B"></i> 即开即用，分钟级部署
                     </div>
-                    <h1>高速稳定的虚拟主机服务</h1>
-                    <p>一键部署网站，畅享稳定云端算力</p>
-                    <div class="hero-actions">
-                        <a href="__ROOT__/register" class="glass-btn glass-btn-primary glass-btn-lg">立即注册</a>
-                        <a href="__ROOT__/cart" class="glass-btn glass-btn-outline glass-btn-lg">查看套餐</a>
+                    <h1 data-page-node-id="p5KlVM3oB5DTchxKLSoeK5">高速稳定的虚拟主机服务</h1>
+                    <p data-page-node-id="kw3YsiV54dhqCbLCxeAsRu">一键部署网站，畅享稳定云端算力</p>
+                    <div class="hero-actions" data-page-node-id="cC2h1KuSFkmreHEPo8Z6kC">
+                        <a href="__ROOT__/register" class="glass-btn glass-btn-primary glass-btn-lg" data-page-node-id="D8I5UZPV1HNLqO5OV957Dd">立即注册</a>
+                        <a href="__ROOT__/cart" class="glass-btn glass-btn-outline glass-btn-lg" data-page-node-id="2S0rpFNJwmhq4KvM3gim7r">查看套餐</a>
                     </div>
 
-                    <div class="hero-features">
-                        <div class="feature-card glass-card glass-reveal glass-stagger-1">
-                            <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-                            <div>
-                                <h3>极速开通</h3>
-                                <p>支付完成后自动开通</p>
+                    <div class="hero-features" data-page-node-id="AAYhIRBdImzuhAfvYmlSlH">
+                        <div class="feature-card glass-card glass-reveal glass-stagger-1" data-page-node-id="Dng0tgYfumjOftO6HLbJzg">
+                            <div class="feature-icon" data-page-node-id="QdwBn2e0xdiUcxhPgpLyWe"><i class="fas fa-bolt" data-page-node-id="ES9L4T2LoJDdsNQ4DD5tx0"></i></div>
+                            <div data-page-node-id="PoIxT0j8BMxFSfGB40K8ZY">
+                                <h3 data-page-node-id="TZfEbJyqFDMH724gCl3U1m">极速开通</h3>
+                                <p data-page-node-id="zwvnXCyF3G38n3GRk0kQjr">支付完成后自动开通</p>
                             </div>
                         </div>
-                        <div class="feature-card glass-card glass-reveal glass-stagger-2">
-                            <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-                            <div>
-                                <h3>安全防护</h3>
-                                <p>多层安全体系防护</p>
+                        <div class="feature-card glass-card glass-reveal glass-stagger-2" data-page-node-id="CqYO5f3JOW3lxwiONmvYz2">
+                            <div class="feature-icon" data-page-node-id="HmIgg4ivUMfPEH1ZSZFyhc"><i class="fas fa-shield-alt" data-page-node-id="qf8zhWFKFDJKWobZjwTkCp"></i></div>
+                            <div data-page-node-id="1aPNvPHeTgCX4NpeJdMuBJ">
+                                <h3 data-page-node-id="g9XtvqTYk6QL25Ne8ujNbP">安全防护</h3>
+                                <p data-page-node-id="88gFuSlyUMTxJBj3mydMkK">多层安全体系防护</p>
                             </div>
                         </div>
-                        <div class="feature-card glass-card glass-reveal glass-stagger-3">
-                            <div class="feature-icon"><i class="fas fa-expand-arrows-alt"></i></div>
-                            <div>
-                                <h3>弹性扩容</h3>
-                                <p>按需升级灵活扩展</p>
+                        <div class="feature-card glass-card glass-reveal glass-stagger-3" data-page-node-id="zDCOv4MvN9vIxxX39U4e8U">
+                            <div class="feature-icon" data-page-node-id="LiqbYTXatsFQksHnkPmd4p"><i class="fas fa-expand-arrows-alt" data-page-node-id="6CXbqD6HRAHoNvSLqvdbaI"></i></div>
+                            <div data-page-node-id="FQT2eSg8L6bMK3W04g4VVw">
+                                <h3 data-page-node-id="Kys7MMOE9IRLBLXXTG3MxZ">弹性扩容</h3>
+                                <p data-page-node-id="a6Z4FDKqstLGUaUjBsTcZf">按需升级灵活扩展</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="hero-visual glass-float">
-                    <img src="__ROOT__/static/assets/images/hero-illustration.png?v=9" alt="高速稳定虚拟主机" class="hero-illustration">
+                <div class="hero-visual glass-float" data-page-node-id="xxJLI3VfHG1TbZamfUx8TN">
+                    <img src="__ROOT__/static/assets/images/hero-illustration.png?v=9" alt="高速稳定虚拟主机" class="hero-illustration" data-page-node-id="arx9CFJYdrJ6MYb9JBbAut">
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="mobile-stats">
-        <div class="container">
-            <div class="mobile-stats-grid">
-                <div class="mobile-stat-item glass-stat-card">
-                    <div class="mobile-stat-value glass-count-up" data-target="{$countserver|default='0'}">{$countserver|default='0'}</div>
-                    <div class="mobile-stat-label">运行服务器</div>
+    <section class="mobile-stats" data-page-node-id="9jzQX4Z6s8tYpDRVPorXB4">
+        <div class="container" data-page-node-id="GJT2pHB3eaUHuRtl3sQznK">
+            <div class="mobile-stats-grid" data-page-node-id="4EiSYSfQyqlGtaoYwR8aVM">
+                <div class="mobile-stat-item glass-stat-card" data-page-node-id="FW4yjfvskaZ9bubPwmWOKE">
+                    <div class="mobile-stat-value glass-count-up" data-target="{$countserver|default='0'}" data-page-node-id="Vuqr4HHTga3YBNZgoR0Z9j">{$countserver|default='0'}</div>
+                    <div class="mobile-stat-label" data-page-node-id="yEDLkXh8ZJrhcXyv0pNzaJ">运行服务器</div>
                 </div>
-                <div class="mobile-stat-item glass-stat-card">
-                    <div class="mobile-stat-value glass-count-up" data-target="{$countuser|default='0'}">{$countuser|default='0'}</div>
-                    <div class="mobile-stat-label">注册用户</div>
+                <div class="mobile-stat-item glass-stat-card" data-page-node-id="UPHBP6YnSkaq7yeUtg32Eh">
+                    <div class="mobile-stat-value glass-count-up" data-target="{$countuser|default='0'}" data-page-node-id="x9FU9dZravND8EG0r02EzS">{$countuser|default='0'}</div>
+                    <div class="mobile-stat-label" data-page-node-id="R4X1r1g8z6dCK5emRszPCA">注册用户</div>
                 </div>
-                <div class="mobile-stat-item glass-stat-card">
-                    <div class="mobile-stat-value glass-count-up" data-target="{$countorder|default='0'}">{$countorder|default='0'}</div>
-                    <div class="mobile-stat-label">累计订单</div>
+                <div class="mobile-stat-item glass-stat-card" data-page-node-id="HtCxGtAhfoMkvvsSi32JEl">
+                    <div class="mobile-stat-value glass-count-up" data-target="{$countorder|default='0'}" data-page-node-id="tBBGWpDF7HXEFb039Y6EPW">{$countorder|default='0'}</div>
+                    <div class="mobile-stat-label" data-page-node-id="z1P1H3E4bOxSEzb3PO4nTg">累计订单</div>
                 </div>
-                <div class="mobile-stat-item glass-stat-card">
-                    <div class="mobile-stat-value glass-count-up" data-target="{$sumpay|default='0'}">{$sumpay|default='0'}</div>
-                    <div class="mobile-stat-label">交易金额</div>
+                <div class="mobile-stat-item glass-stat-card" data-page-node-id="SDXZKu65uBfPvNKrdfz2da">
+                    <div class="mobile-stat-value glass-count-up" data-target="{$sumpay|default='0'}" data-page-node-id="NynLhqBmfq6q8G2MTDCPJM">{$sumpay|default='0'}</div>
+                    <div class="mobile-stat-label" data-page-node-id="nqtH1NUpaLTRZpxCMHDymW">交易金额</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="products">
-        <div class="container">
-            <div class="section-header">
-                <span class="badge"><i class="fas fa-cubes"></i> 产品套餐</span>
-                <h2>选择适合你的方案</h2>
-                <p>多种规格可选，按需付费，灵活升级</p>
+    <!-- ===== 服务器状态（宝塔面板 API 实时采集） ===== -->
+    <section class="serverstatus" id="serverStatus" data-page-node-id="hOhG5CiFo2Ek2TAdl8MGYL">
+        <div class="container" data-page-node-id="3pJomxeODqdA2rJ9qJoRlc">
+            <div class="section-header" data-page-node-id="PnFXHTtYI2Nfd7PrYwFSIE">
+                <span class="badge" data-page-node-id="ZKr1owQUMiz3Lad0t63r3w"><i class="fas fa-server" data-page-node-id="p8rlzg3MyzYD6aw7ysZHI3"></i> 服务器状态</span>
+                <h2 data-page-node-id="KvbiJSysP2MjI6OZWUW8xQ">实时服务器状态</h2>
+                <p data-page-node-id="3iVys0iAVheGz92oFWosZU">数据来自宝塔面板 API 实时采集，每 {$bt_interval|default='15'} 秒自动刷新</p>
             </div>
-            <div class="products-grid">
-                {if !empty($cart)}
-                {foreach $cart as $i=>$c}
-                <a href="__ROOT__/cart" class="product-card glass-card{if $i==0} featured{/if}">
-                    <div class="product-card-header">
-                        <div>
-                            <div class="product-card-name">{$c.name}</div>
-                            <div class="product-card-desc">{$c.content|default='高性能虚拟主机'}</div>
-                        </div>
-                        <div class="product-card-arrow"><i class="fas fa-chevron-right"></i></div>
-                    </div>
-                    <div class="product-card-body">
-                        <div class="product-card-capacity">{$c.capacity_show|default='10GB'}</div>
-                        <div class="product-card-illustration">
-                            <svg viewBox="0 0 64 64" fill="none">
-                                {if $i==0}
-                                <rect x="12" y="36" width="40" height="22" rx="4" fill="rgba(255,255,255,0.2)" stroke="#fff" stroke-width="2"/>
-                                <rect x="20" y="22" width="40" height="22" rx="4" fill="rgba(255,255,255,0.35)" stroke="#fff" stroke-width="2"/>
-                                <rect x="28" y="8" width="40" height="22" rx="4" fill="#fff" stroke="#fff" stroke-width="2"/>
-                                <circle cx="24" cy="47" r="3" fill="#fff"/>
-                                <rect x="32" y="44" width="14" height="6" rx="3" fill="rgba(255,255,255,0.5)"/>
-                                {elseif $i==1}
-                                <rect x="10" y="16" width="44" height="36" rx="6" fill="#EFF6FF" stroke="#DBEAFE" stroke-width="2"/>
-                                <rect x="18" y="24" width="28" height="8" rx="2" fill="#BFDBFE"/>
-                                <rect x="18" y="36" width="20" height="8" rx="2" fill="#DBEAFE"/>
-                                <path d="M46 10 L58 10 L58 48" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" fill="none"/>
-                                <circle cx="58" cy="48" r="4" fill="#3B82F6"/>
-                                {else}
-                                <circle cx="32" cy="32" r="22" fill="#EFF6FF" stroke="#DBEAFE" stroke-width="2"/>
-                                <path d="M32 16 L32 22" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M32 42 L32 48" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M16 32 L22 32" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M42 32 L48 32" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/>
-                                <circle cx="32" cy="32" r="8" fill="#3B82F6"/>
-                                <path d="M28 32 L31 35 L36 29" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                                {/if}
-                            </svg>
-                        </div>
-                    </div>
-                    {if !empty($c.money)}
-                    <div class="product-card-specs">
-                        <div class="product-card-spec"><i class="fas fa-tag"></i> ¥{$c.money}/月</div>
-                        <div class="product-card-spec"><i class="fas fa-hdd"></i> {$c.capacity_show|default='10GB'}</div>
-                    </div>
-                    {/if}
-                </a>
-                {/foreach}
-                {else}
-                <div class="products-empty">
-                    <i class="fas fa-box-open" style="font-size:48px;color:var(--glass-text-muted);margin-bottom:16px;display:block;"></i>
-                    暂无产品套餐，请联系管理员
+
+            <div class="ss-summary glass-card" data-page-node-id="jAQMGay7sX66vg0xxzAzKu">
+                <div class="ss-sum-item" data-page-node-id="AKj9sVRzetYoOByiLVg2pT">
+                    <div class="ss-sum-val" id="ssOnlineTotal" data-page-node-id="rWOAzFoMMTWff8FBwWcBNG">-</div>
+                    <div class="ss-sum-label" data-page-node-id="SYByFmpGFMoeIPQjCAHxpa">在线 / 总数</div>
                 </div>
-                {/if}
+                <div class="ss-sum-item" data-page-node-id="X1AWfhYnHRNOhHsYh3sdMD">
+                    <div class="ss-sum-val" id="ssCpuAvg" data-page-node-id="9jBblfynh1Ko4Jb4HyqO5q">-</div>
+                    <div class="ss-sum-label" data-page-node-id="JPM9URwI4CArjCl1liUqg1">平均 CPU 使用率</div>
+                </div>
+                <div class="ss-sum-item" data-page-node-id="8AABpadsBRfbO9QJJPtujH">
+                    <div class="ss-sum-val" id="ssMemAvg" data-page-node-id="l6b4jIeg9FD86E5aLgqcDn">-</div>
+                    <div class="ss-sum-label" data-page-node-id="26NWe7fD4RxEUXzsKNKC2R">平均内存使用率</div>
+                </div>
+                <div class="ss-sum-item" data-page-node-id="RItP0YFK44qbSEDmV4vbZ7">
+                    <div class="ss-sum-val" id="ssLoadAvg" data-page-node-id="zwyHUaKXpItXgAx2qBf1hT">-</div>
+                    <div class="ss-sum-label" data-page-node-id="rhIAYV7zqQaS6CJSpJI6wZ">平均系统负载</div>
+                </div>
+                <div class="ss-sum-item" data-page-node-id="cXOkGG6UOfu1O6e5SbswWN">
+                    <div class="ss-sum-val" id="ssNetUp" data-page-node-id="EPePHNHb2aFMKAjTYkUdxn">-</div>
+                    <div class="ss-sum-label" data-page-node-id="dxAYDJCk6nouqCBMB9KlxC">总上行速率</div>
+                </div>
+                <div class="ss-sum-item" data-page-node-id="wIDSjDerPNu0E7iP6X1s0S">
+                    <div class="ss-sum-val" id="ssNetDown" data-page-node-id="rWNe6vihvEDi5pgWgKB4CJ">-</div>
+                    <div class="ss-sum-label" data-page-node-id="POOtQxIoNT2gmaCgPGdzwp">总下行速率</div>
+                </div>
+                <div class="ss-sum-item ss-sum-action" data-page-node-id="aV2cM7Qko1UWySLsA4pqh7">
+                    <div class="ss-updated" data-page-node-id="tCuTYreI3FDWbQwcaKr41V">最后更新：<b id="ssUpdated" data-page-node-id="xQLas7wXO0MPqAEC1DlxT7">-</b></div>
+                    <button type="button" class="ss-refresh-btn" id="ssRefreshBtn" data-page-node-id="p6p14WwrTMU8WxZz1Geb5Z"><i class="fas fa-sync-alt" data-page-node-id="9Sjq1zMwqCMS5kVzEgw4Ah"></i> 立即刷新</button>
+                </div>
             </div>
+
+            <div class="ss-grid" id="ssGrid" data-page-node-id="lDHycYcNKJw2hWdVPQ2jcC"></div>
+
+            {empty name="bt_servers"}
+            <div class="ss-empty" data-page-node-id="sv6wCgEUan6XsPC5hOdthW">
+                <i class="fas fa-server" style="font-size:44px;color:var(--glass-text-muted);margin-bottom:14px;display:block;" data-page-node-id="CycgOpZQBrUNQUAzca2hAR"></i>
+                暂未接入服务器状态监控
+            </div>
+            {/empty}
         </div>
     </section>
 
-    <section class="datacenters">
-        <div class="container">
-            <div class="section-header">
-                <span class="badge"><i class="fas fa-globe-asia"></i> 全球节点</span>
-                <h2>全球数据中心</h2>
-                <p>多地域节点部署，就近访问，低延迟高可用</p>
+    <section class="datacenters" data-page-node-id="HRvTFQy5tTQnfjqwYFO00f">
+        <div class="container" data-page-node-id="7P9csOCRBHtbIWIyRDy7xL">
+            <div class="section-header" data-page-node-id="grzpyPZHAkTZBvxwQt3Aq2">
+                <span class="badge" data-page-node-id="nxcSkPAArC1MKe0pyI1EFC"><i class="fas fa-globe-asia" data-page-node-id="so3QUZGcxRAANMzyrklopA"></i> 全球节点</span>
+                <h2 data-page-node-id="am4qVeaLGmv09gKz19hBgS">全球数据中心</h2>
+                <p data-page-node-id="1RhAgnOHCfdXwCbE6hzg3L">多地域节点部署，就近访问，低延迟高可用</p>
             </div>
 
-            <div class="dc-grid">
+            <div class="dc-grid" data-page-node-id="JuK6l59U4rP0d4jpnKdIE1">
                 {foreach $global_datacenters as $k=>$dc}
-                <div class="dc-item glass-card glass-reveal glass-stagger-{$k+1}">
-                    <div class="dc-flag"><i class="{$dc.icon|default='fas fa-map-marker-alt'}"></i></div>
-                    <h4>{$dc.name}</h4>
-                    <p>{$dc.region}</p>
-                    <span class="dc-status">{$dc.status|default='运行正常'}</span>
+                <div class="dc-item glass-card glass-reveal glass-stagger-{$k+1}" data-page-node-id="q5ukWZ0MnDF0yA0uTyczMD">
+                    <div class="dc-flag" data-page-node-id="x3mt6SvjSLTJbIhrza9eTT"><i class="{$dc.icon|default='fas fa-map-marker-alt'}" data-page-node-id="RcvkECtk1HLu6k11ypLJ5s"></i></div>
+                    <h4 data-page-node-id="yguuCwwasGqCKIu2CzMpYf">{$dc.name}</h4>
+                    <p data-page-node-id="ajZzXDwlyChdAnBVd0KT3w">{$dc.region}</p>
+                    <span class="dc-status" data-page-node-id="Sn4f4AHnfutN4IqqXU1C4r">{$dc.status|default='运行正常'}</span>
                 </div>
                 {/foreach}
             </div>
         </div>
     </section>
 
-    <section class="announcements">
-        <div class="container">
-            <div class="section-header">
-                <span class="badge"><i class="fas fa-bullhorn"></i> 最新动态</span>
-                <h2>网站公告</h2>
-                <p>及时了解平台最新动态与维护通知</p>
+    <section class="announcements" data-page-node-id="SgEMpUQGyNVA6p6oTltI4Z">
+        <div class="container" data-page-node-id="gUlbanGDXI70Bn2Tn6gkJL">
+            <div class="section-header" data-page-node-id="WAbt1H0GB2EtXjU0pZxUp8">
+                <span class="badge" data-page-node-id="9y2AAkEcCggn0iwMsY2vFh"><i class="fas fa-bullhorn" data-page-node-id="jLKtF94F6qWqi44hk7QEzK"></i> 最新动态</span>
+                <h2 data-page-node-id="b2gFB9iB6arqlcfM3T51tw">网站公告</h2>
+                <p data-page-node-id="y5lztcNPxsd6OpLiFHJOVp">及时了解平台最新动态与维护通知</p>
             </div>
 
-            <div class="announcement-list glass-content-wrapper">
+            <div class="announcement-list glass-content-wrapper" data-page-node-id="yyRMB3SveeOAEBCPClJbAG">
                 {if $announcement}
                 {foreach $announcement as $a}
-                <div class="announcement-item">
-                    <span class="announcement-title">{$a.title}</span>
-                    <div class="announcement-meta">
-                        <span class="announcement-date">{$a.created_at|date="m-d",###}</span>
-                        <a href="__ROOT__/announcement/{$a.id}" class="announcement-link">查看详情 <i class="fas fa-chevron-right"></i></a>
+                <div class="announcement-item" data-page-node-id="1EaWCxM7vR71wjSYoaT1fo">
+                    <span class="announcement-title" data-page-node-id="JJ8OKSIG9RAJ00LAmnzDoO">{$a.title}</span>
+                    <div class="announcement-meta" data-page-node-id="dM6t3AWDGQiVWG8uyOmx52">
+                        <span class="announcement-date" data-page-node-id="HVklDfvKlfX0Xtm3P7qH5A">{$a.created_at|date="m-d",###}</span>
+                        <a href="__ROOT__/announcement/{$a.id}" class="announcement-link" data-page-node-id="4Xn39MvuCQs3NnXVFVi2Sg">查看详情 <i class="fas fa-chevron-right" data-page-node-id="Vcx3H4Ns2eAENfPvTYOoVD"></i></a>
                     </div>
                 </div>
                 {/foreach}
                 {else}
-                <div class="announcement-empty">
-                    <i class="fas fa-bullhorn"></i>
+                <div class="announcement-empty" data-page-node-id="wQTM4b61GijkUy3EdGwvzD">
+                    <i class="fas fa-bullhorn" data-page-node-id="hTmKksqKq0EaNy1F6q1zRH"></i>
                     暂无公告
                 </div>
                 {/if}
             </div>
         </div>
     </section>
+
+    <script>window.BT_SERVERS = {$bt_servers_json};window.BT_INTERVAL = {$bt_interval|default='15'};</script>
+    {literal}
+    <script>
+    (function () {
+        var ROOT = window['__' + 'ROOT__'] || '';
+        var SERVERS = window.BT_SERVERS || [];
+        var INTERVAL = Math.max(5000, (parseInt(window.BT_INTERVAL || 15, 10) || 15) * 1000);
+        var hist = {};          // id -> {up:[], down:[]}
+        var MAX_POINTS = 40;
+        var lastOnlineMap = {};
+
+        function esc(s) {
+            return String(s === undefined || s === null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+        function fmtMB(mb) {
+            mb = num(mb);
+            if (mb >= 1024) return (mb / 1024).toFixed(2) + ' GB';
+            return Math.round(mb) + ' MB';
+        }
+        function fmtSpeed(kb) {
+            kb = num(kb);
+            if (kb >= 1024) return (kb / 1024).toFixed(2) + ' MB/s';
+            return kb.toFixed(1) + ' KB/s';
+        }
+        function fmtBytes(b) {
+            b = num(b);
+            var u = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'], i = 0;
+            while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+            return (i === 0 ? Math.round(b) : b.toFixed(2)) + ' ' + u[i];
+        }
+        function barCls(p) { return p >= 85 ? 'danger' : (p >= 65 ? 'warn' : ''); }
+        function barHtml(p) {
+            p = Math.max(0, Math.min(100, num(p)));
+            return '<div class="ss-bar ' + barCls(p) + '"><i style="width:' + p + '%"></i></div>';
+        }
+        function sparkHtml(h) {
+            var up = h.up || [], dn = h.down || [];
+            if (up.length < 2 && dn.length < 2) return '';
+            var w = 100, ht = 34, max = 0.0001, i;
+            for (i = 0; i < up.length; i++) if (up[i] > max) max = up[i];
+            for (i = 0; i < dn.length; i++) if (dn[i] > max) max = dn[i];
+            function pts(arr) {
+                var out = [];
+                for (var j = 0; j < arr.length; j++) {
+                    var x = arr.length > 1 ? (j / (arr.length - 1)) * w : 0;
+                    var y = ht - (arr[j] / max) * (ht - 5) - 2.5;
+                    out.push(x.toFixed(1) + ',' + y.toFixed(1));
+                }
+                return out.join(' ');
+            }
+            return '<svg class="ss-spark" viewBox="0 0 ' + w + ' ' + ht + '" preserveAspectRatio="none" aria-hidden="true">' +
+                '<polyline points="' + pts(dn) + '" fill="none" stroke="#10B981" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>' +
+                '<polyline points="' + pts(up) + '" fill="none" stroke="#F59E0B" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>' +
+                '</svg>';
+        }
+
+        function cardHtml(s) {
+            var h = hist[s.id] || { up: [], down: [] };
+            var head =
+                '<div class="ss-card-head">' +
+                    '<div class="ss-card-title">' +
+                        '<div class="ss-card-name"><span class="ss-dot ' + (s.online ? 'on' : 'off') + '"></span>' + esc(s.name) + '</div>' +
+                        '<div class="ss-card-sub">' + (s.online
+                            ? (esc(s.system || 'Linux') + (s.version ? ' · 面板 v' + esc(s.version) : '') + (s.uptime ? ' · 已运行 ' + esc(s.uptime) : ''))
+                            : '连接异常') + '</div>' +
+                    '</div>' +
+                    (s.tag ? '<span class="ss-card-tag">' + esc(s.tag) + '</span>' : '') +
+                '</div>';
+
+            if (!s.online) {
+                return '<div class="ss-card glass-card" data-id="' + s.id + '">' + head +
+                    '<div class="ss-err"><i class="fas fa-exclamation-triangle"></i> ' + esc(s.error || '无法连接宝塔面板') + '</div>' +
+                    '</div>';
+            }
+
+            var cpu = num(s.cpu && s.cpu.used), memP = num(s.mem && s.mem.percent);
+            var load = s.load || {}, loadP = num(load.percent);
+
+            // 与后台实时状态卡片一致的环形指标（CPU 使用率 / 内存 / 负载 5m）
+            var body = '<div class="ss-ring-row">' +
+                '<div class="ss-ring"><div class="v">' + cpu.toFixed(1) + '%</div><div class="lbl">CPU 使用率</div>' + barHtml(cpu) + '</div>' +
+                '<div class="ss-ring"><div class="v">' + memP.toFixed(1) + '%</div><div class="lbl">内存</div>' + barHtml(memP) + '</div>' +
+                '<div class="ss-ring"><div class="v">' + (load.five || 0) + '</div><div class="lbl">负载 5m</div>' + barHtml(loadP) + '</div>' +
+                '</div>';
+
+            body += '<div class="ss-kv"><span>CPU 核心 / 负载 1·5·15</span><b>' +
+                ((s.cpu && s.cpu.num) ? s.cpu.num + ' 核' : '-') + ' / ' +
+                (load.one || 0) + ' · ' + (load.five || 0) + ' · ' + (load.fifteen || 0) + '</b></div>';
+
+            // 明细区块：宽卡片下自动并排成多列（避免单台服务器时右侧/下方大片空白）
+            var secs = '';
+
+            // 网络流量信息 + 网络使用状态
+            var net = s.net || {};
+            secs += '<div class="ss-sec"><div class="ss-sec-title"><i class="fas fa-network-wired"></i> 网络流量信息</div>' +
+                '<div class="ss-kv"><span>实时上行 <span class="up">↑</span></span><b class="up">' + fmtSpeed(net.up) + '</b></div>' +
+                '<div class="ss-kv"><span>实时下行 <span class="down">↓</span></span><b class="down">' + fmtSpeed(net.down) + '</b></div>' +
+                sparkHtml(h) +
+                '<div class="ss-kv"><span>累计 上行 / 下行</span><b>' + fmtBytes(net.up_total) + ' / ' + fmtBytes(net.down_total) + '</b></div>';
+
+            var ifs = net.interfaces || [];
+            if (ifs.length) {
+                secs += '<div class="ss-ifaces" style="margin-top:4px;">';
+                for (var i = 0; i < ifs.length && i < 6; i++) {
+                    secs += '<div class="ss-kv"><span>' + esc(ifs[i].name) + '</span><b>' +
+                        '<span class="up">↑</span>' + fmtSpeed(ifs[i].up) + ' <span class="down">↓</span>' + fmtSpeed(ifs[i].down) +
+                        '</b></div>';
+                }
+                secs += '</div>';
+            }
+            secs += '</div>';
+
+            // 内存详细信息
+            var m = s.mem || {};
+            secs += '<div class="ss-sec"><div class="ss-sec-title"><i class="fas fa-memory"></i> 内存详细信息</div>' +
+                '<div class="ss-kv"><span>实际已用 / 总量</span><b>' + fmtMB(m.real_used) + ' / ' + fmtMB(m.total) + '</b></div>' +
+                '<div class="ss-kv"><span>空闲 / 可用</span><b>' + fmtMB(m.free) + ' / ' + fmtMB(m.available) + '</b></div>' +
+                '<div class="ss-kv"><span>缓存 / 缓冲</span><b>' + fmtMB(m.cached) + ' / ' + fmtMB(m.buffers) + '</b></div>' +
+                '</div>';
+
+            // 磁盘使用情况
+            var dks = s.disk || [];
+            secs += '<div class="ss-sec"><div class="ss-sec-title"><i class="fas fa-hdd"></i> 磁盘使用情况</div>';
+            if (dks.length) {
+                for (var k = 0; k < dks.length && k < 5; k++) {
+                    secs += '<div class="ss-disk-row"><div class="ss-kv"><span>' + esc(dks[k].path) +
+                        (dks[k].type ? ' <span style="opacity:.6">' + esc(dks[k].type) + '</span>' : '') + '</span>' +
+                        '<b>' + esc(dks[k].used) + ' / ' + esc(dks[k].total) + ' · ' + num(dks[k].percent).toFixed(0) + '%</b></div>' +
+                        barHtml(dks[k].percent) + '</div>';
+                }
+            } else {
+                secs += '<div class="ss-kv"><span>暂无分区数据</span><b>-</b></div>';
+            }
+            secs += '</div>';
+
+            body += '<div class="ss-cols">' + secs + '</div>';
+
+            // 注意：实时卡片每 15s 重建，不能带 glass-reveal（它只在页面加载时收集一次元素，
+            // 动态插入的节点永远拿不到 .visible → 会被 opacity:0 永久隐藏，视觉上就是"空一大片"）
+            return '<div class="ss-card glass-card" data-id="' + s.id + '">' + head + body + '</div>';
+        }
+
+        function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
+
+        function render(data) {
+            var list = (data && data.list) ? data.list : [];
+            var sumEl = document.querySelector('.ss-summary');
+            var grid = document.getElementById('ssGrid');
+            if (!grid) return;
+
+            if (!list.length) {
+                grid.innerHTML = '';
+                if (sumEl) sumEl.style.display = 'none';
+                return;
+            }
+            if (sumEl) sumEl.style.display = '';
+
+            // 记录历史速率（用于走势图）
+            list.forEach(function (s) {
+                if (!hist[s.id]) hist[s.id] = { up: [], down: [] };
+                if (s.online) {
+                    hist[s.id].up.push(num(s.net && s.net.up));
+                    hist[s.id].down.push(num(s.net && s.net.down));
+                    if (hist[s.id].up.length > MAX_POINTS) hist[s.id].up.shift();
+                    if (hist[s.id].down.length > MAX_POINTS) hist[s.id].down.shift();
+                }
+                lastOnlineMap[s.id] = s.online ? 1 : 0;
+            });
+
+            grid.innerHTML = list.map(cardHtml).join('');
+
+            var on = 0, cpuSum = 0, memSum = 0, memUsed = 0, memTotal = 0, loadSum = 0, up = 0, down = 0;
+            list.forEach(function (s) {
+                if (!s.online) return;
+                on++;
+                cpuSum += num(s.cpu && s.cpu.used);
+                memUsed += num(s.mem && s.mem.real_used);
+                memTotal += num(s.mem && s.mem.total);
+                loadSum += num(s.load && s.load.five);
+                up += num(s.net && s.net.up);
+                down += num(s.net && s.net.down);
+            });
+
+            setText('ssOnlineTotal', on + ' / ' + list.length);
+            setText('ssCpuAvg', on ? (cpuSum / on).toFixed(1) + '%' : '-');
+            setText('ssMemAvg', memTotal > 0 ? ((memUsed / memTotal) * 100).toFixed(1) + '%' : '-');
+            setText('ssLoadAvg', on ? (loadSum / on).toFixed(2) : '-');
+            setText('ssNetUp', fmtSpeed(up));
+            setText('ssNetDown', fmtSpeed(down));
+
+            var d = new Date(), p = function (n) { return n < 10 ? '0' + n : '' + n; };
+            setText('ssUpdated', p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()));
+        }
+
+        var loading = false;
+        function load(force) {
+            if (loading) return;
+            var btn = document.getElementById('ssRefreshBtn');
+            loading = true;
+            if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+            var url = ROOT + '/server/status' + (force ? '?force=1' : '') + (force ? '' : '&t=' + Date.now());
+            if (!force) url = ROOT + '/server/status?t=' + Date.now();
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' })
+                .then(function (r) { return r.json(); })
+                .then(function (j) { if (j && j.code === 1) render(j); })
+                .catch(function () {})
+                .then(function () {
+                    loading = false;
+                    if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+                });
+        }
+
+        var btn = document.getElementById('ssRefreshBtn');
+        if (btn) btn.addEventListener('click', function () { load(true); });
+
+        // 首屏骨架：用后台已配置的服务器先占位
+        if (SERVERS.length) {
+            document.getElementById('ssGrid').innerHTML = SERVERS.map(function (s) {
+                return '<div class="ss-card glass-card" data-id="' + s.id + '">' +
+                    '<div class="ss-card-head"><div class="ss-card-title">' +
+                    '<div class="ss-card-name"><span class="ss-dot"></span>' + esc(s.name) + '</div>' +
+                    '<div class="ss-card-sub">采集中…</div></div>' +
+                    (s.tag ? '<span class="ss-card-tag">' + esc(s.tag) + '</span>' : '') + '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        load(false);
+        setInterval(function () { load(false); }, INTERVAL);
+
+        // 页面不可见时暂停轮询，回到前台立即刷新
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) load(false);
+        });
+    })();
+    </script>
+    {/literal}
 
     {include file="default/index/footer" /}

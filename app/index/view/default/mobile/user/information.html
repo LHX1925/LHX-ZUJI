@@ -1,0 +1,132 @@
+{php}$title = '个人信息'; $tab_active = 'profile'; $back_url = '/user';{/php}
+{include file="default/mobile/header" /}
+
+<!-- 用户信息卡片 -->
+<div class="app-card" style="padding:24px 20px;display:flex;align-items:center;gap:16px;">
+    <div style="width:72px;height:72px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--glass-bg-strong);border:2px solid var(--glass-border);">
+        {if isset($user.qq) && $user.qq}
+        <img src="https://q1.qlogo.cn/g?b=qq&nk={$user.qq}&s=100" style="width:100%;height:100%;object-fit:cover;" alt="avatar">
+        {else}
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--glass-primary);font-size:28px;"><i class="fas fa-user"></i></div>
+        {/if}
+    </div>
+    <div style="flex:1;min-width:0;">
+        <div style="font-size:20px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            {$user.user|default=$user.name|default='用户'}
+            {if isset($user.vip) && $user.vip}<span class="app-tag app-tag-warning">VIP</span>{/if}
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:6px;">ID：{$user.id|default='0'}</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">邮箱：{$user.mail|default='未设置'}</div>
+    </div>
+</div>
+
+<!-- 账号信息 -->
+<div class="app-card">
+    <div class="app-card-title">账号信息</div>
+    <form id="profileForm">
+        <div class="app-input-group">
+            <label class="app-input-label">昵称</label>
+            <input type="text" class="app-input" name="name" value="{$user.name|default=''}" placeholder="请输入昵称">
+        </div>
+        <div class="app-input-group">
+            <label class="app-input-label">QQ号码</label>
+            <input type="text" class="app-input" name="qq" value="{$user.qq|default=''}" placeholder="请输入QQ号码">
+        </div>
+        <div class="app-input-group">
+            <label class="app-input-label">联系地址</label>
+            <input type="text" class="app-input" name="address" value="{$user.address|default=''}" placeholder="请输入联系地址">
+        </div>
+        <button type="submit" class="app-btn app-btn-primary app-btn-block">保存修改</button>
+    </form>
+</div>
+
+<!-- 安全与设置 -->
+<div class="app-card" style="padding:8px 0;">
+    <a href="__ROOT__/user/password" class="app-list-item" style="padding:14px 20px;">
+        <div class="app-list-icon blue"><i class="fas fa-lock"></i></div>
+        <div class="app-list-body">
+            <div class="app-list-title">修改密码</div>
+            <div class="app-list-sub">定期更换密码保护账号安全</div>
+        </div>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+    <a href="__ROOT__/user/bdmail" class="app-list-item" style="padding:14px 20px;">
+        <div class="app-list-icon purple"><i class="fas fa-envelope"></i></div>
+        <div class="app-list-body">
+            <div class="app-list-title">绑定邮箱</div>
+            <div class="app-list-sub">{$user.mail|default='未绑定'}</div>
+        </div>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+    <a href="__ROOT__/user/theme" class="app-list-item" style="padding:14px 20px;">
+        <div class="app-list-icon green"><i class="fas fa-palette"></i></div>
+        <div class="app-list-body">
+            <div class="app-list-title">主题设置</div>
+            <div class="app-list-sub">切换界面主题风格</div>
+        </div>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+    <a href="__ROOT__/user/realname" class="app-list-item" style="padding:14px 20px;">
+        <div class="app-list-icon orange"><i class="fas fa-id-card"></i></div>
+        <div class="app-list-body">
+            <div class="app-list-title">实名认证</div>
+            <div class="app-list-sub">{if isset($user.realname) && $user.realname}已认证{else}未认证{/if}</div>
+        </div>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+</div>
+
+<!-- 其他功能 -->
+<div class="app-card" style="padding:8px 0;">
+    <a href="__ROOT__/user/payrecord" class="app-list-item" style="padding:14px 20px;">
+        <div class="app-list-icon blue"><i class="fas fa-wallet"></i></div>
+        <div class="app-list-body"><div class="app-list-title">充值记录</div></div>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+    <a href="__ROOT__/user/transaction" class="app-list-item" style="padding:14px 20px;">
+        <div class="app-list-icon green"><i class="fas fa-file-invoice-dollar"></i></div>
+        <div class="app-list-body"><div class="app-list-title">消费记录</div></div>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+    <a href="__ROOT__/user/aff" class="app-list-item" style="padding:14px 20px;">
+        <div class="app-list-icon purple"><i class="fas fa-share-alt"></i></div>
+        <div class="app-list-body"><div class="app-list-title">推广分佣</div></div>
+        <span class="app-tag app-tag-warning" style="margin-right:6px;">立赚</span>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+    <a href="__ROOT__/user/points_shop" class="app-list-item" style="padding:14px 20px;">
+        <div class="app-list-icon orange"><i class="fas fa-coins"></i></div>
+        <div class="app-list-body"><div class="app-list-title">积分商城</div></div>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+    <a href="__ROOT__/user/supporttickets" class="app-list-item" style="padding:14px 20px;">
+        <div class="app-list-icon red"><i class="fas fa-headset"></i></div>
+        <div class="app-list-body"><div class="app-list-title">我的工单</div></div>
+        <i class="fas fa-chevron-right app-list-arrow"></i>
+    </a>
+</div>
+
+<div style="padding:0 16px 16px;">
+    <a href="__ROOT__/user/logout" class="app-btn app-btn-danger app-btn-block" style="background:var(--glass-danger);">退出登录</a>
+</div>
+
+<script>
+$('#profileForm').submit(function() {
+    var name = $(this).find("input[name='name']").val().trim();
+    var qq = $(this).find("input[name='qq']").val().trim();
+    if(!name || !qq){ appToast('昵称和QQ号码不能为空','error'); return false; }
+    var submitBtn = $(this).find("button[type='submit']");
+    submitBtn.prop('disabled', true).text('保存中...');
+    $.ajax({type:'POST',url:'',data:{name:name,qq:qq,address:$(this).find("input[name='address']").val()},dataType:'json',
+        success:function(res){
+            submitBtn.prop('disabled', false).text('保存修改');
+            if(res.code == 1){ appToast(res.msg||'修改成功','success'); }
+            else { appToast(res.msg||'修改失败','error'); }
+        },
+        error:function(){ submitBtn.prop('disabled', false).text('保存修改'); appToast('网络错误','error'); }
+    });
+    return false;
+});
+</script>
+
+{include file="default/mobile/footer" /}

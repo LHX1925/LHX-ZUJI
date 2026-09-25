@@ -87,6 +87,12 @@ function global_input_filter() {
             }
         }
     }
+    // 后台模块 POST 数据跳过过滤：后台管理员已通过登录鉴权，且需要保存 URL/HTML/JSON 等任意内容，
+    // 若按 ../、php:// 等模式过滤会误拦截合法内容，导致后台保存提示"提交失败"
+    $uriPath = isset($_SERVER['REQUEST_URI']) ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : '';
+    if (is_string($uriPath) && preg_match('#(^|/)admin(/|$)#', $uriPath)) {
+        return;
+    }
     // 检查POST参数
     if (!empty($_POST)) {
         foreach ($_POST as $key => $val) {
@@ -186,11 +192,17 @@ function csrf_token() {
 
 /**
  * Verify CSRF token
+ * 兼容：1) 表单字段 __token__；2) 请求头 X-CSRF-Token（AJAX 统一走请求头，避免 Token 混入表单字段）
  */
 function csrf_verify($token) {
     $stored = session('csrf_token');
-    if (!$stored || !$token) return false;
-    return hash_equals($stored, $token);
+    if (!$stored) return false;
+    if ($token && is_string($token) && hash_equals($stored, $token)) return true;
+    if (!empty($_SERVER['HTTP_X_CSRF_TOKEN'])) {
+        $headerToken = $_SERVER['HTTP_X_CSRF_TOKEN'];
+        if (is_string($headerToken) && hash_equals($stored, $headerToken)) return true;
+    }
+    return false;
 }
 
 /**
@@ -403,18 +415,42 @@ function ensure_visitor_log_table() {
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `ip` varchar(50) NOT NULL DEFAULT '' COMMENT 'IP地址',
                 `uri` varchar(500) NOT NULL DEFAULT '' COMMENT '请求路径',
+                `url` varchar(500) NOT NULL DEFAULT '' COMMENT '访问URL',
                 `user_agent` varchar(500) NOT NULL DEFAULT '' COMMENT '浏览器UA',
+                `referer` varchar(500) NOT NULL DEFAULT '' COMMENT '来源页',
                 `user_id` int(11) NOT NULL DEFAULT 0 COMMENT '用户ID(0=访客)',
                 `request_method` varchar(10) NOT NULL DEFAULT 'GET' COMMENT '请求方法',
-                `referer` varchar(500) NOT NULL DEFAULT '' COMMENT '来源页',
                 `visit_time` int(11) NOT NULL DEFAULT 0 COMMENT '访问时间戳',
+                `date` varchar(10) NOT NULL DEFAULT '' COMMENT '日期',
+                `hour` int(2) NOT NULL DEFAULT 0 COMMENT '小时0-23',
                 `is_bot` tinyint(1) NOT NULL DEFAULT 0 COMMENT '疑似机器人:0否 1是',
                 `bot_reason` varchar(255) NOT NULL DEFAULT '' COMMENT '机器人判定原因',
                 PRIMARY KEY (`id`),
                 KEY `idx_ip` (`ip`),
                 KEY `idx_user_id` (`user_id`),
-                KEY `idx_visit_time` (`visit_time`)
+                KEY `idx_visit_time` (`visit_time`),
+                KEY `idx_date` (`date`),
+                KEY `idx_hour` (`date`,`hour`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='访客访问日志'");
+        } else {
+            // 表已存在：补齐缺失列，兼容 record_visitor 与 log_visitor/visitorStats 两种字段
+            // （历史版本可能仅创建了 url/date/hour 或仅 uri/is_bot 的旧结构）
+            $existingCols = array_column(\think\Db::query("SHOW COLUMNS FROM `{$table}`"), 'Field');
+            $columns = [
+                'uri'            => "ALTER TABLE `{$table}` ADD COLUMN `uri` varchar(500) NOT NULL DEFAULT '' COMMENT '请求路径'",
+                'url'            => "ALTER TABLE `{$table}` ADD COLUMN `url` varchar(500) NOT NULL DEFAULT '' COMMENT '访问URL'",
+                'user_id'        => "ALTER TABLE `{$table}` ADD COLUMN `user_id` int(11) NOT NULL DEFAULT 0 COMMENT '用户ID(0=访客)'",
+                'request_method' => "ALTER TABLE `{$table}` ADD COLUMN `request_method` varchar(10) NOT NULL DEFAULT 'GET' COMMENT '请求方法'",
+                'date'           => "ALTER TABLE `{$table}` ADD COLUMN `date` varchar(10) NOT NULL DEFAULT '' COMMENT '日期'",
+                'hour'           => "ALTER TABLE `{$table}` ADD COLUMN `hour` int(2) NOT NULL DEFAULT 0 COMMENT '小时0-23'",
+                'is_bot'         => "ALTER TABLE `{$table}` ADD COLUMN `is_bot` tinyint(1) NOT NULL DEFAULT 0 COMMENT '疑似机器人:0否 1是'",
+                'bot_reason'     => "ALTER TABLE `{$table}` ADD COLUMN `bot_reason` varchar(255) NOT NULL DEFAULT '' COMMENT '机器人判定原因'",
+            ];
+            foreach ($columns as $colName => $alterSql) {
+                if (!in_array($colName, $existingCols, true)) {
+                    \think\Db::execute($alterSql);
+                }
+            }
         }
         $ensured = true;  // 仅在成功后才标记
     } catch (\Throwable $e) {}
@@ -456,14 +492,18 @@ function record_visitor($ip, $uri, $userAgent, $userId, $method, $referer) {
             $botReason = $botReason ? ($botReason . '; 高频请求') : '高频请求(10秒>' . $recentCount . '次)';
         }
 
+        $now = time();
         \think\Db::name('visitor_log')->insert([
             'ip'             => mb_substr($ip, 0, 50),
             'uri'            => mb_substr($uri, 0, 500),
+            'url'            => mb_substr($uri, 0, 500),
             'user_agent'     => mb_substr($userAgent, 0, 500),
             'user_id'        => intval($userId),
             'request_method' => mb_substr($method, 0, 10),
             'referer'        => mb_substr($referer, 0, 500),
-            'visit_time'     => time(),
+            'visit_time'     => $now,
+            'date'           => date('Y-m-d', $now),
+            'hour'           => (int)date('H', $now),
             'is_bot'         => $isBot,
             'bot_reason'     => $botReason,
         ]);

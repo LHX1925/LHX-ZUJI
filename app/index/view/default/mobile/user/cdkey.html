@@ -1,0 +1,77 @@
+{php}$title = '卡密兑换'; $tab_active = 'profile'; $back_url = '/user';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:28px 16px 20px;">
+    <div style="width:64px;height:64px;margin:0 auto 16px;background:linear-gradient(135deg,var(--glass-primary),var(--glass-primary-dark));border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(37,99,235,0.25);">
+        <i class="fas fa-key" style="font-size:28px;color:#fff;"></i>
+    </div>
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">卡密兑换</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">输入卡密，一键兑换余额或开通主机</p>
+</div>
+<div class="app-card" style="padding:20px 16px;">
+    <div style="margin-bottom:16px;">
+        <input type="text" id="cdkey-input" class="app-input" style="text-align:center;font-family:monospace;letter-spacing:1px;font-size:16px;padding:14px;" placeholder="请输入您的卡密" autocomplete="off" maxlength="100">
+    </div>
+    <button type="button" id="btn-redeem" class="app-btn" style="width:100%;font-size:16px;padding:14px;letter-spacing:2px;">兑 换</button>
+</div>
+<div class="app-card" style="margin-top:12px;padding:16px;">
+    <div style="font-size:14px;font-weight:700;color:var(--glass-text);margin-bottom:12px;text-align:center;"><i class="fas fa-info-circle" style="color:var(--glass-primary);"></i> 兑换说明</div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--glass-border);">
+        <div style="width:32px;height:32px;border-radius:10px;background:#D1FAE5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;"><i class="fas fa-coins"></i></div>
+        <div>
+            <div style="font-size:13px;font-weight:600;color:var(--glass-text);">充值余额</div>
+            <div style="font-size:12px;color:var(--glass-text-secondary);">余额充值卡兑换后金额直接到账，可用于购买主机、续费服务</div>
+        </div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--glass-border);">
+        <div style="width:32px;height:32px;border-radius:10px;background:#DBEAFE;color:#2563EB;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;"><i class="fas fa-server"></i></div>
+        <div>
+            <div style="font-size:13px;font-weight:600;color:var(--glass-text);">开通主机</div>
+            <div style="font-size:12px;color:var(--glass-text-secondary);">主机购买卡兑换后自动开通对应产品，无需额外支付</div>
+        </div>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;">
+        <div style="width:32px;height:32px;border-radius:10px;background:#FEF3C7;color:#D97706;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;"><i class="fas fa-lightbulb"></i></div>
+        <div>
+            <div style="font-size:13px;font-weight:600;color:var(--glass-text);">使用提示</div>
+            <div style="font-size:12px;color:var(--glass-text-secondary);">每张卡密仅可使用一次，兑换后立即生效，请妥善保管</div>
+        </div>
+    </div>
+</div>
+<script>
+(function checkJQ(){
+    if (typeof window.jQuery !== 'undefined') {
+        $(function(){
+            var redeeming = false;
+            $('#cdkey-input').on('keydown', function(e) { if (e.key === 'Enter') doRedeem(); });
+            $('#btn-redeem').on('click', function() { doRedeem(); });
+            function doRedeem() {
+                if (redeeming) return;
+                var cdkey = $.trim($('#cdkey-input').val());
+                if (!cdkey) { showToast('请输入卡密', 'warning'); $('#cdkey-input').focus(); return; }
+                redeeming = true;
+                var btn = $('#btn-redeem');
+                btn.prop('disabled', true).text('兑换中...');
+                $.ajax({
+                    type: 'POST', url: '', data: { cdkey: cdkey }, dataType: 'json',
+                    success: function(data) {
+                        redeeming = false;
+                        btn.prop('disabled', false).text('兑 换');
+                        if (data.code == 1) {
+                            showToast(data.msg || '兑换成功！', 'success', 3000);
+                            $('#cdkey-input').val('');
+                            setTimeout(function() { if (data.reload) window.location.reload(); }, 1500);
+                        } else if (data.code == -2) {
+                            handleRealnameResponse(data);
+                        } else {
+                            showToast(data.msg || '兑换失败，请检查卡密是否正确', 'danger', 3000);
+                        }
+                    },
+                    error: function() { redeeming = false; btn.prop('disabled', false).text('兑 换'); showToast('网络错误，请稍后重试', 'danger'); }
+                });
+            }
+            $('#cdkey-input').focus();
+        });
+    } else { setTimeout(checkJQ, 50); }
+})();
+</script>
+{include file="default/mobile/footer" /}

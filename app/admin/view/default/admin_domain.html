@@ -1,0 +1,143 @@
+{include file="default/header" title="域名商城管理" /}
+<style>
+.api-form-card { border: 1.5px solid var(--glass-border, #e2e8f0); border-radius: 14px; padding: 20px; background: var(--glass-bg, #fff); }
+.api-form-card h5 { font-size: 15px; font-weight: 700; color: var(--glass-text, #1e293b); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+.api-form-card h5 i { font-size: 18px; }
+.api-form-card .api-status { font-size: 11px; padding: 2px 10px; border-radius: 999px; font-weight: 600; }
+.api-form-card .api-status.on { background: #d1fae5; color: #065f46; }
+.api-form-card .api-status.off { background: #f1f5f9; color: #64748b; }
+.api-help { font-size: 12px; color: var(--glass-text-muted, #94a3b8); line-height: 1.7; margin-top: 10px; padding: 10px 14px; background: var(--glass-bg-light, #f8fafc); border-radius: 8px; border-left: 3px solid #4f7cff; }
+.api-help a { color: #4f7cff; }
+</style>
+<main class="lyear-layout-content">
+  <div class="container-fluid glass-animate-in">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card admin-card mb-3">
+          <header class="card-header"><div class="card-title">域名注册商 API 对接配置</div></header>
+          <div class="card-body">
+            <div class="api-help mb-3">
+              <b>说明：</b>用户在前台「域名商城」上架域名时，系统需要通过注册商 API 验证域名归属。请在下方填写阿里云万网或腾讯云 DNSPod 的 API 密钥，填好后点「保存」并把状态设为「启用」。<br>
+              <b>获取方式：</b>阿里云 → <a href="https://ram.console.aliyun.com/manage/ak" target="_blank">AccessKey 管理页面</a> 创建 AccessKey；腾讯云 → <a href="https://console.cloud.tencent.com/cam/capi" target="_blank">API 密钥管理</a> 新建密钥。
+            </div>
+            <div class="row">
+              <!-- 阿里云 -->
+              <div class="col-md-6 mb-3">
+                <form class="api-form-card" data-provider="aliyun">
+                  <input type="hidden" name="act" value="save_api">
+                  <input type="hidden" name="provider" value="aliyun">
+                  <h5><i class="fas fa-cloud" style="color:#f59e0b;"></i> 阿里云万网
+                    {php}
+                    $_ali = null;
+                    if (isset($apiConfigs) && is_array($apiConfigs)) { foreach ($apiConfigs as $_c) { if ($_c['provider'] == 'aliyun') { $_ali = $_c; break; } } }
+                    {/php}
+                    {if $_ali && $_ali.status == 1}<span class="api-status on">已启用</span>{else}<span class="api-status off">未启用</span>{/if}
+                  </h5>
+                  <div class="mb-2">
+                    <label class="form-label">AccessKey ID</label>
+                    <input type="text" name="appid" class="form-control" placeholder="LTAI5t..." value="{if $_ali}{$_ali.appid}{/if}">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">AccessKey Secret</label>
+                    <input type="password" name="appkey" class="form-control" placeholder="填写密钥" value="{if $_ali}{$_ali.appkey}{/if}">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">状态</label>
+                    <select name="status" class="form-select">
+                      <option value="0" {if !$_ali || $_ali.status != 1}selected{/if}>未启用</option>
+                      <option value="1" {if $_ali && $_ali.status == 1}selected{/if}>启用</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-admin-primary btn-sm mt-2">保存配置</button>
+                </form>
+              </div>
+              <!-- 腾讯云 -->
+              <div class="col-md-6 mb-3">
+                <form class="api-form-card" data-provider="dnspod">
+                  <input type="hidden" name="act" value="save_api">
+                  <input type="hidden" name="provider" value="dnspod">
+                  <h5><i class="fas fa-cloud" style="color:#2563eb;"></i> 腾讯云 DNSPod
+                    {php}
+                    $_dns = null;
+                    if (isset($apiConfigs) && is_array($apiConfigs)) { foreach ($apiConfigs as $_c) { if ($_c['provider'] == 'dnspod') { $_dns = $_c; break; } } }
+                    {/php}
+                    {if $_dns && $_dns.status == 1}<span class="api-status on">已启用</span>{else}<span class="api-status off">未启用</span>{/if}
+                  </h5>
+                  <div class="mb-2">
+                    <label class="form-label">SecretId</label>
+                    <input type="text" name="appid" class="form-control" placeholder="AKID..." value="{if $_dns}{$_dns.appid}{/if}">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">SecretKey</label>
+                    <input type="password" name="appkey" class="form-control" placeholder="填写密钥" value="{if $_dns}{$_dns.appkey}{/if}">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">状态</label>
+                    <select name="status" class="form-select">
+                      <option value="0" {if !$_dns || $_dns.status != 1}selected{/if}>未启用</option>
+                      <option value="1" {if $_dns && $_dns.status == 1}selected{/if}>启用</option>
+                    </select>
+                  </div>
+                  <button type="submit" class="btn btn-admin-primary btn-sm mt-2">保存配置</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card admin-card">
+          <header class="card-header"><div class="card-title">域名列表</div></header>
+          <div class="card-body">
+            <table class="table table-hover">
+              <thead>
+                <tr><th>ID</th><th>域名</th><th>价格</th><th>注册商</th><th>状态</th><th>操作</th></tr>
+              </thead>
+              <tbody>
+                {foreach $domains as $d}
+                <tr>
+                  <td>{$d.id}</td>
+                  <td style="font-family:Consolas,monospace;">{$d.domain}</td>
+                  <td>¥{$d.price}</td>
+                  <td>{if $d.registrar=='aliyun'}阿里云万网{elseif $d.registrar=='dnspod'}腾讯云DNSPod{/if}</td>
+                  <td>
+                    {if $d.status==1}<span class="badge bg-success">出售中</span>
+                    {elseif $d.status==2}<span class="badge bg-danger">已售出</span>
+                    {else}<span class="badge bg-secondary">已下架</span>{/if}
+                  </td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-danger btn-del" data-id="{$d.id}">删除</button>
+                  </td>
+                </tr>
+                {/foreach}
+              </tbody>
+            </table>
+            {$domains->render()}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{include file="default/footer" /}
+<script>
+$(function(){
+    $('.api-form-card').on('submit', function(e){
+        e.preventDefault();
+        var form = $(this);
+        $.post('', form.serialize(), function(res){
+            if(res.code == 1){ GlassTip.success(res.msg); setTimeout(function(){ location.reload(); }, 800); }
+            else GlassTip.error(res.msg);
+        }, 'json');
+    });
+    $('.btn-del').on('click', function(){
+        var id = $(this).data('id');
+        layer.confirm('确认删除该域名？', function(idx){
+            $.post('', {act:'delete', id:id}, function(res){
+                if(res.code == 1){ GlassTip.success(res.msg); setTimeout(function(){ location.reload(); }, 800); }
+                else GlassTip.error(res.msg);
+            }, 'json');
+            layer.close(idx);
+        });
+    });
+});
+</script>

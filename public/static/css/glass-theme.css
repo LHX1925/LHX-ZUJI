@@ -86,6 +86,7 @@
   --glass-page-bg-login: linear-gradient(160deg, rgba(235, 240, 255, 0.3) 0%, rgba(222, 231, 255, 0.3) 30%, rgba(240, 244, 255, 0.3) 60%, rgba(232, 238, 255, 0.3) 100%);
   
   --glass-radius: 14px;
+  --glass-radius-md: 16px;
   --glass-radius-lg: 20px;
   --glass-radius-sm: 10px;
   --glass-radius-xl: 28px;
@@ -155,6 +156,84 @@ body.no-glass-theme .content {
   background-color: transparent !important;
 }
 
+/* ==================== 用户自定义深色主题 (body[data-theme='dark']) ==================== */
+body[data-theme='dark'] {
+  --glass-text: #E2E8F0;
+  --glass-text-secondary: #94A3B8;
+  --glass-text-muted: #64748B;
+  --glass-text-primary: #93C5FD;
+  --text: #E2E8F0;
+  --text-muted: #94A3B8;
+  --text-secondary: #94A3B8;
+
+  --glass-bg: rgba(15, 23, 42, 0.55);
+  --glass-bg-strong: rgba(15, 23, 42, 0.72);
+  --glass-bg-light: rgba(15, 23, 42, 0.4);
+  --glass-bg-hover: rgba(30, 41, 59, 0.78);
+  --glass-bg-subtle: rgba(15, 23, 42, 0.35);
+  --glass-bg-active: rgba(30, 41, 59, 0.82);
+  --glass-bg-card: rgba(15, 23, 42, 0.6);
+  --glass-bg-input: rgba(15, 23, 42, 0.55);
+  --glass-bg-overlay: rgba(15, 23, 42, 0.7);
+
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-strong: rgba(255, 255, 255, 0.24);
+  --glass-border-subtle: rgba(255, 255, 255, 0.08);
+  --glass-border-focus: rgba(96, 146, 255, 0.65);
+
+  --border: rgba(255, 255, 255, 0.14);
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.24);
+
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --glass-shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --glass-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+  --glass-shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --glass-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --glass-page-bg: linear-gradient(135deg, rgba(10, 15, 28, 0.55) 0%, rgba(17, 24, 39, 0.55) 25%, rgba(15, 23, 42, 0.55) 50%, rgba(23, 32, 53, 0.55) 75%, rgba(10, 15, 28, 0.55) 100%);
+  --glass-page-bg-admin: linear-gradient(135deg, rgba(15, 23, 42, 0.55) 0%, rgba(17, 24, 39, 0.55) 30%, rgba(23, 32, 53, 0.55) 60%, rgba(10, 15, 28, 0.55) 100%);
+  --glass-page-bg-login: linear-gradient(160deg, rgba(15, 23, 42, 0.55) 0%, rgba(17, 24, 39, 0.55) 30%, rgba(23, 32, 53, 0.55) 60%, rgba(10, 15, 28, 0.55) 100%);
+}
+
+/* 深色 + 关闭液态玻璃：使用不透明深色背景 */
+body[data-theme='dark'].no-glass-theme {
+  --glass-bg: #1E293B;
+  --glass-bg-strong: #1E293B;
+  --glass-bg-light: #0F172A;
+  --glass-bg-hover: #334155;
+  --glass-bg-subtle: #0F172A;
+  --glass-bg-active: #334155;
+  --glass-bg-card: #1E293B;
+  --glass-bg-input: #1E293B;
+  --glass-bg-overlay: #1E293B;
+  --glass-border: #334155;
+  --glass-border-strong: #475569;
+  --glass-border-subtle: #1E293B;
+  --glass-border-focus: #64748B;
+  --glass-page-bg: #0F172A;
+  --glass-page-bg-admin: #0F172A;
+  --glass-page-bg-login: #0F172A;
+  background: #0F172A !important;
+}
+
+/* 深色主题下统一表单控件文字与背景色 */
+body[data-theme='dark'] .form-control,
+body[data-theme='dark'] input.form-control,
+body[data-theme='dark'] textarea.form-control,
+body[data-theme='dark'] select.form-control {
+  color: #E2E8F0;
+  background-color: rgba(15, 23, 42, 0.55);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+body[data-theme='dark'] .form-control:focus,
+body[data-theme='dark'] input.form-control:focus,
+body[data-theme='dark'] textarea.form-control:focus,
+body[data-theme='dark'] select.form-control:focus {
+  border-color: var(--glass-primary);
+  background-color: rgba(15, 23, 42, 0.72);
+}
+
 /* ==================== 全局背景 ==================== */
 html {
   background: transparent !important;
@@ -169,8 +248,13 @@ body.glass-enabled {
   -moz-osx-font-smoothing: grayscale;
 }
 
-body.glass-enabled.glass-admin {
+/* 后台管理页默认背景（仅无自定义背景图时生效） */
+body.glass-enabled.glass-admin:not(.glass-bg-image) {
   background: var(--glass-page-bg-admin) !important;
+}
+body.glass-enabled.glass-admin.glass-bg-image[data-bg-type="image"],
+body.glass-enabled.glass-admin.glass-bg-image[data-bg-type="gif"] {
+  background: transparent !important;
 }
 
 body.glass-enabled.glass-login {
@@ -185,16 +269,34 @@ html body.glass-enabled.glass-bg-image {
   transition: background-image 1.2s ease-in-out !important;
 }
 
-/* 普通图片/GIF 背景使用 background-image：cover 铺满全屏，避免四周留白 */
+/* 普通图片/GIF 背景：body 自身透明，由 ::after 全屏固定层承载背景图，
+   彻底解决"页面内容超过一屏时背景被滚动/截断、下方露黑区"的问题 */
 body.glass-enabled.glass-bg-image[data-bg-type="image"],
 body.glass-enabled.glass-bg-image[data-bg-type="gif"],
 html body.glass-enabled.glass-bg-image[data-bg-type="image"],
 html body.glass-enabled.glass-bg-image[data-bg-type="gif"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+body.glass-enabled.glass-bg-image[data-bg-type="image"]::after,
+body.glass-enabled.glass-bg-image[data-bg-type="gif"]::after,
+html body.glass-enabled.glass-bg-image[data-bg-type="image"]::after,
+html body.glass-enabled.glass-bg-image[data-bg-type="gif"]::after {
+  display: block !important;
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
   background-image: var(--glass-bg-image) !important;
   background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
   background-color: #000 !important;
+  z-index: -2 !important;
+  pointer-events: none !important;
 }
 
 /* 视频背景元素 - 使用 viewport 单位确保全屏覆盖，object-fit: cover 铺满全屏 */
@@ -219,7 +321,7 @@ html body.glass-enabled.glass-bg-image[data-bg-type="gif"] {
   background-color: #000 !important;
 }
 
-/* GIF 背景元素 - 使用 viewport 单位确保全屏覆盖，contain 保持原图完整 */
+/* GIF 背景元素 - 使用 viewport 单位确保全屏覆盖，cover 铺满全屏避免留白 */
 .glass-bg-gif {
   position: fixed !important;
   top: 0 !important;
@@ -232,7 +334,7 @@ html body.glass-enabled.glass-bg-image[data-bg-type="gif"] {
   min-height: 100% !important;
   z-index: -1 !important;
   pointer-events: none !important;
-  background-size: contain !important;
+  background-size: cover !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
   background-color: #000 !important;
@@ -241,12 +343,14 @@ html body.glass-enabled.glass-bg-image[data-bg-type="gif"] {
   padding: 0 !important;
 }
 
-/* 视频/GIF 背景时 body 不再设置背景图（保留黑色背景，避免未覆盖区域透底） */
+/* 视频/GIF 背景时 body 背景必须透明：视频/GIF 层是 z-index:-1 的 fixed 元素，
+   若 body 使用不透明背景会把它整个盖住，导致发黑/发灰（看起来像“糊”）。 */
 body.glass-enabled.glass-bg-image[data-bg-type="video"],
 body.glass-enabled.glass-bg-image[data-bg-type="gif"],
 html body.glass-enabled.glass-bg-image[data-bg-type="video"],
 html body.glass-enabled.glass-bg-image[data-bg-type="gif"] {
-  background: #000 !important;
+  background: transparent !important;
+  background-color: transparent !important;
   background-image: none !important;
 }
 
@@ -352,7 +456,7 @@ body.glass-enabled.glass-bg-image .card.admin-card,
 body.glass-enabled.glass-bg-image .admin-card,
 body.glass-enabled.glass-bg-image .glass-topbar,
 body.glass-enabled.glass-bg-image .glass-navbar,
-body.glass-enabled.glass-bg-image .glass-btn,
+body.glass-enabled.glass-bg-image .glass-btn:not(.glass-btn-primary):not(.glass-btn-danger):not(.glass-btn-success):not(.glass-btn-warning):not(.glass-btn-purple):not(.glass-btn-outline),
 body.glass-enabled.glass-bg-image .glass-input,
 body.glass-enabled.glass-bg-image .glass-badge,
 body.glass-enabled.glass-bg-image .glass-table thead th,
@@ -369,7 +473,7 @@ body.glass-enabled.glass-bg-image .input-group-text,
 body.glass-enabled.glass-bg-image .admin-form .form-control,
 body.glass-enabled.glass-bg-image .admin-form .form-select,
 body.glass-enabled.glass-bg-image .search-wrap .form-control,
-body.glass-enabled.glass-bg-image .btn-admin,
+body.glass-enabled.glass-bg-image .btn-admin:not(.btn-admin-primary):not(.btn-admin-danger):not(.btn-admin-warning):not(.btn-admin-success):not(.btn-admin-info):not(.btn-admin-dark),
 body.glass-enabled.glass-bg-image .btn-copy,
 body.glass-enabled.glass-bg-image .glass-notice-bar,
 body.glass-enabled.glass-bg-image .glass-user-table thead th,
@@ -1023,13 +1127,18 @@ body.glass-enabled .table > thead > tr > th {
   opacity: 0.5;
 }
 
-/* 滚动触发淡入 */
+/* 滚动触发淡入（渐进增强：默认可见，仅当 JS 成功就绪后才启用隐藏→显示动画，
+   避免 JS 异常/缓存旧脚本导致下方内容永久隐藏） */
 .glass-reveal {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.7s var(--glass-ease-out), transform 0.7s var(--glass-ease-out);
+}
+body.glass-anim-ready .glass-reveal:not(.visible) {
   opacity: 0;
   transform: translateY(30px);
-  transition: all 0.7s var(--glass-ease-out);
 }
-.glass-reveal.visible {
+body.glass-anim-ready .glass-reveal.visible {
   opacity: 1;
   transform: translateY(0);
 }
@@ -2993,4 +3102,1091 @@ body.glass-enabled textarea::placeholder {
     min-height: 100vh !important;
     min-height: -webkit-fill-available !important;
   }
+}
+
+/* ==================== 深色主题完整覆盖 ==================== */
+/* 修复：用户选择深色主题后，按钮/卡片/输入框/顶栏/弹窗仍为亮白的问题。
+   原因：历史模板与背景图规则大量硬编码 rgba(255,255,255,...) / #fff。
+   这里统一用更高优先级覆盖为深色，确保深色主题完整生效。 */
+
+/* --- 卡片/面板表面（浅色 0.92 白 / #fff → 深色） --- */
+body[data-theme='dark'] .console-hero,
+body[data-theme='dark'] .hero-profile-card,
+body[data-theme='dark'] .stat-card,
+body[data-theme='dark'] .table-card,
+body[data-theme='dark'] .info-card,
+body[data-theme='dark'] .realname-entry,
+body[data-theme='dark'] .console-card,
+body[data-theme='dark'] .glass-stat-card,
+body[data-theme='dark'] .glass-content-wrapper,
+body[data-theme='dark'] .glass-page-header,
+body[data-theme='dark'] .glass-user-card,
+body[data-theme='dark'] .glass-stat-mini,
+body[data-theme='dark'] .glass-profile-card,
+body[data-theme='dark'] .cart-item,
+body[data-theme='dark'] .cart-bottom,
+body[data-theme='dark'] .pay-modal,
+body[data-theme='dark'] .pay-method,
+body[data-theme='dark'] .pay-method-option,
+body[data-theme='dark'] .pay-modal-cancel,
+body[data-theme='dark'] .records-card,
+body[data-theme='dark'] .profile-mini,
+body[data-theme='dark'] .product-card,
+body[data-theme='dark'] .exchange-log,
+body[data-theme='dark'] .products-card,
+body[data-theme='dark'] .glass-empty-state,
+body[data-theme='dark'] .glass-file-item,
+body[data-theme='dark'] .glass-code-block,
+body[data-theme='dark'] .glass-form-group,
+body[data-theme='dark'] .glass-notice-bar,
+body[data-theme='dark'] .admin-card,
+body[data-theme='dark'] .theme-hero,
+body[data-theme='dark'] .form-card,
+body[data-theme='dark'] .realname-card,
+body[data-theme='dark'] .safety-card,
+body[data-theme='dark'] .recharge-card,
+body[data-theme='dark'] .ticket-form-card,
+body[data-theme='dark'] .check-card,
+body[data-theme='dark'] .cdkey-redeem-card,
+body[data-theme='dark'] .redeem-info,
+body[data-theme='dark'] .affs-link-card,
+body[data-theme='dark'] .affs-records,
+body[data-theme='dark'] .affs-stat-card,
+body[data-theme='dark'] .affs-btn-outline,
+body[data-theme='dark'] .aff-benefit-card,
+body[data-theme='dark'] .aff-steps,
+body[data-theme='dark'] .aff-cta,
+body[data-theme='dark'] .info-hero,
+body[data-theme='dark'] .profile-card,
+body[data-theme='dark'] .notice-card,
+body[data-theme='dark'] .security-notice,
+body[data-theme='dark'] .check-item,
+body[data-theme='dark'] .support-card {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* --- 基础玻璃卡片（浅色 0.72 白 → 深色） --- */
+body[data-theme='dark'] .glass-card,
+body[data-theme='dark'] .glass-card-sm,
+body[data-theme='dark'] .glass-card-flat,
+body[data-theme='dark'] .card:not(.no-glass) {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .glass-card:hover,
+body[data-theme='dark'] .glass-card-sm:hover,
+body[data-theme='dark'] .glass-card-flat:hover,
+body[data-theme='dark'] .card:not(.no-glass):hover {
+  background: rgba(30, 41, 59, 0.78) !important;
+}
+
+/* --- 深色主题下 primary 主按钮同样深色化（开通新主机/主机管理） --- */
+body[data-theme='dark'] .action-btn.primary {
+  background: rgba(37, 99, 235, 0.18) !important;
+  border-color: rgba(96, 165, 250, 0.4) !important;
+  color: #93C5FD !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'] .action-btn.primary i {
+  color: #93C5FD !important;
+}
+body[data-theme='dark'] .action-btn.primary:hover {
+  background: rgba(59, 130, 246, 0.28) !important;
+  color: #BFDBFE !important;
+}
+
+/* --- 按钮（浅色/灰 → 深色，保留 danger/success 等彩色按钮） --- */
+body[data-theme='dark'] .action-btn:not(.primary):not(.action-btn-primary),
+body[data-theme='dark'] .action-btn-outline,
+body[data-theme='dark'] .glass-btn:not(.glass-btn-primary):not(.glass-btn-danger):not(.glass-btn-success):not(.glass-btn-warning):not(.glass-btn-purple),
+body[data-theme='dark'] .btn-cancel,
+body[data-theme='dark'] .btn-secondary,
+body[data-theme='dark'] .btn-light,
+body[data-theme='dark'] .btn-dual,
+body[data-theme='dark'] .btn-admin,
+body[data-theme='dark'] .btn-copy,
+body[data-theme='dark'] .btn-online-service,
+body[data-theme='dark'] .btn-contact {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #E2E8F0 !important;
+  background-image: none !important;
+}
+body[data-theme='dark'] .action-btn:not(.primary):not(.action-btn-primary):hover,
+body[data-theme='dark'] .action-btn-outline:hover,
+body[data-theme='dark'] .glass-btn:not(.glass-btn-primary):not(.glass-btn-danger):not(.glass-btn-success):not(.glass-btn-warning):not(.glass-btn-purple):hover,
+body[data-theme='dark'] .btn-cancel:hover,
+body[data-theme='dark'] .btn-secondary:hover,
+body[data-theme='dark'] .btn-light:hover,
+body[data-theme='dark'] .btn-dual:hover {
+  background: rgba(51, 65, 85, 0.9) !important;
+  color: #E2E8F0 !important;
+}
+
+/* --- 输入框 --- */
+body[data-theme='dark'] .form-control,
+body[data-theme='dark'] input.form-control,
+body[data-theme='dark'] textarea.form-control,
+body[data-theme='dark'] select.form-control,
+body[data-theme='dark'] .form-row input,
+body[data-theme='dark'] .glass-input,
+body[data-theme='dark'] .search-wrap .form-control,
+body[data-theme='dark'] .admin-form .form-control,
+body[data-theme='dark'] .admin-form .form-select,
+body[data-theme='dark'] .input-group-text {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #E2E8F0 !important;
+}
+
+/* --- 顶栏/导航/弹窗/下拉/面包屑 --- */
+body[data-theme='dark'] .glass-topbar,
+body[data-theme='dark'] .glass-navbar,
+body[data-theme='dark'] #page-header,
+body[data-theme='dark'] .mobile-tab-bar,
+body[data-theme='dark'] .modal-content,
+body[data-theme='dark'] .modal-header,
+body[data-theme='dark'] .modal-footer,
+body[data-theme='dark'] .dropdown-menu,
+body[data-theme='dark'] .breadcrumb,
+body[data-theme='dark'] .topbar-vip-badge {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #E2E8F0 !important;
+}
+
+/* --- 表格表头 --- */
+body[data-theme='dark'] .glass-table thead th,
+body[data-theme='dark'] .glass-user-table thead th,
+body[data-theme='dark'] .table thead th {
+  background: rgba(30, 41, 59, 0.7) !important;
+  color: #E2E8F0 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* --- 分页 / 标签页 --- */
+body[data-theme='dark'] .nav-tabs .nav-link,
+body[data-theme='dark'] .pagination > li > a,
+body[data-theme='dark'] .pagination > li > span {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #94A3B8 !important;
+}
+body[data-theme='dark'] .nav-tabs .nav-link.active {
+  color: #E2E8F0 !important;
+}
+
+/* --- 背景图模式下强制白色规则的深色化覆盖（完整覆盖所有卡片/面板） --- */
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-card-sm,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-card-flat,
+body[data-theme='dark'].glass-enabled.glass-bg-image .card:not(.no-glass),
+body[data-theme='dark'].glass-enabled.glass-bg-image .console-hero,
+body[data-theme='dark'].glass-enabled.glass-bg-image .hero-profile-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .stat-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .table-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .info-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .realname-entry,
+body[data-theme='dark'].glass-enabled.glass-bg-image .console-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-stat-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-content-wrapper,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-page-header,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-user-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-stat-mini,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-profile-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .cart-item,
+body[data-theme='dark'].glass-enabled.glass-bg-image .cart-bottom,
+body[data-theme='dark'].glass-enabled.glass-bg-image .pay-modal,
+body[data-theme='dark'].glass-enabled.glass-bg-image .pay-method,
+body[data-theme='dark'].glass-enabled.glass-bg-image .pay-method-option,
+body[data-theme='dark'].glass-enabled.glass-bg-image .pay-modal-cancel,
+body[data-theme='dark'].glass-enabled.glass-bg-image .records-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .profile-mini,
+body[data-theme='dark'].glass-enabled.glass-bg-image .product-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .exchange-log,
+body[data-theme='dark'].glass-enabled.glass-bg-image .products-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-empty-state,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-file-item,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-code-block,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-form-group,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-notice-bar,
+body[data-theme='dark'].glass-enabled.glass-bg-image .admin-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .theme-hero,
+body[data-theme='dark'].glass-enabled.glass-bg-image .form-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .realname-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .safety-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .recharge-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .ticket-form-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .check-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .cdkey-redeem-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .redeem-info,
+body[data-theme='dark'].glass-enabled.glass-bg-image .affs-link-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .affs-records,
+body[data-theme='dark'].glass-enabled.glass-bg-image .affs-stat-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .aff-benefit-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .aff-steps,
+body[data-theme='dark'].glass-enabled.glass-bg-image .aff-cta,
+body[data-theme='dark'].glass-enabled.glass-bg-image .info-hero,
+body[data-theme='dark'].glass-enabled.glass-bg-image .profile-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .notice-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .security-notice,
+body[data-theme='dark'].glass-enabled.glass-bg-image .check-item,
+body[data-theme='dark'].glass-enabled.glass-bg-image .support-card,
+body[data-theme='dark'].glass-enabled.glass-bg-image .modal-content,
+body[data-theme='dark'].glass-enabled.glass-bg-image .modal-header,
+body[data-theme='dark'].glass-enabled.glass-bg-image .modal-footer,
+body[data-theme='dark'].glass-enabled.glass-bg-image .dropdown-menu,
+body[data-theme='dark'].glass-enabled.glass-bg-image .breadcrumb {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* --- 背景图模式下按钮深色化（保留彩色按钮） --- */
+body[data-theme='dark'].glass-enabled.glass-bg-image .action-btn.primary {
+  background: rgba(37, 99, 235, 0.22) !important;
+  border-color: rgba(96, 165, 250, 0.4) !important;
+  color: #93C5FD !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .action-btn.primary i {
+  color: #93C5FD !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .action-btn:not(.primary):not(.action-btn-primary),
+body[data-theme='dark'].glass-enabled.glass-bg-image .action-btn-outline,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-btn:not(.glass-btn-primary):not(.glass-btn-danger):not(.glass-btn-success):not(.glass-btn-warning):not(.glass-btn-purple),
+body[data-theme='dark'].glass-enabled.glass-bg-image .btn-cancel,
+body[data-theme='dark'].glass-enabled.glass-bg-image .btn-secondary,
+body[data-theme='dark'].glass-enabled.glass-bg-image .btn-light,
+body[data-theme='dark'].glass-enabled.glass-bg-image .btn-dual,
+body[data-theme='dark'].glass-enabled.glass-bg-image .btn-admin,
+body[data-theme='dark'].glass-enabled.glass-bg-image .btn-copy,
+body[data-theme='dark'].glass-enabled.glass-bg-image .btn-online-service,
+body[data-theme='dark'].glass-enabled.glass-bg-image .btn-contact,
+body[data-theme='dark'].glass-enabled.glass-bg-image .affs-btn-outline {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #E2E8F0 !important;
+  background-image: none !important;
+}
+
+/* --- 背景图模式下输入框/表格/分页/弹窗深色化 --- */
+body[data-theme='dark'].glass-enabled.glass-bg-image .form-control,
+body[data-theme='dark'].glass-enabled.glass-bg-image input.form-control,
+body[data-theme='dark'].glass-enabled.glass-bg-image textarea.form-control,
+body[data-theme='dark'].glass-enabled.glass-bg-image select.form-control,
+body[data-theme='dark'].glass-enabled.glass-bg-image .form-row input,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-input,
+body[data-theme='dark'].glass-enabled.glass-bg-image .search-wrap .form-control,
+body[data-theme='dark'].glass-enabled.glass-bg-image .admin-form .form-control,
+body[data-theme='dark'].glass-enabled.glass-bg-image .admin-form .form-select,
+body[data-theme='dark'].glass-enabled.glass-bg-image .input-group-text,
+body[data-theme='dark'].glass-enabled.glass-bg-image .cdkey-input-group input {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-topbar,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-navbar,
+body[data-theme='dark'].glass-enabled.glass-bg-image #page-header,
+body[data-theme='dark'].glass-enabled.glass-bg-image .mobile-tab-bar,
+body[data-theme='dark'].glass-enabled.glass-bg-image .topbar-vip-badge {
+  background: rgba(15, 23, 42, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-table thead th,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-user-table thead th,
+body[data-theme='dark'].glass-enabled.glass-bg-image .table thead th {
+  background: rgba(30, 41, 59, 0.7) !important;
+  color: #E2E8F0 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .nav-tabs .nav-link,
+body[data-theme='dark'].glass-enabled.glass-bg-image .pagination > li > a,
+body[data-theme='dark'].glass-enabled.glass-bg-image .pagination > li > span {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #94A3B8 !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-modal-content,
+body[data-theme='dark'].glass-enabled.glass-bg-image .glass-modal-content.announcement-popup,
+body[data-theme='dark'].glass-enabled.glass-bg-image .announcement-dropdown {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .roll > div {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .roll > div > div:last-child {
+  background: rgba(30, 41, 59, 0.6) !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .chat-modal,
+body[data-theme='dark'].glass-enabled.glass-bg-image .chat-messages {
+  background: rgba(15, 23, 42, 0.95) !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .chat-modal-header {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .chat-msg.other .bubble {
+  background: rgba(30, 41, 59, 0.85) !important;
+  color: #E2E8F0 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .chat-input-area {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'].glass-enabled.glass-bg-image .chat-input-area input {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #E2E8F0 !important;
+}
+
+/* --- 深色主题下，硬编码深色文字的统一修复 --- */
+body[data-theme='dark'] .realname-page,
+body[data-theme='dark'] .realname-header h2,
+body[data-theme='dark'] .realname-header .subtitle,
+body[data-theme='dark'] .form-row label,
+body[data-theme='dark'] .agreement-row label,
+body[data-theme='dark'] .safety-item,
+body[data-theme='dark'] .realname-footer {
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .realname-header .tag {
+  background: rgba(51, 65, 85, 0.6) !important;
+  color: #94A3B8 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* --- 公告弹窗/下拉通知 --- */
+body[data-theme='dark'] .glass-modal-content,
+body[data-theme='dark'] .glass-modal-content.announcement-popup,
+body[data-theme='dark'] .announcement-dropdown {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .glass-modal-header h4,
+body[data-theme='dark'] .glass-modal-body,
+body[data-theme='dark'] .ann-dropdown-header,
+body[data-theme='dark'] .ann-dropdown-item .ann-title {
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .glass-modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .ann-dropdown-item {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+body[data-theme='dark'] .ann-dropdown-item:hover,
+body[data-theme='dark'] .ann-dropdown-item.unread {
+  background: rgba(30, 41, 59, 0.7) !important;
+}
+body[data-theme='dark'] .glass-modal-close {
+  color: #94A3B8 !important;
+}
+
+/* --- 工单对话气泡 --- */
+body[data-theme='dark'] .roll > div {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .roll > div > div:last-child {
+  background: rgba(30, 41, 59, 0.6) !important;
+}
+
+/* --- 转让市场私聊弹窗 --- */
+body[data-theme='dark'] .chat-modal {
+  background: rgba(15, 23, 42, 0.95) !important;
+}
+body[data-theme='dark'] .chat-modal-header {
+  background: rgba(30, 41, 59, 0.8) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .chat-modal-header h4 {
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .chat-messages {
+  background: rgba(15, 23, 42, 0.6) !important;
+}
+body[data-theme='dark'] .chat-msg.other .bubble {
+  background: rgba(30, 41, 59, 0.85) !important;
+  color: #E2E8F0 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .chat-input-area {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .chat-input-area input {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .chat-modal-close {
+  color: #94A3B8 !important;
+}
+
+/* --- 转让市场彩色按钮深色化（保留语义色相） --- */
+body[data-theme='dark'] .btn-cancel-transfer {
+  background: rgba(239, 68, 68, 0.16) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #FCA5A5 !important;
+}
+body[data-theme='dark'] .btn-cancel-transfer:hover {
+  background: rgba(239, 68, 68, 0.24) !important;
+  border-color: rgba(239, 68, 68, 0.55) !important;
+  color: #FCA5A5 !important;
+}
+body[data-theme='dark'] .btn-view {
+  background: rgba(59, 130, 246, 0.16) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  color: #93C5FD !important;
+}
+body[data-theme='dark'] .btn-view:hover {
+  background: rgba(59, 130, 246, 0.24) !important;
+  border-color: rgba(59, 130, 246, 0.55) !important;
+  color: #93C5FD !important;
+}
+body[data-theme='dark'] .btn-chat {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #86EFAC !important;
+}
+body[data-theme='dark'] .btn-chat:hover {
+  background: rgba(16, 185, 129, 0.24) !important;
+  border-color: rgba(16, 185, 129, 0.55) !important;
+  color: #86EFAC !important;
+}
+
+/* ==================== 后台主题增强 v4：边框 / 亮度 / 深色按钮 ==================== */
+/* 后台使用 body.glass-enabled.glass-admin，且通过顶栏按钮切换 body[data-theme='dark'] */
+
+/* --- 浅色主题：后台卡片/表格补充可见边框，降低“无边框 + 亮度超标” --- */
+body.glass-enabled.glass-admin:not([data-theme='dark']) .card.admin-card,
+body.glass-enabled.glass-admin:not([data-theme='dark']) .admin-card {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(203, 213, 225, 0.95) !important;
+}
+body.glass-enabled.glass-admin:not([data-theme='dark']) .card.admin-card .card-header,
+body.glass-enabled.glass-admin:not([data-theme='dark']) .admin-card .card-header {
+  background: rgba(248, 250, 252, 0.7) !important;
+  border-bottom: 1px solid rgba(203, 213, 225, 0.8) !important;
+}
+body.glass-enabled.glass-admin:not([data-theme='dark']) .table-admin thead th {
+  background: rgba(248, 250, 252, 0.7) !important;
+  border-bottom: 2px solid rgba(203, 213, 225, 0.85) !important;
+  color: #475569 !important;
+}
+body.glass-enabled.glass-admin:not([data-theme='dark']) .table-admin tbody td {
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95) !important;
+  color: #1E293B !important;
+}
+body.glass-enabled.glass-admin:not([data-theme='dark']) .table-admin tbody tr:hover {
+  background: rgba(241, 245, 249, 0.8) !important;
+}
+
+/* --- 深色主题：后台卡片/表格/输入框边框更清晰 --- */
+body[data-theme='dark'].glass-admin .card.admin-card,
+body[data-theme='dark'].glass-admin .admin-card {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+body[data-theme='dark'].glass-admin .card.admin-card .card-header,
+body[data-theme='dark'].glass-admin .admin-card .card-header {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'].glass-admin .table-admin thead th {
+  background: rgba(30, 41, 59, 0.7) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .table-admin tbody td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .table-admin tbody tr:hover {
+  background: rgba(30, 41, 59, 0.55) !important;
+}
+
+/* --- 深色主题：后台自定义按钮 new-btn / nbtn（各模板内联定义，需在此统一覆盖） --- */
+body[data-theme='dark'] .new-btn,
+body[data-theme='dark'] .nbtn {
+  color: #E2E8F0 !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'] .new-btn.primary,
+body[data-theme='dark'] .nbtn.pri {
+  background: linear-gradient(135deg, #4F7CFF, #7B9BFF) !important;
+  color: #fff !important;
+}
+body[data-theme='dark'] .new-btn.danger,
+body[data-theme='dark'] .nbtn.dan {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #fff !important;
+}
+body[data-theme='dark'] .new-btn.success,
+body[data-theme='dark'] .nbtn.suc {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #fff !important;
+}
+body[data-theme='dark'] .new-btn.warn,
+body[data-theme='dark'] .nbtn.warn {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: #fff !important;
+}
+body[data-theme='dark'] .new-btn.outline,
+body[data-theme='dark'] .nbtn.out {
+  background: rgba(30, 41, 59, 0.85) !important;
+  color: #93C5FD !important;
+  border: 2px solid rgba(96, 165, 250, 0.45) !important;
+}
+body[data-theme='dark'] .new-btn.outline:hover,
+body[data-theme='dark'] .nbtn.out:hover {
+  background: rgba(59, 130, 246, 0.28) !important;
+  color: #BFDBFE !important;
+  border-color: rgba(96, 165, 250, 0.6) !important;
+}
+
+/* --- 深色主题：后台 btn-admin 扩展变体（info / secondary / outline） --- */
+body[data-theme='dark'] .btn-admin-secondary,
+body[data-theme='dark'] .btn-admin-info,
+body[data-theme='dark'] .btn-admin-outline {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .btn-admin-secondary:hover,
+body[data-theme='dark'] .btn-admin-info:hover,
+body[data-theme='dark'] .btn-admin-outline:hover {
+  background: rgba(51, 65, 85, 0.9) !important;
+  color: #E2E8F0 !important;
+}
+
+/* --- 深色主题：后台 Bootstrap 按钮（取消/切换密码等） --- */
+body[data-theme='dark'] .btn-secondary,
+body[data-theme='dark'] .btn-outline-secondary {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .btn-secondary:hover,
+body[data-theme='dark'] .btn-outline-secondary:hover {
+  background: rgba(51, 65, 85, 0.9) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .btn-light {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .btn-primary {
+  background: linear-gradient(135deg, #4F7CFF, #7B9BFF) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+body[data-theme='dark'] .btn-info {
+  background: linear-gradient(135deg, #0EA5E9, #38BDF8) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+body[data-theme='dark'] .btn-warning {
+  background: linear-gradient(135deg, #F59E0B, #FBBF24) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+body[data-theme='dark'] .btn-success {
+  background: linear-gradient(135deg, #10B981, #34D399) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+body[data-theme='dark'] .btn-danger {
+  background: linear-gradient(135deg, #EF4444, #F87171) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+
+/* ==================== 浅色主题对比度增强 v5：按钮/链接/卡片可见性 ==================== */
+/* 浅色主题下白色系玻璃元素在浅色背景上几乎不可见，导致“亮白、按钮文字看不清”，
+   在此统一补充可见边框与更实的背景，并确保文字为深色高对比。
+   注意：彩色按钮（primary/danger/success/warning/purple）必须保持自身渐变，
+   不能套用下方白色底规则，否则会出现“白底白字”文字不可见的问题。 */
+body.glass-enabled:not([data-theme='dark']) .glass-btn {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.55) !important;
+  color: #1E293B !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-btn:hover {
+  background: #ffffff !important;
+  border-color: var(--glass-primary) !important;
+  color: #1E293B !important;
+}
+/* 彩色按钮：恢复自身渐变与白字，避免被上面的白色底覆盖 */
+body.glass-enabled:not([data-theme='dark']) .glass-btn-primary {
+  background: linear-gradient(135deg, var(--glass-primary) 0%, var(--glass-primary-light) 100%) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 4px 16px var(--glass-primary-glow) !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-btn-danger {
+  background: linear-gradient(135deg, var(--glass-danger) 0%, var(--glass-danger-light) 100%) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-btn-success {
+  background: linear-gradient(135deg, var(--glass-success) 0%, var(--glass-success-light) 100%) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-btn-warning {
+  background: linear-gradient(135deg, var(--glass-warning) 0%, var(--glass-warning-light) 100%) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-btn-purple {
+  background: linear-gradient(135deg, var(--glass-purple) 0%, var(--glass-purple-light) 100%) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-btn-outline {
+  background: transparent !important;
+  border: 1.5px solid var(--glass-primary) !important;
+  color: var(--glass-primary) !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-btn-outline:hover {
+  background: var(--glass-primary) !important;
+  color: #fff !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-topbar-link {
+  color: #334155 !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-topbar-link:hover,
+body.glass-enabled:not([data-theme='dark']) .glass-topbar-link.active {
+  color: var(--glass-primary) !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-topbar {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(148, 163, 184, 0.4) !important;
+}
+/* 浅色主题卡片：补充可见边框 + 更实的底色，降低“无边框 + 纯白”的亮度超标感 */
+body.glass-enabled:not([data-theme='dark']) .glass-card,
+body.glass-enabled:not([data-theme='dark']) .card:not(.no-glass),
+body.glass-enabled:not([data-theme='dark']) .product-card,
+body.glass-enabled:not([data-theme='dark']) .dc-item,
+body.glass-enabled:not([data-theme='dark']) .feature-card,
+body.glass-enabled:not([data-theme='dark']) .announcement-list,
+body.glass-enabled:not([data-theme='dark']) .glass-content-wrapper {
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid rgba(148, 163, 184, 0.4) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+}
+/* 首页“精选套餐”卡为蓝紫渐变+白字，需恢复渐变，避免被上面的白色底覆盖 */
+body.glass-enabled:not([data-theme='dark']) .product-card.featured {
+  background: linear-gradient(135deg, var(--glass-primary) 0%, var(--glass-primary-dark) 100%) !important;
+  border-color: transparent !important;
+}
+body.glass-enabled:not([data-theme='dark']) .glass-input,
+body.glass-enabled:not([data-theme='dark']) .form-control {
+  border: 1.5px solid rgba(148, 163, 184, 0.45) !important;
+  color: #1E293B !important;
+}
+
+/* ==================== 后台自定义组件主题增强 v6 ==================== */
+/* 后台模板大量使用 .ccard/.ntable/.new-table/.page-bar/.finp 等内联样式，
+   它们不在默认 glass 覆盖范围内：浅色下“无边框/亮度超标”，
+   深色下仍保持纯白（“太亮”），且透明底按钮被赋予浅色文字后“看不清字”。统一补齐。 */
+
+/* --- 浅色主题：自定义卡片/表格补充可见边框，降低亮度 --- */
+body.glass-enabled.glass-admin:not([data-theme='dark']) .ccard,
+body.glass-enabled.glass-admin:not([data-theme='dark']) .panel-card,
+body.glass-enabled.glass-admin:not([data-theme='dark']) .dash-card {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06) !important;
+}
+body.glass-enabled.glass-admin:not([data-theme='dark']) .ccard-hd {
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+body.glass-enabled.glass-admin:not([data-theme='dark']) .ntable th,
+body.glass-enabled.glass-admin:not([data-theme='dark']) .new-table th {
+  background: #f1f5f9 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  color: #334155 !important;
+}
+body.glass-enabled.glass-admin:not([data-theme='dark']) .ntable td,
+body.glass-enabled.glass-admin:not([data-theme='dark']) .new-table td {
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #1e293b !important;
+}
+body.glass-enabled.glass-admin:not([data-theme='dark']) .ntable tr:nth-child(even),
+body.glass-enabled.glass-admin:not([data-theme='dark']) .new-table tbody tr:nth-child(even) {
+  background: #f8fafc !important;
+}
+body.glass-enabled.glass-admin:not([data-theme='dark']) .finp {
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+/* --- 深色主题：自定义卡片/表格/输入框深色化，避免白块刺眼 --- */
+body[data-theme='dark'].glass-admin .ccard,
+body[data-theme='dark'].glass-admin .panel-card,
+body[data-theme='dark'].glass-admin .dash-card {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'].glass-admin .ccard-hd {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .ntable th,
+body[data-theme='dark'].glass-admin .new-table th {
+  background: rgba(30, 41, 59, 0.7) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .ntable td,
+body[data-theme='dark'].glass-admin .new-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .ntable tr:hover td,
+body[data-theme='dark'].glass-admin .new-table tbody tr:hover {
+  background: rgba(30, 41, 59, 0.55) !important;
+}
+body[data-theme='dark'].glass-admin .ntable tr:nth-child(even),
+body[data-theme='dark'].glass-admin .new-table tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.3) !important;
+}
+body[data-theme='dark'].glass-admin .finp {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .flbl {
+  color: #94A3B8 !important;
+}
+/* 深色主题：无彩色变体的透明底按钮统一给可读底色，避免浅字落在浅卡上 */
+body[data-theme='dark'].glass-admin .nbtn,
+body[data-theme='dark'].glass-admin .new-btn {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .nbtn.pri,
+body[data-theme='dark'].glass-admin .new-btn.primary {
+  background: rgba(59, 130, 246, 0.22) !important;
+  border-color: rgba(96, 165, 250, 0.45) !important;
+  color: #93C5FD !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'].glass-admin .nbtn.dan,
+body[data-theme='dark'].glass-admin .new-btn.danger {
+  background: rgba(239, 68, 68, 0.2) !important;
+  border-color: rgba(248, 113, 113, 0.4) !important;
+  color: #FCA5A5 !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'].glass-admin .nbtn.suc,
+body[data-theme='dark'].glass-admin .new-btn.success {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: rgba(52, 211, 153, 0.4) !important;
+  color: #86EFAC !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'].glass-admin .nbtn.warn,
+body[data-theme='dark'].glass-admin .new-btn.warn {
+  background: rgba(245, 158, 11, 0.2) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  color: #FCD34D !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'].glass-admin .nbtn.out,
+body[data-theme='dark'].glass-admin .new-btn.outline {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border: 2px solid rgba(96, 165, 250, 0.45) !important;
+  color: #93C5FD !important;
+}
+
+/* 后台紫色渐变导航条 .pw-bar/.page-bar 保持品牌紫底白字，深浅色均不被卡片底色覆盖 */
+body.glass-enabled.glass-admin .pw-bar,
+body.glass-enabled.glass-admin .page-bar {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+body.glass-enabled.glass-admin .pw-bar h2,
+body.glass-enabled.glass-admin .pw-bar h3,
+body.glass-enabled.glass-admin .pw-bar .title,
+body.glass-enabled.glass-admin .page-bar h2,
+body.glass-enabled.glass-admin .page-bar h3,
+body.glass-enabled.glass-admin .page-bar .title,
+body.glass-enabled.glass-admin .pw-bar a,
+body.glass-enabled.glass-admin .page-bar a {
+  color: #ffffff !important;
+}
+
+/* 深色主题：徽章/状态标签改为半透明深底浅字，避免浅色亮块刺眼 */
+body[data-theme='dark'].glass-admin .nbadge,
+body[data-theme='dark'].glass-admin .new-badge,
+body[data-theme='dark'].glass-admin .admin-badge,
+body[data-theme='dark'].glass-admin .status-badge {
+  color: #E2E8F0 !important;
+  background: rgba(30, 41, 59, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+/* 绿 / 成功 / 运行中 */
+body[data-theme='dark'].glass-admin .nbadge.g,
+body[data-theme='dark'].glass-admin .new-badge.success,
+body[data-theme='dark'].glass-admin .admin-badge-success,
+body[data-theme='dark'].glass-admin .status-active {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(52, 211, 153, 0.4) !important;
+  color: #86EFAC !important;
+}
+/* 红 / 危险 / 已到期-终止 */
+body[data-theme='dark'].glass-admin .nbadge.r,
+body[data-theme='dark'].glass-admin .new-badge.danger,
+body[data-theme='dark'].glass-admin .admin-badge-danger,
+body[data-theme='dark'].glass-admin .status-expired {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border-color: rgba(248, 113, 113, 0.4) !important;
+  color: #FCA5A5 !important;
+}
+/* 蓝 / 信息 / 主要 */
+body[data-theme='dark'].glass-admin .nbadge.b,
+body[data-theme='dark'].glass-admin .new-badge.info,
+body[data-theme='dark'].glass-admin .admin-badge-primary,
+body[data-theme='dark'].glass-admin .status-paid {
+  background: rgba(59, 130, 246, 0.18) !important;
+  border-color: rgba(96, 165, 250, 0.4) !important;
+  color: #93C5FD !important;
+}
+/* 黄 / 警告 / 待支付 */
+body[data-theme='dark'].glass-admin .nbadge.y,
+body[data-theme='dark'].glass-admin .new-badge.warning,
+body[data-theme='dark'].glass-admin .status-pending {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  color: #FCD34D !important;
+}
+/* 灰 / 次要 */
+body[data-theme='dark'].glass-admin .admin-badge-secondary {
+  background: rgba(148, 163, 184, 0.16) !important;
+  border-color: rgba(148, 163, 184, 0.4) !important;
+  color: #CBD5E1 !important;
+}
+
+/* ==================== 后台自定义组件深色主题 v7 ==================== */
+/* 修复：后台大量模板内联硬编码 #fff/#f8fafc 等白底（.form-input/.form-select/
+   .form-textarea/.content-card/.ucard/.ainfo/.perm-section/.add-ban-form/
+   .tab-nav/.chat-form/.new-table 移动卡片/visitor_stats 统计卡），
+   导致切换深色主题后仍显示为亮白块。统一在更高优先级覆盖为深色。 */
+
+/* --- 自定义表单输入框/下拉/文本域 --- */
+body[data-theme='dark'] .form-input,
+body[data-theme='dark'] .form-select,
+body[data-theme='dark'] .form-textarea {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .form-input:focus,
+body[data-theme='dark'] .form-select:focus,
+body[data-theme='dark'] .form-textarea:focus {
+  background: rgba(15, 23, 42, 0.72) !important;
+  border-color: rgba(96, 146, 255, 0.65) !important;
+}
+body[data-theme='dark'] .form-input::placeholder,
+body[data-theme='dark'] .form-textarea::placeholder {
+  color: #64748B !important;
+}
+
+/* --- 内容卡片 .content-card 及头部 --- */
+body[data-theme='dark'] .content-card {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'] .content-card-header {
+  color: #E2E8F0 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* --- 用户信息卡 .ucard / .ainfo --- */
+body[data-theme='dark'] .ucard {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'] .ucard-hd {
+  color: #E2E8F0 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+body[data-theme='dark'] .ainfo {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .ainfo h4,
+body[data-theme='dark'] .ainfo-item .val {
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .ainfo .role,
+body[data-theme='dark'] .ainfo-item .lbl {
+  color: #94A3B8 !important;
+}
+body[data-theme='dark'] .ainfo-item {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* --- 权限分组 .perm-section（角色新增/编辑） --- */
+body[data-theme='dark'] .perm-section {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* --- 封禁新增表单 .add-ban-form / 标签导航 .tab-nav（ip_ban） --- */
+body[data-theme='dark'] .add-ban-form {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .add-ban-form .field label {
+  color: #94A3B8 !important;
+}
+body[data-theme='dark'] .tab-nav {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .tab-nav a {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-right-color: rgba(255, 255, 255, 0.1) !important;
+  color: #94A3B8 !important;
+}
+body[data-theme='dark'] .tab-nav a:hover {
+  background: rgba(30, 41, 59, 0.7) !important;
+  color: #E2E8F0 !important;
+}
+
+/* --- 移动端表格卡片 .new-table tbody tr --- */
+body[data-theme='dark'] .new-table tbody tr {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+}
+
+/* --- 工单对话 .chat-form / 气泡 --- */
+body[data-theme='dark'] .chat-form {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body[data-theme='dark'] .chat-item:not(.admin) .chat-bubble {
+  background: rgba(30, 41, 59, 0.7) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* --- 访客统计 visitor_stats 深色化 --- */
+body[data-theme='dark'] .vis-stats {
+  --vis-card-bg: rgba(15, 23, 42, 0.88);
+  --vis-border: rgba(255, 255, 255, 0.12);
+  --vis-text: #E2E8F0;
+  --vis-text-sub: #94A3B8;
+}
+body[data-theme='dark'] .vis-stat-card,
+body[data-theme='dark'] .vis-card {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'] .vis-card-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .vis-table thead th {
+  background: rgba(30, 41, 59, 0.7) !important;
+  color: #E2E8F0 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.14) !important;
+}
+body[data-theme='dark'] .vis-table tbody td {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'] .vis-table tbody tr:hover {
+  background: rgba(30, 41, 59, 0.55) !important;
+}
+body[data-theme='dark'] .vis-table code {
+  background: rgba(59, 130, 246, 0.18) !important;
+  color: #93C5FD !important;
+}
+body[data-theme='dark'] .vis-btn.outline {
+  background: rgba(30, 41, 59, 0.85) !important;
+  color: #93C5FD !important;
+  border-color: rgba(96, 165, 250, 0.45) !important;
+}
+body[data-theme='dark'] .vis-btn.outline:hover {
+  background: rgba(59, 130, 246, 0.24) !important;
+}
+
+/* ==================== 后台 .content-card/.form-input/.stat-card 深色适配 ====================
+   新增后台页面（API管理/未实名用户/访问详细统计 等）使用 .content-card/.form-input/.form-select/.page-header-bar，
+   与旧 .ccard/.finp 类名不同，深色主题下需补齐，避免出现“异常亮白”白块。 */
+body[data-theme='dark'].glass-admin .content-card,
+body[data-theme='dark'].glass-admin .ccard,
+body[data-theme='dark'].glass-admin .stat-card {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: none !important;
+}
+body[data-theme='dark'].glass-admin .content-card-header,
+body[data-theme='dark'].glass-admin .ccard-hd {
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .form-input,
+body[data-theme='dark'].glass-admin .form-select {
+  background: rgba(15, 23, 42, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .form-input:focus,
+body[data-theme='dark'].glass-admin .form-select:focus {
+  border-color: var(--glass-primary) !important;
+  box-shadow: 0 0 0 3px rgba(96, 146, 255, 0.15) !important;
+}
+body[data-theme='dark'].glass-admin .form-input::placeholder {
+  color: #64748B !important;
+}
+body[data-theme='dark'].glass-admin .stat-card .num {
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .stat-card .lbl {
+  color: #94A3B8 !important;
+}
+body[data-theme='dark'].glass-admin .mono {
+  color: #93C5FD !important;
+}
+body[data-theme='dark'].glass-admin .brand-badge div:first-child {
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .path-list span {
+  color: #64748B !important;
+}
+/* 后台顶部渐变标题条（.page-header-bar）保持品牌渐变，仅保证副标题可读 */
+body[data-theme='dark'].glass-admin .page-header-bar .sub {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+/* 深色主题：表格内联深色重点文字（用户名/品牌名等）改为浅色，避免深字落在深底看不清 */
+body[data-theme='dark'].glass-admin .new-table td strong,
+body[data-theme='dark'].glass-admin .ntable td strong,
+body[data-theme='dark'].glass-admin .brand-badge div div:first-child {
+  color: #E2E8F0 !important;
+}
+body[data-theme='dark'].glass-admin .brand-badge div div:nth-child(2) {
+  color: #94A3B8 !important;
 }

@@ -149,7 +149,11 @@ class App
             $response = $data;
         } elseif (!is_null($data)) {
             // 默认自动识别响应输出类型
-            $type = $request->isAjax() ?
+            $isAjax = $request->isAjax();
+            // 数组返回值永远无法作为 HTML 输出：fetch 等不带 X-Requested-With 的
+            // AJAX 请求会被判为非 AJAX，若按 html 输出数组会抛
+            // "variable type error: array"，这里强制走 json 兜底
+            $type = ($isAjax || is_array($data)) ?
             Config::get('default_ajax_return') :
             Config::get('default_return_type');
 

@@ -1,0 +1,678 @@
+{include file="default/header" title="数据大屏" /}
+<main class="lyear-layout-content" style="margin:0;padding:0;background:#070b1e;" data-page-node-id="3FzhKzuDzUdBjrUGmtbwLQ">
+<style>
+.dv { min-height: calc(100vh - 62px); background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(37,99,235,.18), transparent 60%),
+    radial-gradient(1000px 500px at 90% 0%, rgba(0,242,254,.12), transparent 55%),
+    #070b1e;
+  color:#e2e8f0; padding:14px 16px 22px; box-sizing:border-box; font-family:"Microsoft YaHei",-apple-system,Segoe UI,sans-serif; }
+.dv * { box-sizing:border-box; }
+
+/* ---------- 头部 ---------- */
+.dv-head { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  padding:8px 4px 14px; border-bottom:1px solid rgba(79,172,254,.16); margin-bottom:14px; position:relative; }
+.dv-head::after { content:''; position:absolute; left:0; bottom:-1px; width:180px; height:2px;
+  background:linear-gradient(90deg,#00f2fe,#4facfe,transparent); }
+.dv-title { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.dv-title h1 { margin:0; font-size:22px; font-weight:800; letter-spacing:2px;
+  background:linear-gradient(90deg,#4facfe,#00f2fe); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.dv-title .en { font-size:11px; color:#5b7099; letter-spacing:2px; text-transform:uppercase; }
+.dv-head-right { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+.dv-clock { text-align:right; line-height:1.2; }
+.dv-clock .t { font-size:20px; font-weight:700; color:#00f2fe; font-family:Consolas,Menlo,monospace; letter-spacing:1px; }
+.dv-clock .d { font-size:11px; color:#5b7099; }
+.dv-refresh { display:flex; align-items:center; gap:8px; font-size:12px; color:#7c8fb3; }
+.dv-refresh .cd { color:#ffd700; font-weight:700; font-family:Consolas,monospace; }
+.dv-btn { background:rgba(79,172,254,.12); border:1px solid rgba(79,172,254,.4); color:#4facfe;
+  border-radius:6px; padding:5px 12px; font-size:12px; cursor:pointer; transition:.2s; }
+.dv-btn:hover { background:rgba(79,172,254,.25); color:#fff; }
+.dv-btn.on { background:linear-gradient(90deg,#4facfe,#00f2fe); color:#04122b; border-color:transparent; font-weight:700; }
+
+/* ---------- KPI ---------- */
+.dv-kpis { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:14px; }
+.dv-kpi { position:relative; padding:12px 14px; border-radius:10px; overflow:hidden;
+  background:linear-gradient(160deg, rgba(23,37,84,.85), rgba(12,20,48,.9));
+  border:1px solid rgba(79,172,254,.18); box-shadow:inset 0 0 22px rgba(37,99,235,.12); }
+.dv-kpi::before { content:''; position:absolute; left:0; top:0; width:3px; height:100%; background:var(--kc,#4facfe); }
+.dv-kpi .k-label { font-size:11px; color:#7c8fb3; letter-spacing:.5px; }
+.dv-kpi .k-value { font-size:23px; font-weight:800; color:#fff; line-height:1.25; margin-top:2px;
+  font-family:Consolas,Menlo,monospace; text-shadow:0 0 14px rgba(79,172,254,.35); }
+.dv-kpi .k-unit { font-size:12px; font-weight:600; color:#8ea4c8; margin-left:2px; }
+.dv-kpi .k-foot { font-size:11px; margin-top:3px; color:#5b7099; }
+.dv-kpi .up { color:#ff6b6b; } .dv-kpi .down { color:#22c55e; }
+
+.dv-chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.dv-chip { font-size:11px; padding:5px 10px; border-radius:999px; background:rgba(79,172,254,.08);
+  border:1px solid rgba(79,172,254,.2); color:#8ea4c8; }
+.dv-chip b { color:#00f2fe; font-weight:700; margin-left:4px; font-family:Consolas,monospace; }
+
+/* ---------- 主体三栏 ---------- */
+.dv-body { display:grid; grid-template-columns: 1.15fr 1.35fr 1fr; gap:12px; align-items:start; }
+.dv-col { display:flex; flex-direction:column; gap:12px; }
+
+.dv-panel { position:relative; background:linear-gradient(160deg, rgba(20,32,72,.78), rgba(10,17,40,.88));
+  border:1px solid rgba(79,172,254,.16); border-radius:12px; padding:12px 14px 14px; }
+.dv-panel::before, .dv-panel::after { content:''; position:absolute; width:12px; height:12px; border:1px solid #00f2fe; opacity:.55; }
+.dv-panel::before { left:-1px; top:-1px; border-right:0; border-bottom:0; border-radius:12px 0 0 0; }
+.dv-panel::after  { right:-1px; bottom:-1px; border-left:0; border-top:0; border-radius:0 0 12px 0; }
+.dv-panel-hd { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.dv-panel-title { font-size:13px; font-weight:700; color:#cfe4ff; letter-spacing:1px; position:relative; padding-left:10px; }
+.dv-panel-title::before { content:''; position:absolute; left:0; top:50%; transform:translateY(-50%);
+  width:3px; height:12px; background:linear-gradient(180deg,#00f2fe,#4facfe); border-radius:2px; }
+.dv-tabs { display:flex; gap:4px; margin-left:auto; }
+.dv-tab { background:rgba(79,172,254,.08); border:1px solid rgba(79,172,254,.22); color:#8ea4c8;
+  border-radius:5px; padding:3px 9px; font-size:11px; cursor:pointer; transition:.18s; }
+.dv-tab:hover { color:#fff; border-color:rgba(79,172,254,.5); }
+.dv-tab.on { background:linear-gradient(90deg,#4facfe,#00f2fe); color:#04122b; border-color:transparent; font-weight:700; }
+
+.dv-chart { width:100%; }
+.dv-map { height:430px; }
+.dv-h240 { height:210px; }
+.dv-h200 { height:190px; }
+.dv-h180 { height:170px; }
+.dv-two { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+
+/* ---------- 榜单 ---------- */
+.dv-rank { max-height:250px; overflow:auto; padding-right:4px; }
+.dv-rank::-webkit-scrollbar { width:5px; }
+.dv-rank::-webkit-scrollbar-thumb { background:rgba(79,172,254,.35); border-radius:3px; }
+.dv-rank-item { display:flex; align-items:center; gap:8px; padding:4px 0; font-size:12px; }
+.dv-rank-no { width:18px; height:18px; flex:0 0 18px; border-radius:4px; display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; background:rgba(79,172,254,.15); color:#8ea4c8; }
+.dv-rank-item:nth-child(1) .dv-rank-no { background:linear-gradient(135deg,#ff4d4f,#ff7875); color:#fff; }
+.dv-rank-item:nth-child(2) .dv-rank-no { background:linear-gradient(135deg,#fa8c16,#ffc53d); color:#fff; }
+.dv-rank-item:nth-child(3) .dv-rank-no { background:linear-gradient(135deg,#4facfe,#00f2fe); color:#04122b; }
+.dv-rank-name { flex:1; color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dv-rank-bar { flex:0 0 96px; height:6px; background:rgba(148,163,184,.16); border-radius:4px; overflow:hidden; }
+.dv-rank-bar > i { display:block; height:100%; background:linear-gradient(90deg,#4facfe,#00f2fe); border-radius:4px; }
+.dv-rank-val { flex:0 0 76px; text-align:right; color:#ffd700; font-weight:700; font-family:Consolas,monospace; font-size:12px; }
+
+/* ---------- 实时订单 ---------- */
+/* 系统重要记录 */
+.dv-records { max-height:300px; overflow:auto; }
+.dv-records::-webkit-scrollbar { width:5px; }
+.dv-records::-webkit-scrollbar-thumb { background:rgba(79,172,254,.35); border-radius:3px; }
+.dv-rec { padding:8px 0; border-bottom:1px dashed rgba(79,172,254,.12); }
+.dv-rec-top { display:flex; align-items:center; gap:8px; }
+.dv-rec-cat { flex:0 0 auto; font-size:10px; padding:2px 7px; border-radius:999px; background:rgba(79,172,254,.16); color:#4facfe; white-space:nowrap; }
+.dv-rec-cat.config { background:rgba(245,158,11,.16); color:#f59e0b; }
+.dv-rec-cat.admin_login { background:rgba(16,185,129,.16); color:#10b981; }
+.dv-rec-cat.admin_op { background:rgba(167,139,250,.16); color:#a78bfa; }
+.dv-rec-cat.user { background:rgba(56,189,248,.16); color:#38bdf8; }
+.dv-rec-cat.order { background:rgba(6,182,212,.16); color:#22d3ee; }
+.dv-rec-cat.finance { background:rgba(234,179,8,.16); color:#eab308; }
+.dv-rec-cat.security { background:rgba(239,68,68,.16); color:#f87171; }
+.dv-rec-cat.stats { background:rgba(148,163,184,.16); color:#94a3b8; }
+.dv-rec-lv { width:7px; height:7px; border-radius:50%; flex:0 0 auto; }
+.dv-rec-lv.l1 { background:#94a3b8; }
+.dv-rec-lv.l2 { background:#4facfe; }
+.dv-rec-lv.l3 { background:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.18); }
+.dv-rec-tt { flex:1; font-size:11.5px; color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dv-rec-tm { flex:0 0 auto; font-size:10.5px; color:#64748b; }
+.dv-rec-sub { font-size:10.5px; color:#7f96b8; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dv-rec-stat { display:flex; gap:10px; flex-wrap:wrap; font-size:10.5px; color:#64748b; padding:0 0 8px; border-bottom:1px dashed rgba(79,172,254,.12); margin-bottom:4px; }
+.dv-rec-stat b { color:#cbd5e1; font-weight:700; }
+.dv-orders { max-height:290px; overflow:auto; }
+.dv-orders::-webkit-scrollbar { width:5px; }
+.dv-orders::-webkit-scrollbar-thumb { background:rgba(79,172,254,.35); border-radius:3px; }
+.dv-order { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px dashed rgba(79,172,254,.12); font-size:11.5px; }
+.dv-order .u { flex:0 0 84px; color:#cbd5e1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dv-order .p { flex:1; color:#8ea4c8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dv-order .s { flex:0 0 auto; font-size:10px; padding:2px 7px; border-radius:999px; }
+.dv-order .s0 { background:rgba(56,189,248,.16); color:#38bdf8; }
+.dv-order .s1 { background:rgba(16,185,129,.16); color:#10b981; }
+.dv-order .s2 { background:rgba(245,158,11,.16); color:#f59e0b; }
+.dv-order .s3 { background:rgba(239,68,68,.16); color:#ef4444; }
+.dv-order .t { flex:0 0 66px; text-align:right; color:#5b7099; font-family:Consolas,monospace; }
+
+.dv-loading { text-align:center; padding:40px 0; color:#5b7099; font-size:13px; letter-spacing:1px; }
+.dv-empty { text-align:center; padding:26px 0; color:#4a5c7d; font-size:12px; }
+
+@media (max-width:1500px) { .dv-kpis { grid-template-columns:repeat(4,1fr); } }
+@media (max-width:1200px) {
+  .dv-body { grid-template-columns:1fr; }
+  .dv-map { height:360px; }
+  .dv-kpis { grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width:768px) { .dv-kpis { grid-template-columns:repeat(2,1fr); } .dv-two { grid-template-columns:1fr; } }
+</style>
+
+<div class="dv" data-page-node-id="sIAdg2RsrFcnDY0qDjf51b">
+  <div class="dv-head" data-page-node-id="UMZwtcf0KRHgfj9lx218zm">
+    <div class="dv-title" data-page-node-id="RLtPuwtedIdM6BACZtB41p">
+      <h1 data-page-node-id="qWfw0aKhR5F62ZcvsHGAc0">运营数据大屏</h1>
+      <span class="en" data-page-node-id="VMk8FQEpPDTiKqA7Y27SCC">Business Intelligence</span>
+    </div>
+    <div class="dv-head-right" data-page-node-id="dzN3SP8ueIDpZ4ygGmJVrw">
+      <div class="dv-clock" data-page-node-id="01Vq84Ya2xFgV4iSI3Zcmo"><div class="t" id="dvClock" data-page-node-id="ddIJElKFZDIREP1hqKs0LA">--:--:--</div><div class="d" id="dvDate" data-page-node-id="gYSqPNxKlPEqsA3OlvBgyg">-</div></div>
+      <div class="dv-refresh" data-page-node-id="Jemj4FrHoVhHRKGsQfCAb0">
+        <span data-page-node-id="clYD476jkkkwwuWka24try"><span class="cd" id="dvCountdown" data-page-node-id="qSwZlUcCFconnNG2EgvE8v">30</span>s 自动刷新 · 更新于 <span id="dvUpdated" data-page-node-id="GFMnxhyXGMXanxo8eYOb88">-</span></span>
+        <button class="dv-btn" id="dvRefreshBtn" data-page-node-id="taF94D2MQ47b85GZ2kt1iU">立即刷新</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dv-kpis" id="dvKpis" data-page-node-id="TLJLMHFoM90XerItCqFAQU"></div>
+  <div class="dv-chips" id="dvChips" data-page-node-id="PEOjFKjfNEF6e13G2ukC8e"></div>
+
+  <div class="dv-body" data-page-node-id="P3zPZ6PbOJhC7fiB4zrRW5">
+    <!-- 左：地图 + 榜单 -->
+    <div class="dv-col" data-page-node-id="lR1FE9FsWC3E79Gz8LpdbC">
+      <div class="dv-panel" data-page-node-id="p3JcLcoNAYk95qNkyMDCGy">
+        <div class="dv-panel-hd" data-page-node-id="GKACduWoPEopdMFZn45C8v">
+          <span class="dv-panel-title" data-page-node-id="FFKucrjr018jCUbOAHEq7N">用户地域分布</span>
+          <div class="dv-tabs" id="dvMapTabs" data-page-node-id="g5H796jmeL9yL77wB1I4JB">
+            <button class="dv-tab on" data-view="china" data-page-node-id="zmdEJlQBSOA8qUUoz0v1pO">中国</button>
+            <button class="dv-tab" data-view="world" data-page-node-id="kHDS4pUXBODrx3MDwOMI7l">世界</button>
+          </div>
+        </div>
+        <div class="dv-panel-hd" id="dvMetricRow" style="margin-bottom:4px;" data-page-node-id="kMCzi2oGTemkEs0I7iGOwn">
+          <div class="dv-tabs" style="margin-left:0;" data-page-node-id="pYRm6lPFHheJoM2v1BefGQ">
+            <button class="dv-tab on" data-metric="users" data-page-node-id="623PPLdVUXPVgIVcXdFL7y">用户数</button>
+            <button class="dv-tab" data-metric="orders" data-page-node-id="23Eubg0AWlFyEVTBbBHaOZ">订单数</button>
+            <button class="dv-tab" data-metric="pay" data-page-node-id="mCpYg6UDkLj3927YTM5Xqd">支付金额</button>
+          </div>
+        </div>
+        <div id="dvMap" class="dv-chart dv-map" data-page-node-id="v9c30ho1unxriG5b5S3FyB"></div>
+      </div>
+
+      <div class="dv-panel" data-page-node-id="s6oJwFeMHOKyEVqSgCv8n2">
+        <div class="dv-panel-hd" data-page-node-id="t0UJe0oQmTt8ERQ0DOAwu4">
+          <span class="dv-panel-title" id="dvRankTitle" data-page-node-id="7JM7virxIO9fHtwohVuVJy">省份用户数排行</span>
+          <div class="dv-tabs" id="dvRankTabs" data-page-node-id="x6wVGpLT9QhFCTGWyuQjJK">
+            <button class="dv-tab on" data-rank="province" data-page-node-id="cXIVVkFrfBsRMYGVvPgdgq">省份用户</button>
+            <button class="dv-tab" data-rank="pay" data-page-node-id="Ur8o4d8DFIMCgZxRKk2f8u">支付金额</button>
+            <button class="dv-tab" data-rank="order" data-page-node-id="Pp9eQZa8xC1SvCPSponYA7">订单数</button>
+            <button class="dv-tab" data-rank="country" data-page-node-id="2g7ESD5rVob9QKfHvyejYP">国家</button>
+          </div>
+        </div>
+        <div class="dv-rank" id="dvRank" data-page-node-id="EUuAbmEEr39Xhmv0B4KbHx"><div class="dv-empty" data-page-node-id="rzeSb9XYb2fIKLGPkyMk6l">加载中…</div></div>
+      </div>
+    </div>
+
+    <!-- 中：趋势 -->
+    <div class="dv-col" data-page-node-id="1f8zxJxRkN4FP7XYzLKyJZ">
+      <div class="dv-panel" data-page-node-id="IgweKSolKXFuU59dkvsY5r">
+        <div class="dv-panel-hd" data-page-node-id="5onw5UH0QPmTV63PZVK0Mk"><span class="dv-panel-title" data-page-node-id="jUC7FwHUvbS4vlWcBXfX1y">近 30 天收入趋势（元）</span></div>
+        <div id="dvTrendPay" class="dv-chart dv-h240" data-page-node-id="1TbmbDZUleVC4jfAmY8qkc"></div>
+      </div>
+      <div class="dv-panel" data-page-node-id="ViKBhsf0u3JvD8q7e1Q6Pg">
+        <div class="dv-panel-hd" data-page-node-id="fFyAGbGegAxHbfO7GxiO4q"><span class="dv-panel-title" data-page-node-id="Cm6DxDhLO0n63W6bG99dIc">近 30 天订单量 / 新增用户</span></div>
+        <div id="dvTrendOrder" class="dv-chart dv-h240" data-page-node-id="2aTG3DyAbG9RSgGhVzdgfp"></div>
+      </div>
+      <div class="dv-panel" data-page-node-id="0V0TEgvJV8WoEVOB3dcfaH">
+        <div class="dv-panel-hd" data-page-node-id="2MIIHdX9mlAOZTqXdCOvlE"><span class="dv-panel-title" data-page-node-id="pugDXDrH7QFm5VnJwtTCgc">24 小时下单时段分布</span></div>
+        <div id="dvHour" class="dv-chart dv-h200" data-page-node-id="g0XlLcKcXJ51IJ3oXGo4FU"></div>
+      </div>
+    </div>
+
+    <!-- 右：构成 + 排行 + 流水 -->
+    <div class="dv-col" data-page-node-id="KLPf7Qg8dLwKLv2ghpsopS">
+      <div class="dv-panel" data-page-node-id="9kY3xOkVqke2AS147peJs7">
+        <div class="dv-panel-hd" data-page-node-id="2bYGotW2gTawlcN9FdtxZ8"><span class="dv-panel-title" data-page-node-id="X7EyNXmj47cl8pghHcfYZD">支付方式 / 订单状态构成</span></div>
+        <div class="dv-two" data-page-node-id="naz3PYkhmnEM2A8GO0kd7n">
+          <div id="dvChannel" class="dv-chart dv-h200" data-page-node-id="YsguRVhADCz7PWTuX6PeFb"></div>
+          <div id="dvStatus" class="dv-chart dv-h200" data-page-node-id="7aw8jVmpt3Oyd8bHx1JzoG"></div>
+        </div>
+      </div>
+      <div class="dv-panel" data-page-node-id="gxx0Z52xifx50gsetg7poQ">
+        <div class="dv-panel-hd" data-page-node-id="PZZKDIT9cfuPhCdD7647BT"><span class="dv-panel-title" data-page-node-id="4wvQu5sWXk9HqjJEtjZuWq">热销套餐 TOP10</span></div>
+        <div id="dvProducts" class="dv-chart dv-h200" data-page-node-id="0EjJZ0okn3aYKcmYndQjqE"></div>
+      </div>
+      <div class="dv-panel" data-page-node-id="2Du9how4H0GNo4Q1EkNiTF">
+        <div class="dv-panel-hd" data-page-node-id="bJ0INAO0bpnzArQW7JEtyP"><span class="dv-panel-title" data-page-node-id="4Y25HSdXvu5ZFpoI26fH1J">消费排行 TOP10</span></div>
+        <div id="dvTopUsers" class="dv-chart dv-h200" data-page-node-id="ByBMyoKqXBcw3X0bs6zmjA"></div>
+      </div>
+      <div class="dv-panel">
+        <div class="dv-panel-hd"><span class="dv-panel-title">系统重要记录</span></div>
+        <div class="dv-records" id="dvRecords"><div class="dv-empty">加载中…</div></div>
+      </div>
+      <div class="dv-panel" data-page-node-id="ZoLcXcFfOGGcXXww4aTUhL">
+        <div class="dv-panel-hd" data-page-node-id="rXEBuMknQOzrP0U9Abr7fN"><span class="dv-panel-title" data-page-node-id="UFTzXpv0iuiBjo9YsH2rEf">实时订单流水</span></div>
+        <div class="dv-orders" id="dvOrders" data-page-node-id="A4vpHzhmRyI1BvMPK2Rifp"><div class="dv-empty" data-page-node-id="X7QOt8cUGmKU6NARjJAk7K">加载中…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+
+<script src="__ROOT__/static/js/echarts.min.js"></script>
+{include file="default/footer" /}
+
+{literal}
+<script>
+(function () {
+  var DATA_URL = '__ROOT__/admin/datav/data';
+  var MAP_CHINA = '__ROOT__/admin/chinamapjson';
+  var MAP_WORLD = '__ROOT__/static/map/world.json';
+  var REFRESH_SEC = 30;
+
+  var C = { blue:'#4facfe', cyan:'#00f2fe', gold:'#ffd700', green:'#10B981',
+            orange:'#F59E0B', red:'#EF4444', purple:'#A78BFA', pink:'#F472B6' };
+  var AXIS = { line:'rgba(79,172,254,.18)', label:'#7c8fb3' };
+
+  var D = null;                       // 全量数据
+  var charts = {};                    // 图表实例
+  var view = 'china';                 // china | world
+  var metric = 'users';               // users | orders | pay
+  var rankType = 'province';
+  var countdown = REFRESH_SEC;
+
+  function $(id) { return document.getElementById(id); }
+  function num(v) { v = parseFloat(v); return isNaN(v) ? 0 : v; }
+  function fmtInt(n) { n = num(n); return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function fmtMoney(n) {
+    n = num(n);
+    if (n >= 100000000) return (n / 100000000).toFixed(2) + '亿';
+    if (n >= 10000) return (n / 10000).toFixed(2) + '万';
+    return n.toFixed(2);
+  }
+  function esc(s) {
+    return String(s === undefined || s === null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  // ---------- 数字滚动 ----------
+  function animateNum(el, target, decimals, prefix) {
+    var from = parseFloat(el.getAttribute('data-v') || '0');
+    var to = num(target);
+    el.setAttribute('data-v', to);
+    if (from === to) { el.innerHTML = (prefix || '') + to.toFixed(decimals || 0); return; }
+    var start = Date.now(), dur = 700;
+    function step() {
+      var p = Math.min(1, (Date.now() - start) / dur);
+      var e = 1 - Math.pow(1 - p, 3);
+      var cur = from + (to - from) * e;
+      el.innerHTML = (prefix || '') + (decimals ? cur.toFixed(decimals) : fmtInt(cur));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  // ---------- KPI ----------
+  function renderKpis(s, g) {
+    var up = function (v) { return '<span class="' + (v >= 0 ? 'up' : 'down') + '">' + (v >= 0 ? '▲' : '▼') + ' ' + Math.abs(v) + '%</span>'; };
+    var cards = [
+      { l:'注册用户总数', v:s.total_users, d:0, c:C.blue,  f:'今日 +' + s.today_users + ' · 本月 +' + s.month_users },
+      { l:'今日新增用户', v:s.today_users, d:0, c:C.cyan,  f:up(g.user_today) + ' 环比昨日' },
+      { l:'实时在线',     v:s.online,      d:0, c:C.green, f:'登录用户 ' + s.online_users + ' 人' },
+      { l:'累计订单',     v:s.order_total, d:0, c:C.purple,f:'今日 ' + s.order_today + ' · 本月 ' + s.order_month },
+      { l:'今日订单',     v:s.order_today, d:0, c:C.orange,f:up(g.order_today) + ' 环比昨日' },
+      { l:'活跃主机',     v:s.host_active, d:0, c:C.green, f:'暂停 ' + s.host_suspended + ' · 开通中 ' + s.host_creating },
+      { l:'累计收入(元)', v:s.pay_total,   d:2, c:C.gold,  f:'共 ' + s.pay_count + ' 笔充值' },
+      { l:'今日收入(元)', v:s.pay_today,   d:2, c:C.red,   f:up(g.pay_today) + ' 环比昨日' },
+      { l:'本月收入(元)', v:s.pay_month,   d:2, c:C.pink,  f:'待支付 ' + s.pay_pending + ' 笔' },
+      { l:'客单价(元)',   v:s.avg_recharge,d:2, c:C.cyan,  f:'平均每笔充值' },
+      { l:'已实名认证',   v:s.realname_verified, d:0, c:C.blue, f:'待审核 ' + s.realname_pending + ' 人' },
+      { l:'待处理工单',   v:s.ticket_pending,   d:0, c:C.red,   f:'工单总数 ' + s.ticket_total }
+    ];
+    $('dvKpis').innerHTML = cards.map(function (c, i) {
+      return '<div class="dv-kpi" style="--kc:' + c.c + '">' +
+        '<div class="k-label">' + c.l + '</div>' +
+        '<div class="k-value" id="kpi' + i + '">0</div>' +
+        '<div class="k-foot">' + c.f + '</div></div>';
+    }).join('');
+    cards.forEach(function (c, i) {
+      animateNum($('kpi' + i), c.v, c.d, '');
+    });
+
+    $('dvChips').innerHTML = [
+      ['今日登录用户', s.login_today], ['本月新增用户', s.month_users], ['本月订单', s.order_month],
+      ['终止主机', s.host_terminated], ['待开通购物车', s.cart_pending], ['中国用户', s.china_users],
+      ['卡密 ' + s.cdkey_used + '/' + s.cdkey_total, ''], ['服务器', s.server_count],
+      ['在售套餐', s.product_count], ['充值笔数', s.pay_count]
+    ].map(function (x) {
+      return '<span class="dv-chip">' + x[0] + (x[1] !== '' ? '<b>' + fmtInt(x[1]) + '</b>' : '') + '</span>';
+    }).join('');
+  }
+
+  // ---------- 通用图表底座 ----------
+  function baseGrid(l, r, t, b) {
+    return { left: l || 44, right: r || 18, top: t || 26, bottom: b || 26 };
+  }
+  function axisCommon() {
+    return {
+      axisLine: { lineStyle: { color: AXIS.line } },
+      axisTick: { show: false },
+      axisLabel: { color: AXIS.label, fontSize: 10 },
+      splitLine: { lineStyle: { color: 'rgba(79,172,254,.08)' } }
+    };
+  }
+  function tooltipDark() {
+    return {
+      backgroundColor: 'rgba(10,17,40,.94)', borderColor: 'rgba(79,172,254,.45)', borderWidth: 1,
+      padding: [8, 12], textStyle: { color: '#e2e8f0', fontSize: 12 },
+      extraCssText: 'border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.45);'
+    };
+  }
+  function ensureChart(id) {
+    if (!charts[id]) charts[id] = echarts.init($(id));
+    return charts[id];
+  }
+
+  // ---------- 地图 ----------
+  function mapSeriesData() {
+    if (view === 'world') {
+      return (D.country_stats || []).map(function (c) { return { name: c.en || c.name, value: c.value }; });
+    }
+    var src = metric === 'pay' ? (D.pay_province || [])
+            : metric === 'orders' ? (D.order_province || [])
+            : (D.province_stats || []);
+    return src.map(function (p) { return { name: p.name, value: num(p.value) }; });
+  }
+  function mapColors() {
+    return metric === 'pay'   ? ['#0b2a4a', '#0e7490', '#06b6d4', '#67e8f9'] :
+           metric === 'orders' ? ['#1e1b4b', '#4c1d95', '#7c3aed', '#c4b5fd'] :
+                                 ['#0b2a4a', '#1d4ed8', '#3b82f6', '#93c5fd'];
+  }
+  function mapName() { return metric === 'pay' ? '支付金额(元)' : (metric === 'orders' ? '订单数' : '用户数'); }
+
+  function buildMapOption() {
+    var data = mapSeriesData();
+    var vals = data.map(function (d) { return d.value; });
+    var max = vals.length ? Math.max.apply(null, vals) : 1;
+    if (max <= 0) max = 1;
+    var isWorld = view === 'world';
+    return {
+      backgroundColor: 'transparent',
+      tooltip: Object.assign({ trigger: 'item', formatter: function (p) {
+        if (!p.value && p.value !== 0) return '';
+        var v = metric === 'pay' ? '¥' + fmtMoney(p.value) : fmtInt(p.value);
+        return '<b style="font-size:13px;">' + esc(p.name) + '</b><div style="color:#ffd700;margin-top:3px;">' + mapName() + '：' + v + '</div>';
+      } }, tooltipDark()),
+      visualMap: {
+        type: 'continuous', min: 0, max: max, left: 12, bottom: 14,
+        text: ['高', '低'], textStyle: { color: '#7c8fb3', fontSize: 10 },
+        calculable: false, itemWidth: 10, itemHeight: 90,
+        inRange: { color: mapColors() }, seriesIndex: 0, show: true
+      },
+      geo: {
+        map: isWorld ? 'world' : 'china', roam: true, zoom: isWorld ? 1.2 : 1.15,
+        scaleLimit: { min: 0.8, max: 12 },
+        itemStyle: { areaColor: 'rgba(16,34,74,.85)', borderColor: 'rgba(79,172,254,.35)', borderWidth: 0.6 },
+        emphasis: { label: { show: true, color: '#fff', fontSize: 11 }, itemStyle: { areaColor: '#1d4ed8' } }
+      },
+      series: [{
+        type: 'map', map: isWorld ? 'world' : 'china', geoIndex: 0, data: data,
+        label: { show: false }, itemStyle: { borderColor: 'rgba(0,242,254,.25)' },
+        emphasis: { label: { show: true, color: '#fff', fontSize: 11 }, itemStyle: { areaColor: '#1d4ed8' } }
+      }]
+    };
+  }
+
+  function renderMap() {
+    var cb = function () {
+      ensureChart('dvMap').setOption(buildMapOption(), true);
+    };
+    var key = view === 'world' ? 'world' : 'china';
+    if (echarts.getMap(key)) { cb(); return; }
+    var url = view === 'world' ? MAP_WORLD : MAP_CHINA;
+    fetch(url).then(function (r) { return r.json(); })
+      .then(function (geo) { echarts.registerMap(key, geo); cb(); })
+      .catch(function () { cb(); });
+  }
+
+  // ---------- 榜单 ----------
+  function renderRank() {
+    var src, title, isMoney = false;
+    if (rankType === 'pay')          { src = D.pay_province || [];   title = '省份支付金额排行（元）'; isMoney = true; }
+    else if (rankType === 'order')   { src = D.order_province || []; title = '省份订单数排行'; }
+    else if (rankType === 'country') { src = D.country_stats || [];  title = '国家 / 地区用户数排行'; }
+    else                             { src = D.province_stats || []; title = '省份用户数排行'; }
+    $('dvRankTitle').textContent = title;
+
+    var box = $('dvRank');
+    if (!src.length) { box.innerHTML = '<div class="dv-empty">暂无数据</div>'; return; }
+    src = src.slice(0, 20);
+    var max = Math.max.apply(null, src.map(function (x) { return num(x.value); }));
+    if (max <= 0) max = 1;
+    box.innerHTML = src.map(function (x, i) {
+      var v = num(x.value);
+      var show = isMoney ? '¥' + fmtMoney(v) : fmtInt(v);
+      return '<div class="dv-rank-item"><span class="dv-rank-no">' + (i + 1) + '</span>' +
+        '<span class="dv-rank-name">' + esc(x.name) + '</span>' +
+        '<span class="dv-rank-bar"><i style="width:' + (v / max * 100).toFixed(1) + '%"></i></span>' +
+        '<span class="dv-rank-val">' + show + '</span></div>';
+    }).join('');
+  }
+
+  // ---------- 趋势 ----------
+  function renderTrendPay() {
+    var t = D.trend || {};
+    var c = ensureChart('dvTrendPay');
+    c.setOption({
+      backgroundColor: 'transparent',
+      tooltip: Object.assign({ trigger: 'axis', axisPointer: { type: 'line', lineStyle: { color: 'rgba(0,242,254,.4)' } },
+        formatter: function (ps) { return ps[0].axisValue + '<br/><b style="color:#ffd700;">¥' + fmtMoney(ps[0].value) + '</b>'; } }, tooltipDark()),
+      grid: baseGrid(56, 20, 22, 24),
+      xAxis: Object.assign({ type: 'category', boundaryGap: false, data: t.dates || [] }, axisCommon(), { splitLine: { show: false } }),
+      yAxis: Object.assign({ type: 'value', axisLabel: { color: AXIS.label, fontSize: 10, formatter: function (v) { return fmtMoney(v); } } }, axisCommon()),
+      series: [{
+        type: 'line', smooth: true, symbol: 'circle', symbolSize: 5, data: t.pay || [],
+        lineStyle: { width: 2.4, color: C.gold, shadowColor: 'rgba(255,215,0,.55)', shadowBlur: 12 },
+        itemStyle: { color: C.gold, borderColor: '#fff', borderWidth: 1 },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: 'rgba(255,215,0,.38)' }, { offset: 1, color: 'rgba(255,215,0,0)' }
+          ])
+        }
+      }]
+    }, true);
+  }
+
+  function renderTrendOrder() {
+    var t = D.trend || {};
+    var c = ensureChart('dvTrendOrder');
+    c.setOption({
+      backgroundColor: 'transparent',
+      tooltip: Object.assign({ trigger: 'axis', axisPointer: { type: 'shadow' } }, tooltipDark()),
+      legend: { data: ['订单量', '新增用户'], right: 6, top: 0, textStyle: { color: AXIS.label, fontSize: 10 }, itemWidth: 10, itemHeight: 6 },
+      grid: baseGrid(46, 46, 26, 24),
+      xAxis: Object.assign({ type: 'category', data: t.dates || [] }, axisCommon(), { splitLine: { show: false } }),
+      yAxis: [
+        Object.assign({ type: 'value', name: '订单', nameTextStyle: { color: AXIS.label, fontSize: 10 } }, axisCommon()),
+        Object.assign({ type: 'value', name: '用户', nameTextStyle: { color: AXIS.label, fontSize: 10 } }, axisCommon(), { splitLine: { show: false } })
+      ],
+      series: [
+        { name: '订单量', type: 'bar', barWidth: '46%', data: t.order || [],
+          itemStyle: { borderRadius: [3, 3, 0, 0], color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: C.cyan }, { offset: 1, color: 'rgba(79,172,254,.25)' }]) } },
+        { name: '新增用户', type: 'line', yAxisIndex: 1, smooth: true, symbol: 'none', data: t.user || [],
+          lineStyle: { width: 2, color: C.purple }, itemStyle: { color: C.purple } }
+      ]
+    }, true);
+  }
+
+  function renderHour() {
+    var h = D.hour_dist || [];
+    var c = ensureChart('dvHour');
+    c.setOption({
+      backgroundColor: 'transparent',
+      tooltip: Object.assign({ trigger: 'axis', axisPointer: { type: 'shadow' },
+        formatter: function (ps) { return ps[0].axisValue + '<br/>下单 <b style="color:#00f2fe;">' + fmtInt(ps[0].value) + '</b> 笔'; } }, tooltipDark()),
+      grid: baseGrid(40, 14, 20, 24),
+      xAxis: Object.assign({ type: 'category', data: h.map(function (x) { return x.hour; }) }, axisCommon(), { splitLine: { show: false }, axisLabel: { color: AXIS.label, fontSize: 9, interval: 1 } }),
+      yAxis: Object.assign({ type: 'value' }, axisCommon()),
+      series: [{
+        type: 'bar', barWidth: '58%', data: h.map(function (x) { return num(x.value); }),
+        itemStyle: { borderRadius: [3, 3, 0, 0], color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: '#22d3ee' }, { offset: 1, color: 'rgba(34,211,238,.18)' }]) }
+      }]
+    }, true);
+  }
+
+  // ---------- 环图 ----------
+  var RING_COLORS = [C.blue, C.cyan, C.gold, C.green, C.orange, C.purple, C.pink, '#94A3B8'];
+
+  function renderChannel() {
+    var src = D.pay_channel || [];
+    var c = ensureChart('dvChannel');
+    c.setOption({
+      backgroundColor: 'transparent',
+      tooltip: Object.assign({ trigger: 'item', formatter: function (p) {
+        return '<b>' + esc(p.name) + '</b><br/>金额 <b style="color:#ffd700;">¥' + fmtMoney(p.value) + '</b>';
+      } }, tooltipDark()),
+      title: { text: '支付方式', subtext: src.length ? '' : '暂无', left: 'center', top: 0,
+               textStyle: { color: '#cfe4ff', fontSize: 11, fontWeight: 'normal' },
+               subtextStyle: { color: '#5b7099', fontSize: 10 } },
+      series: [{
+        type: 'pie', radius: ['52%', '74%'], center: ['50%', '58%'], avoidLabelOverlap: true,
+        itemStyle: { borderColor: '#0a1228', borderWidth: 2 },
+        label: { show: false }, labelLine: { show: false },
+        data: src.map(function (x, i) {
+          return { name: x.name, value: num(x.value),
+                   itemStyle: { color: RING_COLORS[i % RING_COLORS.length] } };
+        })
+      }]
+    }, true);
+  }
+
+  function renderStatus() {
+    var src = D.order_status || [];
+    var c = ensureChart('dvStatus');
+    c.setOption({
+      backgroundColor: 'transparent',
+      tooltip: Object.assign({ trigger: 'item', formatter: function (p) { return '<b>' + esc(p.name) + '</b>：' + fmtInt(p.value) + ' 单'; } }, tooltipDark()),
+      title: { text: '订单状态', left: 'center', top: 0, textStyle: { color: '#cfe4ff', fontSize: 11, fontWeight: 'normal' } },
+      series: [{
+        type: 'pie', radius: ['52%', '74%'], center: ['50%', '58%'],
+        itemStyle: { borderColor: '#0a1228', borderWidth: 2 },
+        label: { show: false }, labelLine: { show: false },
+        data: src.map(function (x) { return { name: x.name, value: num(x.value), itemStyle: { color: x.color || C.blue } }; })
+      }]
+    }, true);
+  }
+
+  // ---------- 横向条形排行 ----------
+  function renderBarChart(id, rows, colorTop, colorBottom, unit) {
+    var c = ensureChart(id);
+    if (!rows.length) { c.clear(); c.setOption({ title: { text: '暂无数据', left: 'center', top: 'middle', textStyle: { color: '#4a5c7d', fontSize: 12 } } }); return; }
+    var names = rows.map(function (x) { return x.name; }).reverse();
+    var vals = rows.map(function (x) { return num(x.v); }).reverse();
+    c.setOption({
+      backgroundColor: 'transparent',
+      tooltip: Object.assign({ trigger: 'axis', axisPointer: { type: 'shadow' } }, tooltipDark()),
+      grid: { left: 4, right: 56, top: 6, bottom: 6, containLabel: true },
+      xAxis: Object.assign({ type: 'value' }, axisCommon(), { show: false }),
+      yAxis: Object.assign({ type: 'category', data: names }, axisCommon(),
+        { splitLine: { show: false }, axisLine: { show: false }, axisLabel: { color: '#cbd5e1', fontSize: 10 } }),
+      series: [{
+        type: 'bar', barWidth: 11, data: vals,
+        itemStyle: { borderRadius: 6, color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+          { offset: 0, color: colorTop }, { offset: 1, color: colorBottom }]) },
+        label: { show: true, position: 'right', color: '#ffd700', fontSize: 10, fontFamily: 'Consolas,monospace',
+          formatter: function (p) { return (unit === '¥' ? '¥' : '') + (unit === '¥' ? fmtMoney(p.value) : fmtInt(p.value)); } }
+      }]
+    }, true);
+  }
+
+  // ---------- 实时订单 ----------
+  function renderOrders() {
+    var src = D.recent_orders || [];
+    var box = $('dvOrders');
+    if (!src.length) { box.innerHTML = '<div class="dv-empty">暂无订单</div>'; return; }
+    box.innerHTML = src.map(function (o) {
+      return '<div class="dv-order"><span class="u">' + esc(o.user) + '</span>' +
+        '<span class="p">' + esc(o.product) + '</span>' +
+        '<span class="s s' + esc(o.state_id) + '">' + esc(o.state) + '</span>' +
+        '<span class="t">' + esc(o.time) + '</span></div>';
+    }).join('');
+  }
+
+  // ---------- 系统重要记录 ----------
+  function renderRecords() {
+    var src = D.records || [];
+    var st = D.record_stats || {};
+    var box = $('dvRecords');
+    if (!box) return;
+    var head = '<div class="dv-rec-stat">' +
+      '<span>总计 <b>' + fmtInt(st.total || 0) + '</b></span>' +
+      '<span>今日 <b>' + fmtInt(st.today || 0) + '</b></span>' +
+      '<span>近7天 <b>' + fmtInt(st.week || 0) + '</b></span>' +
+      '<span>警告 <b style="color:#f87171;">' + fmtInt((st.by_level && st.by_level[2]) || 0) + '</b></span>' +
+      '</div>';
+    if (!src.length) { box.innerHTML = head + '<div class="dv-empty">暂无重要记录</div>'; return; }
+    box.innerHTML = head + src.map(function (r) {
+      return '<div class="dv-rec">' +
+        '<div class="dv-rec-top">' +
+          '<span class="dv-rec-lv l' + esc(r.level) + '"></span>' +
+          '<span class="dv-rec-cat ' + esc(r.category) + '">' + esc(r.cat_name) + '</span>' +
+          '<span class="dv-rec-tt" title="' + esc(r.title) + '">' + esc(r.title) + '</span>' +
+          '<span class="dv-rec-tm">' + esc(r.time) + '</span>' +
+        '</div>' +
+        (r.summary ? '<div class="dv-rec-sub">' + esc(r.operator) + ' · ' + esc(r.summary) + '</div>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  // ---------- 渲染全部 ----------
+  function renderAll() {
+    var s = D.stats || {}, g = D.growth || {};
+    renderKpis(s, g);
+    renderMap();
+    renderRank();
+    renderTrendPay();
+    renderTrendOrder();
+    renderHour();
+    renderChannel();
+    renderStatus();
+    renderBarChart('dvProducts', (D.top_products || []).map(function (x) { return { name: x.name, v: x.orders }; }), C.cyan, 'rgba(79,172,254,.25)', '');
+    renderBarChart('dvTopUsers', (D.top_users || []).map(function (x) { return { name: x.name, v: x.value }; }), C.gold, 'rgba(255,215,0,.25)', '¥');
+    renderOrders();
+    renderRecords();
+    $('dvUpdated').textContent = D.generated_at || '-';
+    // 世界视图下只有国家维度，隐藏指标切换
+    $('dvMetricRow').style.display = view === 'world' ? 'none' : '';
+  }
+
+  function load() {
+    fetch(DATA_URL + '?t=' + Date.now(), { headers: { 'X-Requested-With': 'XMLHttpRequest' }, cache: 'no-store' })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.code === 1) { D = j; renderAll(); }
+      })
+      .catch(function () {});
+  }
+
+  // ---------- 事件 ----------
+  $('dvMapTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('.dv-tab'); if (!b) return;
+    this.querySelectorAll('.dv-tab').forEach(function (x) { x.classList.remove('on'); });
+    b.classList.add('on'); view = b.getAttribute('data-view'); renderMap();
+    $('dvMetricRow').style.display = view === 'world' ? 'none' : '';
+  });
+  document.getElementById('dvMetricRow').addEventListener('click', function (e) {
+    var b = e.target.closest('.dv-tab'); if (!b) return;
+    this.querySelectorAll('.dv-tab').forEach(function (x) { x.classList.remove('on'); });
+    b.classList.add('on'); metric = b.getAttribute('data-metric'); renderMap();
+  });
+  $('dvRankTabs').addEventListener('click', function (e) {
+    var b = e.target.closest('.dv-tab'); if (!b) return;
+    this.querySelectorAll('.dv-tab').forEach(function (x) { x.classList.remove('on'); });
+    b.classList.add('on'); rankType = b.getAttribute('data-rank'); renderRank();
+  });
+  $('dvRefreshBtn').addEventListener('click', function () { countdown = REFRESH_SEC; load(); });
+
+  // 时钟 + 倒计时
+  function tick() {
+    var d = new Date();
+    $('dvClock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    $('dvDate').textContent = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  setInterval(tick, 1000); tick();
+  setInterval(function () {
+    countdown--;
+    if (countdown <= 0) { countdown = REFRESH_SEC; load(); }
+    $('dvCountdown').textContent = countdown;
+  }, 1000);
+
+  window.addEventListener('resize', function () {
+    for (var k in charts) { if (charts[k]) charts[k].resize(); }
+  });
+
+  load();
+})();
+</script>
+{/literal}

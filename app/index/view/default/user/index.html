@@ -255,6 +255,8 @@
                 box-shadow: 0 1px 2px rgba(0,0,0,0.03), var(--glass-shadow-inset);
                 white-space: nowrap;
                 height: 72px;
+                min-width: 0;
+                overflow: hidden;
             }
 
             .action-btn:hover {
@@ -686,7 +688,7 @@
                 <p>管理账号信息、安全设置与订单资产</p>
             </div>
             <a href="__ROOT__/user/information" class="hero-profile-card">
-                <img src="https://q1.qlogo.cn/g?b=qq&nk={$user.qq}&s=100" alt="avatar">
+                <img src="{:get_user_avatar($user)}" alt="avatar">
                 <div class="info">
                     <div class="name">
                         {$user.name}
@@ -873,7 +875,7 @@
                 <i class="fas fa-gift" style="color:#F59E0B;font-size:14px;"></i> 积分签到
             </h3>
             <div style="text-align:center;padding:6px 0;">
-                <div style="font-size:24px;font-weight:800;color:var(--glass-text);">{$userPoints}</div>
+                <div style="font-size:24px;font-weight:800;color:var(--glass-text);" id="pointsNum">{$userPoints}</div>
                 <div style="font-size:11px;color:var(--glass-text-secondary);margin-bottom:10px;">当前积分</div>
                 {if $canCheckin}
                 <button class="btn btn-primary" id="checkinBtn" onclick="doCheckin()" style="padding:8px 24px;font-size:13px;font-weight:600;border-radius:25px;width:100%;">
@@ -884,8 +886,9 @@
                     <i class="fas fa-check-circle"></i> 今日已签到
                 </button>
                 {/if}
+                <div id="checkinMsg" style="display:none;margin-top:10px;padding:9px 12px;border-radius:10px;font-size:12.5px;font-weight:600;line-height:1.5;text-align:left;"></div>
                 <div style="margin-top:6px;font-size:11px;color:var(--glass-text-muted);">
-                    <i class="fas fa-info-circle"></i> 每日签到随机获得1~20积分
+                    <i class="fas fa-info-circle"></i> 每日签到随机获得1~30积分
                 </div>
             </div>
             {if !empty($recentCheckins)}
@@ -1038,14 +1041,38 @@ function doCheckin() {
     btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> 签到中...');
     $.post('__ROOT__/user/checkin', function(res) {
         if (res.code == '1') {
-            alert(res.msg);
-            location.reload();
+            // 玻璃风格成功弹窗：显示签到成功 + 获得的积分数
+            if (window.GlassToast) {
+                GlassToast.show({
+                    type: 'success',
+                    title: '签到成功',
+                    msg: '获得 ' + res.points + ' 积分' + (res.total != null ? '，当前共 ' + res.total + ' 积分' : ''),
+                    duration: 2600
+                });
+            } else if (typeof layer !== 'undefined') {
+                layer.msg('签到成功，获得 ' + res.points + ' 积分', {icon: 1});
+            } else {
+                alert('签到成功，获得 ' + res.points + ' 积分');
+            }
+            if (res.total != null) { $('#pointsNum').text(res.total); }
+            btn.hide();
+            $('#checkinBtn').after('<button class="btn btn-secondary" disabled style="padding:8px 24px;font-size:13px;font-weight:600;border-radius:25px;width:100%;opacity:0.6;margin-top:0;"><i class="fas fa-check-circle"></i> 今日已签到</button>');
         } else {
-            alert(res.msg);
+            if (window.GlassToast) {
+                GlassToast.error(res.msg || '签到失败');
+            } else if (typeof layer !== 'undefined') {
+                layer.msg(res.msg || '签到失败', {icon: 2});
+            } else {
+                alert(res.msg || '签到失败');
+            }
             btn.prop('disabled', false).html('<i class="fas fa-gift"></i> 每日签到');
         }
     }, 'json').fail(function() {
-        alert('签到失败，请稍后再试');
+        if (window.GlassToast) {
+            GlassToast.error('签到失败，请稍后再试');
+        } else {
+            alert('签到失败，请稍后再试');
+        }
         btn.prop('disabled', false).html('<i class="fas fa-gift"></i> 每日签到');
     });
 }

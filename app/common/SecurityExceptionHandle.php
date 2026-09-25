@@ -15,17 +15,37 @@ class SecurityExceptionHandle extends Handle
         // 记录真实错误到日志（供管理员查看）
         $this->logException($e);
 
+        // 判断是否为AJAX请求
+        $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+
+        // AJAX/POST 请求统一返回 JSON，避免 app_debug=true 时输出 HTML 错误页导致前端进入 error 分支显示"提交失败"
+        if ($isAjax || $isPost) {
+            // 数据库异常且系统未安装 → 提示先完成安装（而不是抛出 SQL 错误）
+            if ($this->isDbException($e) && !$this->isInstalled()) {
+                return json(['code' => -1, 'msg' => '系统尚未安装或数据库连接失败，请先完成系统安装', 'redirect' => '/install'], 500);
+            }
+            $msg = \think\App::$debug ? $e->getMessage() : '系统繁忙，请稍后再试';
+            return json(['code' => -1, 'msg' => $msg], 500);
+        }
+
+        // 数据库异常且系统未安装（未配置/连库失败/无已安装标记）→ 引导进入安装向导
+        // 注意：此判断须在 debug 分支之前，否则 app_debug=true 时会直接显示 SQL 错误页
+        if ($this->isDbException($e) && !$this->isInstalled()) {
+            $baseDir = rtrim(str_replace('\\', '/', dirname(isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '/index.php')), '/');
+            $installUrl = ($baseDir === '/' || $baseDir === '') ? '/install' : $baseDir . '/install';
+            if (!headers_sent()) {
+                header('Location: ' . $installUrl, true, 302);
+            } else {
+                echo '<meta http-equiv="refresh" content="0;url=' . htmlspecialchars($installUrl) . '">';
+            }
+            exit;
+        }
+
         // 调试模式：直接展示 ThinkPHP 原生详细错误页（含堆栈与源码），便于快速定位问题。
         // 生产环境请将 app_debug 设为 false，届时仍走下方统一的"系统维护中"页面，不泄露任何信息。
         if (\think\App::$debug) {
             return parent::render($e);
-        }
-
-        // 判断是否为AJAX请求
-        $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-        $isPost = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
-        if ($isAjax || $isPost) {
-            return json(['code' => -1, 'msg' => '系统繁忙，请稍后再试'], 500);
         }
 
         // HTTP异常（404/403等）
@@ -44,6 +64,33 @@ class SecurityExceptionHandle extends Handle
 
         // 通用500错误 - 绝对不显示路径
         return $this->genericError(500);
+    }
+
+    /**
+     * 判断是否为数据库相关异常
+     */
+    private function isDbException(Exception $e)
+    {
+        $className = get_class($e);
+        return strpos($className, 'PDO') !== false
+            || strpos($className, 'Db') !== false
+            || stripos($e->getMessage(), 'SQLSTATE') !== false;
+    }
+
+    /**
+     * 系统是否已完成安装（依据数据库中的专属标记，不依赖 install.lock）
+     */
+    private function isInstalled()
+    {
+        try {
+            require_once dirname(dirname(__DIR__)) . '/app/install_check.php';
+            if (!defined('PATH')) {
+                return false;
+            }
+            return mnbt_install_state(false)['ok'] === true;
+        } catch (\Throwable $e2) {
+            return false;
+        }
     }
 
     /**

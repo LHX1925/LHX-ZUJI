@@ -266,8 +266,8 @@ function handleFiles(files) {
   if (!files || files.length === 0) return;
   for (var i = 0; i < files.length; i++) {
     (function(file) {
-      if (file.size > 5 * 1024 * 1024) { alert('文件 ' + file.name + ' 超过 5MB 限制'); return; }
-      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { alert('文件 ' + file.name + ' 格式不支持'); return; }
+      if (file.size > 5 * 1024 * 1024) { GlassTip.warning('文件 ' + file.name + ' 超过 5MB 限制'); return; }
+      if (!/^image\/(jpeg|png|webp)$/.test(file.type)) { GlassTip.warning('文件 ' + file.name + ' 格式不支持'); return; }
       var formData = new FormData();
       formData.append('file', file);
       formData.append('act', 'upload_image');
@@ -289,7 +289,7 @@ function handleFiles(files) {
               '</div>'
             );
           } else {
-            alert(res.msg || '上传失败');
+            GlassTip.error(res.msg || '上传失败');
           }
         },
         error: function(xhr, status, err) {
@@ -298,7 +298,7 @@ function handleFiles(files) {
             try { var r = JSON.parse(xhr.responseText); msg = r.msg || msg; } catch(e) {}
           }
           console.error('Upload error:', status, err, xhr.responseText);
-          alert(msg);
+          GlassTip.error(msg);
         }
       });
     })(files[i]);
@@ -313,13 +313,13 @@ function removeImage(url, btn) {
 
 function submitAdd() {
   var form = $('#addForm');
-  if (!form.find('[name=title]').val()) { alert('请输入违规标题'); return; }
+  if (!form.find('[name=title]').val()) { GlassTip.warning('请输入违规标题'); return; }
   $.post('', form.serialize(), function(res) {
     if (res.code == 1) {
-      alert(res.msg);
-      location.reload();
+      GlassTip.success(res.msg || '保存成功');
+      setTimeout(function(){ location.reload(); }, 800);
     } else {
-      alert(res.msg || '操作失败');
+      GlassTip.error(res.msg || '操作失败');
     }
   }, 'json');
 }
@@ -329,7 +329,7 @@ function toggleStatus(id, el) {
       $(el).text(res.msg == '已公示' ? '公示中' : '已隐藏');
       $(el).toggleClass('bg-success bg-secondary');
     } else {
-      alert(res.msg);
+      GlassTip.error(res.msg || '操作失败');
     }
   }, 'json');
 }
@@ -338,15 +338,17 @@ function toggleAll(cb) {
 }
 function batchDelete() {
   var ids = $('.row-check:checked').map(function(){ return $(this).val(); }).get().join(',');
-  if (!ids) { alert('请选择要删除的记录'); return; }
-  if (!confirm('确定删除所选违规通报？')) return;
-  $.post('', { act: 'delete', ids: ids }, function(res) {
-    if (res.code == 1) {
-      alert(res.msg);
-      location.reload();
-    } else {
-      alert(res.msg || '删除失败');
-    }
-  }, 'json');
+  if (!ids) { GlassTip.warning('请选择要删除的记录'); return; }
+  layer.confirm('确定删除所选违规通报？', {icon: 3, skin: 'glass-layer-skin', title: '删除确认'}, function(idx) {
+    layer.close(idx);
+    $.post('', { act: 'delete', ids: ids }, function(res) {
+      if (res.code == 1) {
+        GlassTip.success(res.msg || '删除成功');
+        setTimeout(function(){ location.reload(); }, 800);
+      } else {
+        GlassTip.error(res.msg || '删除失败');
+      }
+    }, 'json');
+  });
 }
 </script>

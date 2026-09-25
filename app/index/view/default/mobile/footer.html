@@ -1,0 +1,42 @@
+</div><!-- /app-content -->
+
+<!-- 底部导航栏 -->
+<nav class="app-tabbar">
+    <a href="__ROOT__/" class="app-tab {if isset($tab_active) && $tab_active == 'home'}active{/if}">
+        <i class="fas fa-home"></i>
+        <span>首页</span>
+    </a>
+    <a href="__ROOT__/cart" class="app-tab {if isset($tab_active) && $tab_active == 'product'}active{/if}">
+        <i class="fas fa-cubes"></i>
+        <span>产品</span>
+    </a>
+    <a href="__ROOT__/user" class="app-tab {if isset($tab_active) && $tab_active == 'host'}active{/if}">
+        <i class="fas fa-server"></i>
+        <span>主机</span>
+    </a>
+    <a href="__ROOT__/user/order" class="app-tab {if isset($tab_active) && $tab_active == 'order'}active{/if}">
+        <i class="fas fa-receipt"></i>
+        <span>订单</span>
+    </a>
+    <a href="__ROOT__/user/information" class="app-tab {if isset($tab_active) && $tab_active == 'profile'}active{/if}">
+        <i class="fas fa-user"></i>
+        <span>我的</span>
+    </a>
+</nav>
+
+</div><!-- /app-page -->
+
+<script>
+var appToastTimer = null;
+function appToast(msg, type) {
+    type = type || 'info';
+    var t = document.getElementById('appToast');
+    clearTimeout(appToastTimer);
+    t.className = 'app-toast app-toast-' + type + ' show';
+    t.textContent = msg;
+    appToastTimer = setTimeout(function(){ t.className = 'app-toast'; }, 2500);
+}
+</script>
+
+</body>
+</html>

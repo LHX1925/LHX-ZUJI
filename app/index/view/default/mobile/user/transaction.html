@@ -1,0 +1,40 @@
+{php}$title = '消费记录'; $tab_active = 'host'; $back_url = '/user';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">消费记录</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">查看订单、支付与扣费明细</p>
+</div>
+<div class="app-search" style="margin-bottom:12px;">
+    <i class="fas fa-search"></i>
+    <input type="text" id="recordSearch" placeholder="搜索订单号或产品名称" style="width:100%;padding:12px 14px 12px 38px;border:1.5px solid var(--glass-border);border-radius:12px;font-size:14px;color:var(--glass-text);background:var(--glass-bg-light);outline:none;">
+</div>
+{if isset($data) && count($data) > 0}
+<div class="app-card" style="overflow:hidden;padding:0;">
+    {foreach $data as $d}
+    <div class="app-list-item record-row" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:14px;font-weight:600;color:var(--glass-text);">{$d.content}</span>
+            <span class="app-tag" style="background:rgba(16,185,129,0.15);color:#10B981;">已支付</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--glass-text-muted);">
+            <span>ORD{$d.id}</span>
+            <span>{:date('Y-m-d H:i', $d.time)}</span>
+        </div>
+    </div>
+    {/foreach}
+</div>
+{if method_exists($data, 'render')}
+<div style="padding:16px;text-align:center;">{$data->render()}</div>
+{/if}
+{else}
+<div class="app-empty"><i class="fas fa-receipt"></i><p>暂无消费记录</p></div>
+{/if}
+<script>
+document.getElementById('recordSearch').addEventListener('input', function() {
+    var keyword = this.value.toLowerCase();
+    document.querySelectorAll('.record-row').forEach(function(row) {
+        row.style.display = row.textContent.toLowerCase().indexOf(keyword) > -1 ? '' : 'none';
+    });
+});
+</script>
+{include file="default/mobile/footer" /}

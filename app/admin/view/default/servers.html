@@ -35,8 +35,8 @@
 }
 </style>
 <main class="lyear-layout-content">
-  <div class="container-fluid glass-animate-in">
-    <div class="row">
+  <div class="container-fluid glass-animate-in" style="max-width:1200px;margin:0 auto;">
+    <div class="row justify-content-center">
       <div class="col-lg-10 col-xl-8">
         <div class="card admin-card">
           <header class="card-header"><div class="card-title">服务器信息</div></header>
@@ -166,21 +166,36 @@
 {include file="default/footer" /}
 <script>
 $("form").submit(function (){
-  var load = layer.msg('修改中，请稍后...',{icon:16,shade:0.8,time:false});
+  var load = layer.msg('修改中，请稍后...', {icon:16, shade:0.8, time:false});
   var form = $('form').serializeArray();
   $.ajax({
     type:'POST',
     url:'',
     data:form,
     dataType:'json',
+    timeout: 15000,
     success:function (data){
       layer.close(load);
       if(data.code == 1){
-        setTimeout(function () { location.href = ''; }, 1000);
-        layer.alert(data.msg,{icon:1,shade:0.8});
+        layer.msg(data.msg,{icon:1,time:600},function(){ location.href = ''; });
       }else{
-        layer.alert(data.msg,{icon:2,shade:0.8});
+        GlassTip.error(data.msg);
       }
+    },
+    error:function (xhr, status, error){
+      layer.close(load);
+      var msg = '提交失败';
+      if(status === 'timeout'){
+        msg = '请求超时，请检查网络或服务器状态';
+      }else if(xhr.status){
+        msg += '（HTTP ' + xhr.status + '）';
+      }
+      if(xhr.responseText && xhr.responseText.length < 300){
+        msg += '：' + xhr.responseText;
+      }else if(error){
+        msg += '：' + error;
+      }
+      GlassTip.error(msg);
     }
   });
   return false;

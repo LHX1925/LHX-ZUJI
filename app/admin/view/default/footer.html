@@ -1,7 +1,7 @@
   </div>
 </div>
 
-<link rel="stylesheet" type="text/css" href="__ROOT__/static/css/glass-theme.css">
+<link rel="stylesheet" type="text/css" href="__ROOT__/static/css/glass-theme.css?v=17">
 <script type="text/javascript" src="__ROOT__/static/js/jquery.min.js"></script>
 <script type="text/javascript" src="__ROOT__/static/js/popper.min.js"></script>
 <script type="text/javascript" src="__ROOT__/static/js/bootstrap.min.js"></script>
@@ -9,27 +9,127 @@
 <script type="text/javascript" src="__ROOT__/static/js/jquery.cookie.min.js"></script>
 <script type="text/javascript" src="__ROOT__/static/js/main.min.js"></script>
 
-<script src="__ROOT__/static/assets/vendor/layer/layer.js"></script>
+<script src="__ROOT__/static/js/layer-modern.js?v=1"></script>
 <script src="__ROOT__/static/js/glass-animations.js"></script>
 <script>
-// 后台统一使用浅色主题，防止旧版深色主题 Cookie 覆盖
-$(function() {
-    $('body').attr('data-theme', 'light');
-    if ($.removeCookie) {
-        $.removeCookie('the_site_theme', { path: '/' });
+// ===== 后台全局玻璃提示系统（右上角滑入 Toast，彻底重做）=====
+// 提供 GlassTip.success/error/warning/info，右上角滑入 + 图标 + 进度条 + 自动消失
+// 拦截原生 alert() 统一替换为右上角玻璃提示
+(function () {
+    if (window.__glassTipInstalled) return;
+    window.__glassTipInstalled = true;
+
+    var ICONS = {
+        success: { cls: 'gt-success', icon: 'mdi mdi-check-circle', color: '#22c55e' },
+        error:   { cls: 'gt-error',   icon: 'mdi mdi-close-circle', color: '#ef4444' },
+        warning: { cls: 'gt-warning', icon: 'mdi mdi-alert', color: '#f59e0b' },
+        info:    { cls: 'gt-info',    icon: 'mdi mdi-information', color: '#3b82f6' }
+    };
+
+    // 注入 Toast 样式（跟随 body[data-theme] 浅色/深色）
+    var css = ''
+        + '#gt-container{position:fixed;top:16px;right:16px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:calc(100vw - 32px);}'
+        + '.gt-toast{pointer-events:auto;display:flex;align-items:center;gap:10px;min-width:240px;max-width:340px;padding:12px 16px;border-radius:12px;font-size:13.5px;font-weight:500;'
+        + 'background:rgba(255,255,255,0.92);border:1px solid rgba(226,232,240,0.8);box-shadow:0 8px 32px rgba(0,0,0,0.16);'
+        + 'backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);'
+        + 'color:#1e293b;overflow:hidden;position:relative;animation:gtIn .32s cubic-bezier(.21,1.02,.73,1);}'
+        + '.gt-toast.gt-leaving{animation:gtOut .28s ease forwards;}'
+        + '.gt-toast i.gt-ic{font-size:22px;flex-shrink:0;line-height:1;}'
+        + '.gt-toast .gt-msg{flex:1;line-height:1.45;word-break:break-word;}'
+        + '.gt-toast .gt-bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform-origin:left;animation:gtBar linear forwards;}'
+        + '@keyframes gtIn{from{opacity:0;transform:translateX(120%);}to{opacity:1;transform:translateX(0);}}'
+        + '@keyframes gtOut{from{opacity:1;transform:translateX(0);}to{opacity:0;transform:translateX(120%);}}'
+        + '@keyframes gtBar{from{transform:scaleX(1);}to{transform:scaleX(0);}}'
+        + 'body[data-theme="dark"] .gt-toast{background:rgba(30,41,59,0.92);border:1px solid rgba(148,163,184,0.2);color:#e2e8f0;box-shadow:0 8px 32px rgba(0,0,0,0.5);}';
+
+    var styleEl = document.createElement('style');
+    styleEl.textContent = css;
+    document.head.appendChild(styleEl);
+
+    function toast(msg, type, duration) {
+        var conf = ICONS[type] || ICONS.info;
+        duration = duration || 2500;
+        var box = document.getElementById('gt-container');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'gt-container';
+            document.body.appendChild(box);
+        }
+        var el = document.createElement('div');
+        el.className = 'gt-toast ' + conf.cls;
+        var icon = conf.icon || 'mdi mdi-information';
+        // 若页面没有 mdi 图标库则用内联 svg 兜底
+        el.innerHTML = '<i class="gt-ic ' + icon + '" style="color:' + conf.color + '"></i>'
+            + '<span class="gt-msg">' + String(msg == null ? '' : msg).replace(/</g, '&lt;') + '</span>'
+            + '<span class="gt-bar" style="background:' + conf.color + ';animation-duration:' + duration + 'ms"></span>';
+        box.appendChild(el);
+        // 限制最多同时 5 条
+        while (box.children.length > 5) box.removeChild(box.firstChild);
+        setTimeout(function () {
+            el.classList.add('gt-leaving');
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300);
+        }, duration);
     }
-});
-// CSRF防护: 所有AJAX POST请求自动附带Token
-$(document).ajaxSend(function(e, xhr, settings) {
-    if (settings.type && settings.type.toUpperCase() === 'POST' && window._csrfToken) {
-        if (settings.data) {
-            if (typeof settings.data === 'string') {
-                settings.data += '&__token__=' + encodeURIComponent(window._csrfToken);
-            } else if ($.isPlainObject(settings.data)) {
-                settings.data.__token__ = window._csrfToken;
-            }
+
+    // 保存原生 alert 兜底
+    window.__nativeAlert = window.alert;
+    // 拦截原生 alert → 右上角玻璃提示
+    window.alert = function (msg) {
+        toast(String(msg == null ? '' : msg), 'info');
+    };
+
+    window.GlassTip = {
+        success: function (msg) { toast(msg, 'success'); },
+        error: function (msg) { toast(msg, 'error'); },
+        warning: function (msg) { toast(msg, 'warning'); },
+        info: function (msg) { toast(msg, 'info'); }
+    };
+})();
+</script>
+<script>
+// 后台主题：默认浅色，用户可在顶栏切换深色/浅色，选择持久化到 localStorage（不影响前台用户主题）
+$(function() {
+    var themeKey = 'admin_theme';
+    function applyAdminTheme(theme) {
+        $('body').attr('data-theme', theme);
+        var icon = $('#themeToggle i');
+        if (icon.length) {
+            icon.attr('class', theme === 'dark' ? 'mdi mdi-weather-sunny' : 'mdi mdi-weather-night');
+        }
+        $('#themeToggle').attr('title', theme === 'dark' ? '切换浅色主题' : '切换深色主题');
+        if (window.localStorage) {
+            try { localStorage.setItem(themeKey, theme); } catch (e) {}
+        }
+        // 前台主题 Cookie 与后台主题相互独立，避免互相干扰
+        if ($.removeCookie) {
+            $.removeCookie('the_site_theme', { path: '/' });
         }
     }
+    var currentTheme = (window.localStorage && localStorage.getItem(themeKey)) || 'light';
+    applyAdminTheme(currentTheme);
+    $(document).on('click', '#themeToggle', function(e) {
+        e.preventDefault();
+        var next = ($('body').attr('data-theme') === 'dark') ? 'light' : 'dark';
+        applyAdminTheme(next);
+    });
+});
+// CSRF防护: 所有AJAX POST请求通过请求头附带Token
+// （改为请求头方式，避免 Token 混入表单字段导致后端批量写入报 Unknown column '__token__'）
+$(document).ajaxSend(function(e, xhr, settings) {
+    if (settings.type && settings.type.toUpperCase() === 'POST' && window._csrfToken) {
+        xhr.setRequestHeader('X-CSRF-Token', window._csrfToken);
+    }
+});
+// 全局 AJAX 错误兜底：任何请求失败自动关闭全部弹层并提示，避免"一直转圈"
+$(document).ajaxError(function(e, xhr, settings) {
+    try { layer.closeAll(); } catch (err) {}
+    var msg = '请求失败';
+    if (xhr.status) { msg += '（HTTP ' + xhr.status + '）'; }
+    if (xhr.responseText && xhr.responseText.length < 200) {
+        var t = xhr.responseText.replace(/\s+/g, ' ').trim();
+        if (t) msg += '：' + t;
+    }
+    try { GlassTip.error(msg); } catch (err) {}
 });
 </script>
 </body>

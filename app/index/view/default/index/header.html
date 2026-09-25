@@ -3,9 +3,30 @@
     <meta name="description" content="{$description}">
     <meta name="keywords" content="{$keywords}">
     <link rel="shortcut icon" type="image/x-icon" href="{$favicon}"/>
+    {php}$__l2dPreLogged = session('userid') ? 1 : 0;{/php}
+    {if $__l2dPreLogged}
+    <script>
+    /* 跨页音乐续播预热：head 阶段就用上次的音频直链开始缓冲，与页面加载并行，
+       避免切换页面后重新拉流造成的卡顿（无播放记录时不发起任何请求） */
+    (function(){
+        try {
+            var raw = sessionStorage.getItem('l2d_np_live');
+            if (!raw) return;
+            var o = JSON.parse(raw);
+            if (!o || !o.id || !o.src || !o.playing) return;
+            var el = new Audio();
+            el.preload = 'auto';
+            if (o.volume > 0) el.volume = o.volume;
+            el.src = o.src;
+            window.__l2dPreAudio = el;
+            window.__l2dPreItem = o;
+        } catch (e) {}
+    })();
+    </script>
+    {/if}
     <link rel="stylesheet" type="text/css" href="__ROOT__/static/assets/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="__ROOT__/static/css/glass-theme.css?v=7">
-    {if isset($web.glass_theme) && $web.glass_theme == 'pink_blue'}<link rel="stylesheet" type="text/css" href="__ROOT__/static/css/pink-blue-gradient.css?v=4">{/if}
+    <link rel="stylesheet" type="text/css" href="__ROOT__/static/css/glass-theme.css?v=17">
+    {if isset($web.glass_theme) && $web.glass_theme == 'pink_blue'}<link rel="stylesheet" type="text/css" href="__ROOT__/static/css/pink-blue-gradient.css?v=7">{/if}
     <style>
         * {
             margin: 0;
@@ -15,6 +36,7 @@
 
         html {
             overflow-y: auto;
+            overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
         }
@@ -25,6 +47,16 @@
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            max-width: 100%;
+            overflow-x: clip;
+        }
+
+        img, video {
+            max-width: 100%;
+            height: auto;
+        }
+        iframe {
+            max-width: 100%;
         }
 
         .container {
@@ -198,7 +230,9 @@
             align-items: center;
             gap: 8px;
             margin-left: auto;
-            flex-shrink: 0;
+            flex: 1 1 auto;
+            min-width: 0;
+            justify-content: flex-end;
             overflow-x: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
@@ -626,6 +660,10 @@
             }
             .logo-text {
                 font-size: 16px !important;
+                max-width: 110px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             .mobile-header-nav {
                 gap: 4px !important;
@@ -1212,7 +1250,8 @@
         }
     </style>
     <script type="text/javascript" src="__ROOT__/static/js/jquery.min.js"></script>
-    <script type="text/javascript" src="__ROOT__/static/js/glass-animations.js?v=5"></script>
+    <script>window['__' + 'ROOT__'] = "__ROOT__";</script>
+    <script type="text/javascript" src="__ROOT__/static/js/glass-animations.js?v=7"></script>
     <script>
         window.showToast = function(message, type, delay) {
             type = type || 'info';
@@ -1237,24 +1276,28 @@
     </script>
 </head>
 {php}
+// 官网公开页（首页/产品/登录/注册等）始终使用后台默认主题，不跟随任何用户的个性化主题
+$themeMode = (isset($web['theme_mode']) && $web['theme_mode'] === 'dark') ? 'dark' : 'light';
 $bgImagesAttr = isset($web['bg_images']) ? str_replace(["\r\n", "\r", "\n"], ",", $web['bg_images']) : '';
 $glassOpacity = isset($web['glass_opacity']) ? intval($web['glass_opacity']) / 100 : 0.72;
 $bgType = isset($web['bg_type']) ? $web['bg_type'] : 'image';
 $isVideoBg = ($bgType === 'video' && !empty($web['bg_image']));
 $isGifBg = ($bgType === 'gif' && !empty($web['bg_image']));
 $hasBg = !empty($web['bg_image']);
-$bgBlurPx = isset($web['bg_blur']) ? intval($web['bg_blur']) : 3;
+$bgBlurPx = isset($web['bg_blur']) ? intval($web['bg_blur']) : 0;
 $glassEnabled = (!isset($web['glass_enabled']) || $web['glass_enabled'] == "1");
 
 $bodyClass = $glassEnabled ? 'glass-enabled' : 'no-glass-theme';
 if ($glassEnabled && $hasBg) $bodyClass .= ' glass-bg-image';
-if ($glassEnabled && $bgBlurPx > 0) $bodyClass .= ' glass-bg-blurred';
+// 视频/GIF 背景保持清晰不模糊（模糊叠加层会盖住动态背景导致发糊），仅静态图片支持后台模糊程度
+if ($glassEnabled && $bgBlurPx > 0 && !$isVideoBg && !$isGifBg) $bodyClass .= ' glass-bg-blurred';
 
 $bodyStyle = '--glass-opacity: ' . $glassOpacity . ';';
 if (!$isVideoBg && $hasBg) $bodyStyle .= '--glass-bg-image: url(\'' . addslashes($web['bg_image']) . '\');';
-if ($bgBlurPx > 0) $bodyStyle .= '--glass-bg-blur: ' . $bgBlurPx . 'px;';
+if ($bgBlurPx > 0 && !$isVideoBg && !$isGifBg) $bodyStyle .= '--glass-bg-blur: ' . $bgBlurPx . 'px;';
 
 $bodyAttrs = '';
+$bodyAttrs .= ' data-theme="' . $themeMode . '"';
 if ($hasBg) $bodyAttrs .= ' data-bg-main="' . htmlspecialchars($web['bg_image'], ENT_QUOTES, 'UTF-8') . '"';
 $bodyAttrs .= ' data-bg-type="' . htmlspecialchars($bgType, ENT_QUOTES, 'UTF-8') . '"';
 if (isset($web['bg_gradient']) && $web['bg_gradient'] != 'default') $bodyAttrs .= ' data-bg-gradient="' . htmlspecialchars($web['bg_gradient'], ENT_QUOTES, 'UTF-8') . '"';
@@ -1270,6 +1313,25 @@ if ($glassEnabled && $isVideoBg) {
 }
 
 echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs . '>';
+{/php}
+
+{php}
+// ===== 背景音乐（不显示播放器，进入官网自动播放） =====
+$bgMusicEnabled = (isset($web['bg_music_enabled']) && $web['bg_music_enabled'] == 1);
+$bgMusicUrl = isset($web['bg_music_url']) ? trim($web['bg_music_url']) : '';
+$bgMusicVolume = isset($web['bg_music_volume']) ? intval($web['bg_music_volume']) : 50;
+$userMusicEnabled = true;
+// 登录用户若在个性化主题中关闭了音乐，则不再播放
+if (session('userid')) {
+    $curUser = \think\Db::name('user')->where('id', session('userid'))->field('music_enabled')->find();
+    if ($curUser && isset($curUser['music_enabled']) && $curUser['music_enabled'] == 0) {
+        $userMusicEnabled = false;
+    }
+}
+if ($bgMusicEnabled && $bgMusicUrl !== '' && $userMusicEnabled) {
+    echo '<audio id="bgMusicPlayer" src="' . htmlspecialchars($bgMusicUrl, ENT_QUOTES, 'UTF-8') . '" loop autoplay preload="auto" style="display:none;"></audio>';
+    echo '<script>window.__BG_MUSIC_VOLUME__ = ' . (floatval($bgMusicVolume) / 100) . ';</script>';
+}
 {/php}
 
 <div class="page-wrapper">

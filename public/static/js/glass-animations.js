@@ -11,19 +11,72 @@
         if (!reveals.length) return;
 
         function checkReveal() {
-            var windowHeight = window.innerHeight;
+            var windowHeight = window.innerHeight || document.documentElement.clientHeight;
             reveals.forEach(function(el) {
                 var top = el.getBoundingClientRect().top;
-                var revealPoint = 120;
+                var revealPoint = Math.min(120, windowHeight * 0.2);
                 if (top < windowHeight - revealPoint) {
                     el.classList.add('visible');
                 }
             });
         }
 
+        // 优先使用 IntersectionObserver，滚动进入视口即显示（比滚动事件更可靠）
+        if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: '0px 0px -8% 0px', threshold: 0.01 });
+            reveals.forEach(function(el) { observer.observe(el); });
+        }
+
         window.addEventListener('scroll', checkReveal, { passive: true });
         window.addEventListener('resize', checkReveal, { passive: true });
+        window.addEventListener('load', checkReveal);
         checkReveal();
+
+        // 兜底：无论滚动事件是否触发，短暂延迟后强制显示所有 reveal，避免内容永久隐藏
+        setTimeout(function() {
+            reveals.forEach(function(el) { el.classList.add('visible'); });
+        }, 1200);
+
+        // 动态插入的 .glass-reveal（AJAX/JS 渲染的卡片、列表等）也要纳入：
+        // 上面只在页面加载时收集了一次元素，后来插入的节点不在观察列表里，会被
+        // `body.glass-anim-ready .glass-reveal:not(.visible){opacity:0}` 永久隐藏（显示为空白占位）。
+        function observeRevealEl(el) {
+            if (!el || el.classList.contains('visible')) return;
+            var wh = window.innerHeight || document.documentElement.clientHeight;
+            var top = el.getBoundingClientRect().top;
+            if (top < wh - Math.min(120, wh * 0.2)) {
+                // 已在视口内：同步加 .visible（在绘制前完成，避免出现 0.7s 的重复淡入）
+                el.classList.add('visible');
+                return;
+            }
+            if ('IntersectionObserver' in window) observer.observe(el);
+        }
+        if ('MutationObserver' in window && document.body) {
+            try {
+                var dynObserver = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(m) {
+                        m.addedNodes.forEach(function(node) {
+                            if (node.nodeType !== 1) return;
+                            if (node.classList && node.classList.contains('glass-reveal')) {
+                                observeRevealEl(node);
+                            }
+                            if (node.querySelectorAll) {
+                                var list = node.querySelectorAll('.glass-reveal:not(.visible)');
+                                for (var i = 0; i < list.length; i++) observeRevealEl(list[i]);
+                            }
+                        });
+                    });
+                });
+                dynObserver.observe(document.body, { childList: true, subtree: true });
+            } catch (e) {}
+        }
     }
 
     // ========== 涟漪效果 ==========
@@ -70,13 +123,13 @@
         }
     }
 
-    // ========== 背景图/视频/GIF 轮播 ==========
+    // ========== 背景图/视频/GIF 轮番（刷新页面自动切换下一张） ==========
     function initBgImageRotation() {
         var body = document.querySelector('body.glass-enabled.glass-bg-image');
         if (!body) return;
 
         var bgType = body.getAttribute('data-bg-type') || 'image';
-        // 视频背景：由 video 标签自动播放，暂不参与轮播
+        // 视频背景：由 video 标签自动播放，暂不参与轮番
         if (bgType === 'video') return;
 
         // 优先从 data 属性读取主图，兼容 inline style 未设置的情况
@@ -89,8 +142,6 @@
             }
         }
         var extraImagesAttr = body.getAttribute('data-bg-images');
-        var intervalSec = parseInt(body.getAttribute('data-bg-switch-interval') || '0', 10);
-        if (!intervalSec || intervalSec < 3) return;
 
         var images = [];
         if (mainImage) images.push(mainImage);
@@ -105,7 +156,26 @@
         }
         if (images.length < 2) return;
 
-        // 预加载所有图片/GIF
+        // 刷新轮番：每次刷新页面自动切换到下一张（localStorage 记录当前索引）
+        var KEY = 'glass_bg_rotation_index';
+        var stored = parseInt(localStorage.getItem(KEY), 10);
+        if (isNaN(stored)) stored = -1;
+        var next = (stored + 1) % images.length;
+        try { localStorage.setItem(KEY, String(next)); } catch (e) {}
+
+        var currentUrl = images[next];
+        body.style.setProperty('--glass-bg-image', currentUrl);
+
+        // GIF 模式：同步更新 div 背景
+        var gifEl = document.getElementById('glass-bg-gif');
+        if (gifEl) {
+            var match = currentUrl.match(/url\(['"]?(.+?)['"]?\)/);
+            if (match && match[1]) {
+                gifEl.style.backgroundImage = 'url(\'' + match[1].replace(/'/g, "\\'") + '\')';
+            }
+        }
+
+        // 预加载所有图片/GIF，减少下次切换时的空白
         images.forEach(function(imgUrl) {
             var match = imgUrl.match(/url\(['"]?(.+?)['"]?\)/);
             if (match && match[1]) {
@@ -113,20 +183,6 @@
                 preload.src = match[1];
             }
         });
-
-        var current = 0;
-        var gifEl = document.getElementById('glass-bg-gif');
-        setInterval(function() {
-            current = (current + 1) % images.length;
-            body.style.setProperty('--glass-bg-image', images[current]);
-            // GIF 模式：同步更新 div 背景
-            if (gifEl) {
-                var match = images[current].match(/url\(['"]?(.+?)['"]?\)/);
-                if (match && match[1]) {
-                    gifEl.style.backgroundImage = 'url(\'' + match[1].replace(/'/g, "\\'") + '\')';
-                }
-            }
-        }, intervalSec * 1000);
     }
 
     // ========== 视频背景自动播放/恢复 ==========
@@ -348,6 +404,9 @@
 
     // ========== 初始化所有动画 ==========
     function init() {
+        // 标记 JS 已就绪：CSS 仅在此时启用 .glass-reveal 的隐藏→显示动画，
+        // JS 加载失败/异常时内容保持默认可见，避免用户中心下方内容永久隐藏。
+        if (document.body) document.body.classList.add('glass-anim-ready');
         initScrollReveal();
         initRippleEffect();
         loadBgGradient();

@@ -1,0 +1,325 @@
+{include file="default/header" title="邮件推送" /}
+<main class="lyear-layout-content page-wrap">
+  <div class="container-fluid">
+    <div class="page-header-bar">
+      <h3 class="page-header-bar-title">邮件推送（紧急事件通知）</h3>
+    </div>
+
+    {if !$smtpReady}
+    <div class="mp-warn">
+      <span class="mdi mdi-alert-outline"></span>
+      尚未配置 SMTP 邮件服务器，邮件无法发出。请先到「系统设置 → 网站设置 → 邮件设置」填写 SMTP 信息。
+    </div>
+    {/if}
+
+    <div class="mp-stats">
+      <div class="mp-stat"><div class="mp-stat-num">{$queuePending}</div><div class="mp-stat-label">待发送</div></div>
+      <div class="mp-stat"><div class="mp-stat-num ok">{$queueSent}</div><div class="mp-stat-label">已发送</div></div>
+      <div class="mp-stat"><div class="mp-stat-num bad">{$queueFail}</div><div class="mp-stat-label">失败</div></div>
+      <div class="mp-stat-tip">邮件由后台任务（<code>/cron</code>）分批投递，量大时请确保计划任务正常运行</div>
+    </div>
+
+    <div class="content-card" style="margin-bottom:18px;">
+      <div class="content-card-header"><span>新建邮件</span></div>
+      <div class="content-card-body">
+        <form id="mpForm" novalidate>
+          <input type="hidden" name="__token__" value="{$csrf_token|default=''}">
+          <div class="mb-3">
+            <label class="form-label">邮件标题 <span style="color:#de350b">*</span></label>
+            <input class="form-input" type="text" id="mp-title" maxlength="200" placeholder="如：【重要】服务器维护通知">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              邮件正文 <span style="color:#de350b">*</span>
+              <small style="color:#94a3b8;font-weight:400;">支持 HTML，例如 &lt;p&gt;、&lt;b&gt;、&lt;a href=""&gt;、&lt;img&gt; 等标签</small>
+            </label>
+            <textarea class="form-input mp-textarea" id="mp-content" rows="9" placeholder="&lt;p&gt;尊敬的用户：&lt;/p&gt;&#10;&lt;p&gt;我们将于 今晚 23:00 进行&lt;b&gt;机房网络升级&lt;/b&gt;，预计影响 30 分钟。&lt;/p&gt;&#10;&lt;p&gt;如有疑问请联系 &lt;a href=&quot;mailto:service@example.com&quot;&gt;客服&lt;/a&gt;。&lt;/p&gt;"></textarea>
+            <div class="mp-editor-bar">
+              <label class="mp-check"><input type="checkbox" id="mp-html" checked> 按 HTML 解析</label>
+              <span class="mp-mini" onclick="mpWrap('<b>','</b>')">加粗</span>
+              <span class="mp-mini" onclick="mpWrap('<p>','</p>')">段落</span>
+              <span class="mp-mini" onclick="mpWrap('<a href=&quot;&quot;>','</a>')">链接</span>
+              <span class="mp-mini" onclick="mpWrap('<ul>\n  <li>','</li>\n</ul>')">列表</span>
+              <span class="mp-mini" onclick="mpPreview()">预览</span>
+              <span class="mp-hint">不勾选「按 HTML 解析」时，正文按纯文本发送（换行自动转行）</span>
+            </div>
+            <div id="mpPreviewBox" class="mp-preview" style="display:none;"></div>
+          </div>
+
+          <div class="form-row2">
+            <div class="mb-3">
+              <label class="form-label">发送对象</label>
+              <select class="form-input" id="mp-target-type">
+                <option value="all">全部用户（有邮箱的）</option>
+                <option value="level">按会员等级</option>
+                <option value="users">指定用户 ID（多个用逗号分隔）</option>
+                <option value="emails">指定邮箱（多个用逗号/换行分隔）</option>
+              </select>
+            </div>
+            <div class="mb-3" id="mp-target-wrap" style="display:none;">
+              <label class="form-label" id="mp-target-label">对象参数</label>
+              <select class="form-input" id="mp-level" style="display:none;">
+                <option value="0">普通用户</option>
+                <option value="1">青铜VIP</option>
+                <option value="2">白银VIP</option>
+                <option value="3">黄金VIP</option>
+                <option value="4">紫金VIP</option>
+                <option value="5">钻石VIP</option>
+                <option value="6">至尊VIP</option>
+              </select>
+              <input class="form-input" type="text" id="mp-target-value" placeholder="如 1,2,3" style="display:none;">
+            </div>
+          </div>
+
+          <div class="form-row2">
+            <div class="mb-3">
+              <label class="form-label">发送方式</label>
+              <select class="form-input" id="mp-send-mode">
+                <option value="now">立即发送</option>
+                <option value="schedule">定时发送</option>
+              </select>
+            </div>
+            <div class="mb-3" id="mp-schedule-wrap" style="display:none;">
+              <label class="form-label">发送时间</label>
+              <input class="form-input" type="datetime-local" id="mp-schedule-at">
+            </div>
+          </div>
+
+          <div class="mp-actions">
+            <button type="button" class="new-btn primary" onclick="mpSubmit()">
+              <span class="mdi mdi-send"></span> 创建并发送
+            </button>
+            <span class="mp-hint">「立即发送」会马上投递；「定时发送」到点后由后台任务自动投递（也可在下方列表手动提前发送）</span>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-header"><span>推送记录</span></div>
+      <div class="content-card-body">
+        <div class="table-responsive">
+          <table class="new-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>标题</th>
+                <th>发送对象</th>
+                <th>收件人</th>
+                <th>发送时间</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {if !empty($list)}
+              {foreach $list as $item}
+              <tr>
+                <td data-label="ID">{$item.id}</td>
+                <td data-label="标题">{$item.title}</td>
+                <td data-label="发送对象">
+                  {if $item.target_type=='all'}
+                  <span class="new-badge info">全部用户</span>
+                  {elseif $item.target_type=='level'}
+                  <span class="new-badge info">按等级：{$item.target_value}</span>
+                  {elseif $item.target_type=='users'}
+                  <span class="new-badge info">指定用户：{$item.target_value}</span>
+                  {else}
+                  <span class="new-badge info">指定邮箱</span>
+                  {/if}
+                </td>
+                <td data-label="收件人">{$item.sent_count} / {$item.total_count}</td>
+                <td data-label="发送时间">
+                  {if $item.schedule_time>0}
+                  {$item.schedule_time|date="Y-m-d H:i",###}
+                  {else}
+                  {$item.created_at|date="Y-m-d H:i",###}
+                  {/if}
+                </td>
+                <td data-label="状态">
+                  {if $item.status=='1'}
+                  <span class="new-badge success">已投递</span>
+                  {elseif $item.status=='2'}
+                  <span class="new-badge warning">已取消</span>
+                  {elseif $item.status=='3'}
+                  <span class="new-badge danger">失败</span>
+                  {else}
+                  <span class="new-badge warning">待发送</span>
+                  {/if}
+                </td>
+                <td data-label="操作">
+                  <button class="new-btn primary" onclick="mpSend({$item.id})" title="立即发送">
+                    <span class="mdi mdi-send"></span>
+                  </button>
+                  <button class="new-btn outline" onclick="mpCancel({$item.id})" title="取消">
+                    <span class="mdi mdi-cancel"></span>
+                  </button>
+                  <button class="new-btn danger" onclick="mpDelete({$item.id})" title="删除">
+                    <span class="mdi mdi-delete"></span>
+                  </button>
+                </td>
+              </tr>
+              {/foreach}
+              {else}
+              <tr><td colspan="7" class="text-center text-muted py-4">暂无推送记录</td></tr>
+              {/if}
+            </tbody>
+          </table>
+        </div>
+        <div style="text-align:center;margin-top:16px">{$list->render()}</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+{include file="default/footer" /}
+
+<style>
+.page-header-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;background:linear-gradient(135deg,#1f6feb,#1552b8);padding:22px 28px;border-radius:16px;margin-top:16px;box-shadow:0 6px 24px rgba(31,111,235,.25)}
+.page-header-bar-title{color:#fff;font-size:1.35rem;font-weight:700;margin:0;letter-spacing:.3px}
+.mp-warn{display:flex;align-items:center;gap:8px;margin-top:16px;padding:12px 16px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:13.5px}
+.mp-stats{display:grid;grid-template-columns:repeat(3,minmax(0,120px)) 1fr;gap:14px;align-items:center;margin-top:16px}
+.mp-stat{background:#fff;border:1px solid #e6edf5;border-radius:14px;padding:14px 16px;text-align:center}
+.mp-stat-num{font-size:22px;font-weight:700;color:#1f2937}
+.mp-stat-num.ok{color:#16a34a}
+.mp-stat-num.bad{color:#dc2626}
+.mp-stat-label{font-size:12px;color:#8b96a8;margin-top:4px}
+.mp-stat-tip{font-size:12.5px;color:#8b96a8;line-height:1.7}
+.mp-stat-tip code{background:#f1f5f9;padding:1px 6px;border-radius:6px;color:#1552b8}
+/* .form-input 在本页此前没有任何布局规则，textarea 会回落到浏览器默认宽度（约 20 列）导致输入框又窄又小 */
+.form-label{display:block;font-size:13px;font-weight:600;color:#475569;margin-bottom:6px}
+.form-input{display:block;width:100%;max-width:100%;box-sizing:border-box;padding:9px 14px;font-size:13.5px;line-height:1.5;color:#334155;background:#fff;border:1.5px solid #d5dae2;border-radius:10px;outline:none;transition:border-color .2s,box-shadow .2s}
+.form-input:focus{border-color:#1f6feb;box-shadow:0 0 0 3px rgba(31,111,235,.12)}
+input.form-input,select.form-input{height:auto;min-height:40px}
+select.form-input{appearance:auto}
+.mp-textarea{display:block;width:100%;max-width:100%;box-sizing:border-box;min-height:320px;height:auto;padding:14px 16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;line-height:1.75;resize:vertical;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+.mp-editor-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.mp-check{font-size:13px;color:#475569;display:flex;align-items:center;gap:6px;cursor:pointer}
+.mp-mini{font-size:12px;color:#1f6feb;background:#eef4ff;border:1px solid #d6e4ff;border-radius:8px;padding:3px 10px;cursor:pointer}
+.mp-mini:hover{background:#e2ecff}
+.mp-hint{font-size:12px;color:#94a3b8}
+.mp-preview{margin-top:10px;padding:14px 16px;border:1px dashed #cbd5e1;border-radius:12px;background:#fbfdff;font-size:14px;line-height:1.8;color:#334155;max-height:260px;overflow:auto}
+.form-row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.mp-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px}
+@media (max-width:768px){
+  .mp-stats{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .mp-stat-tip{grid-column:1/-1;}
+  .form-row2{grid-template-columns:minmax(0,1fr);}
+}
+</style>
+
+<script>
+(function () {
+  var typeEl = document.getElementById('mp-target-type');
+  var wrap = document.getElementById('mp-target-wrap');
+  var label = document.getElementById('mp-target-label');
+  var levelEl = document.getElementById('mp-level');
+  var valueEl = document.getElementById('mp-target-value');
+  var modeEl = document.getElementById('mp-send-mode');
+  var schWrap = document.getElementById('mp-schedule-wrap');
+
+  function syncTarget() {
+    var t = typeEl.value;
+    if (t === 'all') { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    if (t === 'level') {
+      label.textContent = '选择会员等级';
+      levelEl.style.display = '';
+      valueEl.style.display = 'none';
+    } else if (t === 'users') {
+      label.textContent = '用户 ID（多个用逗号分隔）';
+      levelEl.style.display = 'none';
+      valueEl.style.display = '';
+      valueEl.placeholder = '如 1,2,3';
+    } else {
+      label.textContent = '邮箱地址（多个用逗号分隔）';
+      levelEl.style.display = 'none';
+      valueEl.style.display = '';
+      valueEl.placeholder = '如 a@qq.com, b@163.com';
+    }
+  }
+  typeEl.addEventListener('change', syncTarget);
+  syncTarget();
+
+  modeEl.addEventListener('change', function () {
+    schWrap.style.display = (modeEl.value === 'schedule') ? '' : 'none';
+  });
+
+  window.mpWrap = function (before, after) {
+    var ta = document.getElementById('mp-content');
+    var s = ta.selectionStart, e = ta.selectionEnd;
+    var sel = ta.value.slice(s, e) || '内容';
+    ta.value = ta.value.slice(0, s) + before + sel + after + ta.value.slice(e);
+    ta.focus();
+    ta.selectionStart = s + before.length;
+    ta.selectionEnd = s + before.length + sel.length;
+  };
+
+  window.mpPreview = function () {
+    var box = document.getElementById('mpPreviewBox');
+    if (box.style.display === 'none') {
+      box.innerHTML = document.getElementById('mp-content').value || '<span style="color:#94a3b8">（正文为空）</span>';
+      box.style.display = '';
+    } else {
+      box.style.display = 'none';
+    }
+  };
+
+  window.mpSubmit = function () {
+    var title = document.getElementById('mp-title').value.trim();
+    var content = document.getElementById('mp-content').value;
+    if (!title) { GlassTip.error('请填写邮件标题'); return; }
+    if (!content.replace(/<[^>]+>/g, '').trim()) { GlassTip.error('请填写邮件正文'); return; }
+    var type = typeEl.value;
+    var value = '';
+    if (type === 'level') value = levelEl.value;
+    else if (type !== 'all') value = valueEl.value.trim();
+    if (type !== 'all' && !value) { GlassTip.error('请填写发送对象参数'); return; }
+    var mode = modeEl.value;
+    var at = document.getElementById('mp-schedule-at').value;
+    if (mode === 'schedule' && !at) { GlassTip.error('请选择定时发送时间'); return; }
+    if (!document.getElementById('mp-html').checked) {
+      // 纯文本模式：转义后换行转 <br>
+      content = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+    }
+    var load = layer.msg('提交中...', {icon: 16, shade: 0.8, time: false});
+    $.ajax({
+      type: 'POST', url: '',
+      data: { act: 'save', title: title, content: content, target_type: type, target_value: value, send_mode: mode, schedule_at: at },
+      dataType: 'json',
+      success: function (data) {
+        layer.close(load);
+        if (data.code == '1' || data.code == 1) {
+          layer.msg(data.msg, {icon: 1}, function () { window.location.reload(); });
+        } else {
+          GlassTip.error(data.msg || '操作失败');
+        }
+      },
+      error: function () { layer.close(load); GlassTip.error('网络错误'); }
+    });
+  };
+
+  function act(urlData, confirmText, okReload) {
+    layer.confirm(confirmText, {icon: 2, title: '操作确认'}, function () {
+      var load = layer.msg('处理中...', {icon: 16, shade: 0.8, time: false});
+      $.ajax({
+        type: 'POST', url: '', data: urlData, dataType: 'json',
+        success: function (data) {
+          layer.close(load);
+          if (data.code == '1' || data.code == 1) {
+            layer.msg(data.msg, {icon: 1}, function () { window.location.reload(); });
+          } else {
+            GlassTip.error(data.msg || '操作失败');
+          }
+        },
+        error: function () { layer.close(load); GlassTip.error('网络错误'); }
+      });
+    });
+  }
+
+  window.mpSend = function (id) { act({act: 'send', id: id}, '确定立即发送这条邮件吗？', true); };
+  window.mpCancel = function (id) { act({act: 'cancel', id: id}, '确定取消这条推送任务吗？（定时任务将不再自动发送）', true); };
+  window.mpDelete = function (id) { act({act: 'delete', id: id}, '确定删除这条推送记录吗？', true); };
+})();
+</script>

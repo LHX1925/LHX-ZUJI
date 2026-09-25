@@ -1,0 +1,171 @@
+{php}$title = '购物车'; $tab_active = 'host';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">购物车</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">商品将保留15分钟，超时后自动失效</p>
+</div>
+{if isset($items) && count($items) > 0}
+<div id="cart-list">
+    {foreach $items as $item}
+    <div class="app-card cart-item" data-id="{$item.id}" data-price="{$item.money}" style="margin-bottom:10px;padding:16px;display:flex;align-items:flex-start;gap:12px;">
+        <input type="checkbox" class="cart-check" value="{$item.id}" style="width:18px;height:18px;accent-color:var(--glass-primary);flex-shrink:0;margin-top:2px;">
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:700;color:var(--glass-text);">{$item.cart_name}</div>
+            <div style="font-size:12px;color:var(--glass-text-muted);margin-top:4px;">
+                <span>账号：{$item.user}</span>
+                <span style="margin-left:10px;">时长：{$item.time} {if $item.cycle=='day'}天{elseif $item.cycle=='month'}月{elseif $item.cycle=='season'}季{elseif $item.cycle=='year'}年{elseif $item.cycle=='unrestricted'}次{/if}</span>
+            </div>
+            <div class="cart-countdown" data-expire="{$item.expire_at}" style="font-size:12px;color:#EF4444;margin-top:4px;">剩余保留时间：计算中...</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:16px;font-weight:800;color:var(--glass-primary);">¥{$item.money}</div>
+            <button type="button" class="cart-del" onclick="delItem({$item.id}, this)" style="background:none;border:none;color:var(--glass-text-muted);cursor:pointer;font-size:14px;padding:4px;margin-top:4px;"><i class="fas fa-trash-alt"></i></button>
+        </div>
+    </div>
+    {/foreach}
+</div>
+<div class="app-card" style="padding:16px;position:sticky;bottom:0;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--glass-text);cursor:pointer;">
+            <input type="checkbox" id="selectAll" style="width:18px;height:18px;accent-color:var(--glass-primary);"> 全选
+        </label>
+        <div style="font-size:14px;color:var(--glass-text);">合计：<strong id="totalPrice" style="font-size:20px;color:var(--glass-primary);">¥0.00</strong></div>
+    </div>
+    <button type="button" class="app-btn" id="payBtn" onclick="openPayModal()" disabled style="width:100%;">立即支付</button>
+</div>
+<!-- 支付弹窗 -->
+<div id="payModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:flex-end;justify-content:center;">
+    <div style="background:var(--glass-bg);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;padding:24px 16px 32px;animation:slideUp 0.3s ease;">
+        <div style="font-size:18px;font-weight:800;color:var(--glass-text);margin-bottom:16px;text-align:center;">确认订单</div>
+        <div id="payModalConfig" style="margin-bottom:16px;"></div>
+        <div style="font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:10px;">选择支付方式</div>
+        <div id="payMethods">
+            <label class="app-list-item pay-method-opt active" onclick="selectPayMethod(this, 'balance')" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 0;">
+                <input type="radio" name="pay_method" value="balance" checked style="accent-color:var(--glass-primary);width:18px;height:18px;">
+                <div>
+                    <div style="font-size:14px;font-weight:600;color:var(--glass-text);"><i class="fas fa-wallet"></i> 余额支付</div>
+                    <div style="font-size:11px;color:var(--glass-text-muted);">使用账户余额直接支付并开通</div>
+                </div>
+            </label>
+            {if isset($pays)}
+            {foreach $pays as $pay}
+            <label class="app-list-item pay-method-opt" onclick="selectPayMethod(this, '{$pay.id}')" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:14px 0;">
+                <input type="radio" name="pay_method" value="{$pay.id}" style="accent-color:var(--glass-primary);width:18px;height:18px;">
+                <div>
+                    <div style="font-size:14px;font-weight:600;color:var(--glass-text);">{$pay.name}</div>
+                    <div style="font-size:11px;color:var(--glass-text-muted);">在线支付，支付成功后自动开通</div>
+                </div>
+            </label>
+            {/foreach}
+            {/if}
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px;">
+            <button type="button" class="app-btn" onclick="closePayModal()" style="flex:1;background:transparent;color:var(--glass-text);border:1px solid var(--glass-border);">取消</button>
+            <button type="button" class="app-btn" id="modalPayBtn" onclick="confirmPay()" style="flex:1;">确认支付 <span id="modalTotal">¥0.00</span></button>
+        </div>
+    </div>
+</div>
+<style>@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}</style>
+{else}
+<div class="app-empty"><i class="fas fa-shopping-cart"></i><p>购物车是空的</p><a href="__ROOT__/product" style="color:var(--glass-primary);font-size:14px;">去选购产品</a></div>
+{/if}
+<script>
+function formatTimeLeft(seconds) {
+    if (seconds <= 0) return '已过期';
+    var m = Math.floor(seconds / 60);
+    var s = Math.floor(seconds % 60);
+    return m + '分' + (s < 10 ? '0' : '') + s + '秒';
+}
+function updateCountdown() {
+    document.querySelectorAll('.cart-countdown').forEach(function(el) {
+        var expire = parseInt(el.getAttribute('data-expire'));
+        var left = expire - Math.floor(Date.now() / 1000);
+        el.textContent = '剩余保留时间：' + formatTimeLeft(left);
+        if (left <= 0) { el.closest('.cart-item').style.opacity = '0.5'; el.textContent = '已过期，请刷新页面'; }
+    });
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+function calcTotal() {
+    var total = 0;
+    var ids = [];
+    document.querySelectorAll('.cart-check').forEach(function(cb) {
+        if (cb.checked) { total += parseFloat(cb.closest('.cart-item').getAttribute('data-price')); ids.push(cb.value); }
+    });
+    document.getElementById('totalPrice').textContent = '¥' + total.toFixed(2);
+    document.getElementById('payBtn').disabled = ids.length === 0;
+    return ids;
+}
+document.querySelectorAll('.cart-check').forEach(function(cb) { cb.addEventListener('change', calcTotal); });
+document.getElementById('selectAll').addEventListener('change', function() {
+    var checked = this.checked;
+    document.querySelectorAll('.cart-check').forEach(function(cb) { cb.checked = checked; });
+    calcTotal();
+});
+var selectedPayMethod = 'balance';
+var modalSelectedIds = [];
+var modalTotalAmount = 0;
+function openPayModal() {
+    var ids = calcTotal();
+    if (ids.length === 0) { appToast('请选择要结算的商品', 'warning'); return; }
+    modalSelectedIds = ids;
+    modalTotalAmount = parseFloat(document.getElementById('totalPrice').textContent.replace('¥', ''));
+    document.getElementById('modalTotal').textContent = '¥' + modalTotalAmount.toFixed(2);
+    var html = '';
+    document.querySelectorAll('.cart-check').forEach(function(cb) {
+        if (cb.checked) {
+            var item = cb.closest('.cart-item');
+            var name = item.querySelector('div[style*="flex:1"] div:first-child').textContent;
+            var price = item.querySelector('div[style*="text-align:right"] div:first-child').textContent;
+            html += '<div class="app-info-row"><span>' + name + '</span><span style="font-weight:600;">' + price + '</span></div>';
+        }
+    });
+    html += '<div class="app-info-row" style="border-top:1px solid var(--glass-border);padding-top:10px;margin-top:8px;"><span style="font-weight:700;">合计</span><span style="font-size:18px;font-weight:800;color:var(--glass-primary);">¥' + modalTotalAmount.toFixed(2) + '</span></div>';
+    document.getElementById('payModalConfig').innerHTML = html;
+    document.getElementById('payModal').style.display = 'flex';
+}
+function closePayModal() { document.getElementById('payModal').style.display = 'none'; }
+function selectPayMethod(el, value) {
+    selectedPayMethod = value;
+    document.querySelectorAll('.pay-method-opt').forEach(function(opt) { opt.classList.remove('active'); });
+    el.classList.add('active');
+}
+function confirmPay() {
+    if (modalSelectedIds.length === 0) { appToast('请选择要结算的商品', 'warning'); return; }
+    var btn = document.getElementById('modalPayBtn');
+    btn.disabled = true;
+    if (selectedPayMethod === 'balance') {
+        if (!confirm('确定使用余额支付 ¥' + modalTotalAmount.toFixed(2) + ' 结算选中的 ' + modalSelectedIds.length + ' 个产品吗？')) { btn.disabled = false; return; }
+        doCheckout('balance');
+    } else {
+        if (!confirm('确定使用在线支付 ¥' + modalTotalAmount.toFixed(2) + ' 结算吗？')) { btn.disabled = false; return; }
+        doCheckout('plugin', selectedPayMethod);
+    }
+}
+function doCheckout(paytype, payid) {
+    var data = 'ids=' + modalSelectedIds.join(',') + '&paytype=' + paytype;
+    if (payid) data += '&payid=' + payid;
+    fetch('__ROOT__/user/cartCheckout', { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: data })
+    .then(function(r) { return r.json(); }).then(function(data) {
+        if (data.code == 1) {
+            if (paytype === 'balance') { appToast(data.msg || '支付成功', 'success'); setTimeout(function() { location.href = '__ROOT__/user/order'; }, 1800); }
+            else if (data.redirect) { appToast('正在跳转支付...', 'info'); setTimeout(function() { location.href = data.redirect; }, 1500); }
+            else if (data.payurl) { appToast('正在跳转支付...', 'info'); setTimeout(function() { location.href = data.payurl; }, 1500); }
+        } else { appToast(data.msg || '操作失败', 'error'); document.getElementById('modalPayBtn').disabled = false; }
+    }).catch(function() { appToast('网络错误，请稍后重试', 'error'); document.getElementById('modalPayBtn').disabled = false; });
+}
+function delItem(id, btn) {
+    if (!confirm('确定要从购物车删除该产品吗？')) return;
+    fetch('__ROOT__/user/cartDel', { method: 'POST', headers: {'Content-Type':'application/x-www-form-urlencoded'}, body: 'id=' + id })
+    .then(function(r) { return r.json(); }).then(function(data) {
+        if (data.code == 1) {
+            btn.closest('.cart-item').remove();
+            calcTotal();
+            if (document.querySelectorAll('.cart-item').length === 0) location.reload();
+            appToast('已删除', 'success');
+        } else { appToast(data.msg || '删除失败', 'error'); }
+    });
+}
+document.getElementById('payModal').addEventListener('click', function(e) { if (e.target === this) closePayModal(); });
+</script>
+{include file="default/mobile/footer" /}

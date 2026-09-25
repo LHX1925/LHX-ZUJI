@@ -1,0 +1,40 @@
+{php}$title = '产品列表'; $tab_active = 'product';{/php}
+{include file="default/mobile/header" /}
+
+<!-- 分类横向滚动 -->
+<div class="app-categories">
+    {if !empty($product)}
+    <a href="__ROOT__/cart" class="app-category-chip {if !$productid}active{/if}">全部</a>
+    {foreach $product as $p}
+    <a href="__ROOT__/cart/{$p.id}" class="app-category-chip {if $productid==$p.id}active{/if}">{$p.name}</a>
+    {/foreach}
+    {/if}
+</div>
+
+<!-- 产品列表 -->
+{if !empty($cart)}
+{foreach $cart as $c}
+<a href="__ROOT__/product/{$c.id}" class="app-product-card">
+    <div class="app-product-name">{$c.name}</div>
+    <div class="app-product-desc">{$c.content|default='稳定可靠的虚拟主机服务'}</div>
+    <div class="app-product-specs">
+        <span><i class="fas fa-hdd"></i> {:formatSizeM($c.data2 ?? '')}</span>
+        {if isset($c.data3) && $c.data3}<span><i class="fas fa-database"></i> {:formatSizeM($c.data3)}</span>{/if}
+        {if isset($c.data4) && $c.data4}<span><i class="fas fa-chart-line"></i> {:formatTraffic($c.data4)}</span>{/if}
+        {if isset($c.data5) && $c.data5}<span><i class="fas fa-globe"></i> {$c.data5} 域名</span>{/if}
+    </div>
+    <div class="app-product-price {if $c.money=='0'}free{/if}">
+        {if $c.money=='0'}免费{else}&yen;{$c.money}{/if}
+        <small>/月</small>
+    </div>
+</a>
+{/foreach}
+{else}
+<div class="app-empty">
+    <i class="fas fa-box-open"></i>
+    <h3>暂无产品</h3>
+    <p>该分类下还没有产品</p>
+</div>
+{/if}
+
+{include file="default/mobile/footer" /}

@@ -10,7 +10,7 @@
       <div class="container-fluid glass-animate-in">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h4 class="mb-0" style="font-weight:600;color:#172b4d;">角色管理</h4>
-          <a href="/admin/admin_manager/add_role" class="btn-admin btn-admin-primary">添加角色</a>
+          <span style="font-size:13px;color:#6b7280;">系统内置两种角色，普通管理员的权限请在「添加/编辑管理员」时单独勾选</span>
         </div>
         <div class="card admin-card">
           <div class="card-body">
@@ -56,12 +56,7 @@
                     {/php}
                   </td>
                   <td>
-                    {if $role.id != 1}
-                    <a href="/admin/admin_manager/edit_role/{$role.id}" class="btn-admin btn-admin-info">编辑</a>
-                    <button class="btn-admin btn-admin-danger" onclick="deleteRole({$role.id})">删除</button>
-                    {else}
                     <span class="admin-badge admin-badge-secondary">系统内置</span>
-                    {/if}
                   </td>
                 </tr>
                 {/foreach}
@@ -76,13 +71,16 @@
     </main>
 <script>
 function deleteRole(id) {
-  if (!confirm('确定要删除此角色吗？')) return;
-  $.post('/admin/admin_manager/delete_role', {id: id}, function(res) {
-    if (res.code == 1) {
-      location.reload();
-    } else {
-      alert(res.msg);
-    }
+  layer.confirm('确定要删除此角色吗？', {icon: 3, skin: 'glass-layer-skin', title: '删除确认'}, function(idx) {
+    layer.close(idx);
+    $.post('/admin/admin_manager/delete_role', {id: id}, function(res) {
+      if (res.code == 1) {
+        GlassTip.success(res.msg || '删除成功');
+        setTimeout(function(){ location.reload(); }, 800);
+      } else {
+        GlassTip.error(res.msg || '删除失败');
+      }
+    }, 'json').fail(function(){ GlassTip.error('请求失败'); });
   });
 }
 </script>

@@ -1,0 +1,175 @@
+{php}$title = '实名认证'; $tab_active = 'profile'; $back_url = '/user';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">实名认证</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">填写真实姓名与身份证号码，完成身份一致性核验</p>
+</div>
+{if $user.realname_status == 1}
+<div class="app-card" style="margin-bottom:12px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;margin-bottom:16px;background:rgba(16,185,129,0.08);color:#166534;border:1px solid rgba(16,185,129,0.2);font-size:14px;">
+        <i class="fas fa-check-circle" style="font-size:18px;"></i> 实名认证已通过
+    </div>
+    <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;"><i class="far fa-user" style="margin-right:6px;"></i> 真实姓名</label>
+        <input type="text" class="app-input" value="{$user.realname|default=''}" disabled style="background:var(--glass-bg-light);color:var(--glass-text-muted);">
+    </div>
+    <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;"><i class="far fa-id-card" style="margin-right:6px;"></i> 身份证号码</label>
+        <input type="text" class="app-input" value="{if $user.idcard}**** **** **** {:substr($user.idcard,-4)}{/if}" disabled style="background:var(--glass-bg-light);color:var(--glass-text-muted);">
+    </div>
+</div>
+{elseif $user.realname_status == 3}
+<div class="app-card" style="margin-bottom:12px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;margin-bottom:16px;background:rgba(245,158,11,0.08);color:#92400E;border:1px solid rgba(245,158,11,0.2);font-size:14px;">
+        <i class="fas fa-clock" style="font-size:18px;"></i> 实名认证审核中，请耐心等待管理员处理
+    </div>
+    <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;"><i class="far fa-user" style="margin-right:6px;"></i> 真实姓名</label>
+        <input type="text" class="app-input" value="{$user.realname|default=''}" disabled style="background:var(--glass-bg-light);color:var(--glass-text-muted);">
+    </div>
+    <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;"><i class="far fa-id-card" style="margin-right:6px;"></i> 身份证号码</label>
+        <input type="text" class="app-input" value="{if $user.idcard}**** **** **** {:substr($user.idcard,-4)}{/if}" disabled style="background:var(--glass-bg-light);color:var(--glass-text-muted);">
+    </div>
+</div>
+{elseif $user.realname_status == 2}
+<div class="app-card" style="margin-bottom:12px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;margin-bottom:16px;background:rgba(239,68,68,0.08);color:#991B1B;border:1px solid rgba(239,68,68,0.2);font-size:14px;">
+        <i class="fas fa-times-circle" style="font-size:18px;"></i> 实名认证已被驳回，请核对信息后重新提交
+    </div>
+    <form id="realnameForm">
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;"><i class="far fa-user" style="margin-right:6px;"></i> 真实姓名</label>
+            <input type="text" name="realname" id="realnameInput" class="app-input" placeholder="请输入真实姓名" maxlength="20" required>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;"><i class="far fa-id-card" style="margin-right:6px;"></i> 身份证号码</label>
+            <input type="text" name="idcard" id="idcardInput" class="app-input" placeholder="请输入18位居民身份证号" maxlength="18" required>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <input type="checkbox" id="agreement" required style="accent-color:var(--glass-primary);width:16px;height:16px;flex-shrink:0;">
+            <label for="agreement" style="font-size:13px;color:var(--glass-text-secondary);">我已阅读并同意<a href="javascript:;" style="color:var(--glass-primary);">《实名认证服务协议》</a></label>
+        </div>
+        <button type="submit" class="app-btn" id="submitBtn" style="width:100%;">提交核验</button>
+    </form>
+</div>
+{else}
+<div class="app-card" style="margin-bottom:12px;padding:16px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:10px;margin-bottom:16px;background:var(--glass-bg-light);color:var(--glass-text-secondary);border:1px solid var(--glass-border);font-size:14px;">
+        <i class="fas fa-info-circle" style="font-size:18px;"></i>
+        {if $realnameMode == '0'}实名认证暂未开启{/if}
+        {if $realnameMode == '1'}系统将自动核验您的身份信息{if $apiType=='3'}（手机三要素）{/if}{/if}
+        {if $realnameMode == '2'}提交后将由管理员审核{/if}
+    </div>
+    {if $realnameMode != '0'}
+    <form id="realnameForm">
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;"><i class="far fa-user" style="margin-right:6px;"></i> 真实姓名</label>
+            <input type="text" name="realname" id="realnameInput" class="app-input" placeholder="请输入真实姓名" maxlength="20" required>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;"><i class="far fa-id-card" style="margin-right:6px;"></i> 身份证号码</label>
+            <input type="text" name="idcard" id="idcardInput" class="app-input" placeholder="请输入18位居民身份证号" maxlength="18" required>
+        </div>
+        {if $apiType == '3'}
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;"><i class="fas fa-mobile-alt" style="margin-right:6px;"></i> 手机号码</label>
+            <input type="text" name="mobile" id="mobileInput" class="app-input" placeholder="请输入本人实名手机号" maxlength="11" required>
+        </div>
+        {/if}
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+            <input type="checkbox" id="agreement" required style="accent-color:var(--glass-primary);width:16px;height:16px;flex-shrink:0;">
+            <label for="agreement" style="font-size:13px;color:var(--glass-text-secondary);">我已阅读并同意<a href="javascript:;" style="color:var(--glass-primary);">《实名认证服务协议》</a></label>
+        </div>
+        <button type="submit" class="app-btn" id="submitBtn" style="width:100%;">提交核验</button>
+    </form>
+    {/if}
+</div>
+{/if}
+<div class="app-card" style="padding:16px;margin-bottom:12px;">
+    <div style="font-size:15px;font-weight:700;color:var(--glass-primary);text-align:center;margin-bottom:16px;">安全说明</div>
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;font-size:14px;color:var(--glass-text-secondary);">
+        <i class="fas fa-check-circle" style="color:var(--glass-primary);font-size:16px;margin-top:2px;flex-shrink:0;"></i>
+        <span>数据加密传输</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;font-size:14px;color:var(--glass-text-secondary);">
+        <i class="fas fa-check-circle" style="color:var(--glass-primary);font-size:16px;margin-top:2px;flex-shrink:0;"></i>
+        <span>信息严格保密</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--glass-text-secondary);">
+        <i class="fas fa-check-circle" style="color:var(--glass-primary);font-size:16px;margin-top:2px;flex-shrink:0;"></i>
+        <span>合规身份核验</span>
+    </div>
+</div>
+<div style="text-align:center;font-size:12px;color:var(--glass-text-muted);padding:8px 0;">
+    认证完成后可继续使用平台服务，信息仅用于身份核验
+</div>
+<script>
+$(function(){
+    var _msg = location.search.match(/[?&]msg=([^&]+)/);
+    if(_msg){ showToast(decodeURIComponent(_msg[1].replace(/\+/g, ' ')), 'warning', 3000); }
+
+    var REALNAME_ENCRYPT = {$realnameEncrypt|default='0'} == '1';
+    var CIPHER_KEY = '{$cipherKey|default=""}';
+    function hasWebCrypto(){ return !!(window.crypto && window.crypto.subtle && window.TextEncoder); }
+    function realnameEncryptPayload(keyHex, data) {
+        return crypto.subtle.digest('SHA-256', new TextEncoder().encode(keyHex)).then(function(keyHash){
+            return crypto.subtle.importKey('raw', keyHash, {name:'AES-CBC'}, false, ['encrypt']);
+        }).then(function(key){
+            var iv = crypto.getRandomValues(new Uint8Array(16));
+            var plain = new TextEncoder().encode(JSON.stringify(data));
+            return crypto.subtle.encrypt({name:'AES-CBC', iv:iv}, key, plain).then(function(ct){
+                var full = new Uint8Array(iv.length + ct.byteLength);
+                full.set(iv, 0);
+                full.set(new Uint8Array(ct), iv.length);
+                var bin = '';
+                for (var i=0;i<full.length;i++) bin += String.fromCharCode(full[i]);
+                return btoa(bin);
+            });
+        });
+    }
+
+    $('#realnameForm').on('submit', function(e){
+        e.preventDefault();
+        var btn = $('#submitBtn');
+        var realname = $.trim($('#realnameInput').val());
+        var idcard = $.trim($('#idcardInput').val());
+        var mobile = $.trim($('#mobileInput').val());
+        if(!realname || !idcard){ showToast('请填写完整信息','warning',2500); return; }
+        if(!/^([\u4e00-\u9fa5·]{2,20})$/.test(realname)){ showToast('姓名格式错误','warning',2500); return; }
+        if(!/^\d{17}[\dXx]$/.test(idcard)){ showToast('身份证号格式错误','warning',2500); return; }
+        if($('#mobileInput').length && !mobile){ showToast('请填写手机号码','warning',2500); return; }
+        if($('#mobileInput').length && mobile && !/^1[3-9]\d{9}$/.test(mobile)){ showToast('手机号格式错误','warning',2500); return; }
+        if(!$('#agreement').is(':checked')){ showToast('请先阅读并同意实名认证服务协议','warning',2500); return; }
+        btn.prop('disabled', true).text('提交中...');
+
+        var doSubmit = function(data){
+            $.ajax({
+                type: 'POST', url: '', data: data, dataType:'json',
+                success: function(res){
+                    if(res.code == 1){
+                        showToast(res.msg || '操作成功','success',1800);
+                        setTimeout(function(){ location.reload(); },1800);
+                    }else{
+                        showToast(res.msg,'danger',2500);
+                        btn.prop('disabled', false).text('提交核验');
+                    }
+                },
+                error: function(){ showToast('网络错误，请稍后重试','danger',2500); btn.prop('disabled', false).text('提交核验'); }
+            });
+        };
+
+        if(REALNAME_ENCRYPT && CIPHER_KEY && hasWebCrypto()){
+            var payload = { realname: realname, idcard: idcard, mobile: mobile, ts: Math.floor(Date.now()/1000) };
+            realnameEncryptPayload(CIPHER_KEY, payload).then(function(enc){
+                doSubmit({ act:'submit', payload: enc });
+            }).catch(function(){
+                doSubmit({ act:'submit', realname:realname, idcard:idcard, mobile:mobile });
+            });
+        } else {
+            doSubmit({ act:'submit', realname:realname, idcard:idcard, mobile:mobile });
+        }
+    });
+});
+</script>
+{include file="default/mobile/footer" /}

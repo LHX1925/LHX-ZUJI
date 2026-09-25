@@ -1,0 +1,143 @@
+{include file="default/header" title="未实名用户统计"/}
+<style>
+.lyear-layout-content.page-wrap{position:relative!important;height:auto!important;width:100%!important;max-width:1400px!important;margin:0 auto!important;left:auto!important;padding:calc(64px + 24px) 20px 40px 20px!important}
+.page-wrap { --pri: #d97706; --pri2: #b45309; }
+.page-header-bar {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border-radius: 16px; padding: 20px 24px; margin-bottom: 20px;
+  color: #fff; box-shadow: 0 4px 20px rgba(245,158,11,0.25);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.page-header-bar h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.page-header-bar .sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+.stat-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:20px; }
+.stat-card { background:#fff; border-radius:14px; padding:18px 16px; box-shadow:0 2px 12px rgba(0,0,0,0.04); border:1px solid #e8ecf1; text-align:center; }
+.stat-card .num { font-size:26px; font-weight:800; color:#1a1a2e; line-height:1.2; }
+.stat-card .lbl { font-size:12px; color:#94a3b8; margin-top:4px; }
+.stat-card.c-green .num { color:#059669; }
+.stat-card.c-orange .num { color:#d97706; }
+.stat-card.c-blue .num { color:#2563eb; }
+.stat-card.c-red .num { color:#dc2626; }
+.content-card { background:#fff; border-radius:16px; box-shadow:0 2px 16px rgba(0,0,0,0.05); border:1px solid #e8ecf1; overflow:hidden; margin-bottom:20px; }
+.content-card-body { padding:18px 20px; }
+.new-table { width:100%; border-collapse:collapse; font-size:13px; }
+.new-table thead th { background:#f8fafc; color:#475569; font-weight:600; padding:10px 12px; border-bottom:2px solid #e2e8f0; font-size:11px; text-transform:uppercase; letter-spacing:0.03em; white-space:nowrap; }
+.new-table tbody td { padding:10px 12px; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:middle; }
+.new-table tbody tr:hover { background:#fafbfc; }
+.new-btn { display:inline-flex; align-items:center; gap:5px; padding:8px 16px; border-radius:10px; border:none; font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; }
+.new-btn.primary { background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; box-shadow:0 3px 10px rgba(245,158,11,0.3); }
+.new-btn.danger { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; }
+.new-btn.out { background:#fff; color:#d97706; border:2px solid #e2e8f0; }
+.new-btn.sm { padding:4px 10px; font-size:11px; }
+.new-badge { display:inline-flex; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.new-badge.gray { background:#f1f5f9; color:#64748b; }
+.new-badge.red { background:#fef2f2; color:#dc2626; }
+.search-box { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+.form-input { padding:9px 14px; border:2px solid #e2e8f0; border-radius:10px; font-size:13px; background:#fff; color:#334155; }
+.form-input:focus { border-color:#f59e0b; box-shadow:0 0 0 3px rgba(245,158,11,0.1); outline:none; }
+@media (max-width:768px){
+  .page-header-bar { padding:14px 16px; border-radius:12px; }
+  .new-table thead { display:none; }
+  .new-table tbody td { display:block; text-align:right; padding:6px 8px; }
+  .new-table tbody td::before { content:attr(data-label); float:left; font-weight:600; color:#475569; font-size:10px; text-transform:uppercase; }
+  .new-table tbody tr { display:block; margin-bottom:6px; background:#fafbfc; border-radius:10px; padding:4px 8px; }
+}
+</style>
+
+<main class="lyear-layout-content page-wrap">
+  <div class="container-fluid">
+    <div class="page-header-bar">
+      <div>
+        <h2>未实名用户统计</h2>
+        <div class="sub">统计未完成实名认证的用户，支持一键删除</div>
+      </div>
+    </div>
+
+    <div class="stat-cards">
+      <div class="stat-card"><div class="num">{$total}</div><div class="lbl">总用户数</div></div>
+      <div class="stat-card c-green"><div class="num">{$verified}</div><div class="lbl">已实名</div></div>
+      <div class="stat-card c-orange"><div class="num">{$unverified}</div><div class="lbl">未实名</div></div>
+      <div class="stat-card c-blue"><div class="num">{$pending}</div><div class="lbl">待审核</div></div>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-body">
+        <form method="get" action="">
+          <div class="search-box">
+            <input class="form-input" type="text" name="search" placeholder="搜索用户名/邮箱..." value="{$search|default=''}" style="min-width:220px;"/>
+            <button class="new-btn primary" type="submit"><i class="mdi mdi-magnify"></i> 搜索</button>
+            {if $search}<a href="?" class="new-btn out">清除</a>{/if}
+            <button type="button" class="new-btn danger" style="margin-left:auto;" onclick="deleteAll()"><i class="mdi mdi-delete-sweep"></i> 一键删除全部未实名用户</button>
+          </div>
+        </form>
+
+        <div class="table-responsive">
+          <table class="new-table">
+            <thead>
+              <tr><th>ID</th><th>用户名</th><th>昵称</th><th>邮箱</th><th>实名状态</th><th>注册时间</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+{foreach $users as $u}
+              <tr>
+                <td data-label="ID">{$u.id}</td>
+                <td data-label="用户名"><strong style="color:#1a1a2e;">{$u.user}</strong></td>
+                <td data-label="昵称">{$u.name|default='-'}</td>
+                <td data-label="邮箱">{$u.mail|default='-'}</td>
+                <td data-label="实名状态">
+                  {if $u.realname_status==2}<span class="new-badge red">已驳回</span>
+                  {elseif $u.realname_status==0}<span class="new-badge gray">未认证</span>
+                  {else}<span class="new-badge gray">未认证</span>{/if}
+                </td>
+                <td data-label="注册时间">{if $u.time>0}{:date('Y-m-d H:i',$u.time)}{else}-{/if}</td>
+                <td data-label="操作">
+                  <button class="new-btn danger sm" onclick="deleteOne({$u.id},'{$u.user}')">删除</button>
+                </td>
+              </tr>
+{/foreach}
+{if empty($users->items())}
+              <tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;"><i class="mdi mdi-shield-check" style="font-size:40px;display:block;margin-bottom:10px;"></i>暂无未实名用户</td></tr>
+{/if}
+            </tbody>
+          </table>
+        </div>
+        {if !empty($users->items())}
+        <div style="text-align:center;margin-top:16px;">{$users->render()}</div>
+        {/if}
+      </div>
+    </div>
+  </div>
+</main>
+{include file="default/footer" /}
+<script>
+function token(){ return $('input[name="__token__"]').val() || window._csrfToken || ''; }
+
+function deleteOne(id, user){
+  layer.confirm('确定删除用户 <strong style="color:#dc2626;">' + user + '</strong> 吗？此操作不可恢复！', function(){
+    var load = layer.load(1, {time:false});
+    $.ajax({
+      type:'POST', url:'', data:{ act:'delete_one', id:id }, dataType:'json',
+      success:function(res){
+        layer.close(load);
+        if(res.code == 1){ layer.msg(res.msg, {icon:1}, function(){ location.reload(); }); }
+        else { GlassTip.error(res.msg); }
+      },
+      error:function(){ layer.close(load); GlassTip.error('操作失败'); }
+    });
+  });
+}
+
+function deleteAll(){
+  layer.confirm('确定要<strong style="color:#dc2626;">一键删除所有未实名用户</strong>吗？<br/>名下仍有订单的用户会被自动跳过。此操作不可恢复！', {icon:0, title:'危险操作'}, function(){
+    var load = layer.load(1, {time:false});
+    $.ajax({
+      type:'POST', url:'', data:{ act:'delete_all', __token__: token() }, dataType:'json',
+      success:function(res){
+        layer.close(load);
+        if(res.code == 1){ layer.alert(res.msg, {icon:1}, function(){ location.reload(); }); }
+        else { GlassTip.error(res.msg); }
+      },
+      error:function(){ layer.close(load); GlassTip.error('操作失败'); }
+    });
+  });
+}
+</script>

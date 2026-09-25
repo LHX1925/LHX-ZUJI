@@ -344,6 +344,104 @@ function mnbt_ChangePassword($data3, $data4, $password)
     return ['code' => -1, 'msg' => "重置密码失败：{$msg}"];
 }
 
+/**
+ * ==================== Docker 容器开通 ====================
+ *
+ * 面板（尼玛宝塔 V2）对外接口：POST {base}/api/api.php?gn=docker
+ *   op=open   开通（只需 username，**不需要容器配置**）
+ *   op=close  关闭开通
+ *   op=get    查询开通状态
+ *
+ * 「开通」只代表允许这台主机使用 Docker：镜像 / 端口 / 目录挂载 / 环境变量
+ * 全部由用户在自己的面板里填写，销售系统不代填。每台主机只允许一个容器。
+ */
+
+//开通 Docker（由销售系统自动调用，或后台管理员手动点击）
+function mnbt_DockerOpen($data3, $order)
+{
+    return mnbt_DockerCall($data3, $order, 'open');
+}
+
+//关闭 Docker
+function mnbt_DockerClose($data3, $order)
+{
+    return mnbt_DockerCall($data3, $order, 'close');
+}
+
+//查询 Docker 开通状态
+function mnbt_DockerStatus($data3, $order)
+{
+    return mnbt_DockerCall($data3, $order, 'get');
+}
+
+//Docker 接口统一调用
+function mnbt_DockerCall($data3, $order, $op)
+{
+    $names = ['open' => '开通', 'close' => '关闭', 'get' => '查询'];
+    $opName = isset($names[$op]) ? $names[$op] : $op;
+
+    if (empty($order["user"])) {
+        return ["code" => -1, "msg" => "Docker{$opName}失败：该主机缺少面板用户名"];
+    }
+    if (empty($data3["host"])) {
+        return ["code" => -1, "msg" => "Docker{$opName}失败：服务器主机地址未配置"];
+    }
+    if (!function_exists('curl_init')) {
+        return ["code" => -1, "msg" => "Docker{$opName}失败：服务器未安装 PHP curl 扩展"];
+    }
+
+    $endpoint = mnbt_parseHost($data3);
+    if ($endpoint["host"] === "" || $endpoint["host"] === "http" || $endpoint["host"] === "https") {
+        return ["code" => -1, "msg" => "Docker{$opName}失败：主机地址填写错误，请只填域名或IP，不要带 http://"];
+    }
+
+    $datass = [
+        'url' => $endpoint["api"] . '?gn=docker',
+        'data' => [
+            'username' => $order["user"],
+            'op' => $op,
+        ]
+    ];
+    $datass = mnbt_notnulldata($datass, $data3);
+
+    $logFile = PATH . 'runtime/mnbt_debug.log';
+    @file_put_contents($logFile, "[DOCKER-REQUEST] " . json_encode([
+        'time' => date('Y-m-d H:i:s'),
+        'url' => $datass['url'],
+        'post_data' => $datass['data'],
+    ], JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND);
+
+    $raw = @mnbt_CURL($datass);
+
+    @file_put_contents($logFile, "[DOCKER-RESPONSE] " . (is_string($raw) ? $raw : json_encode($raw)) . "\n\n", FILE_APPEND);
+
+    if ($raw === false || $raw === null || $raw === '') {
+        return ["code" => -1, "msg" => "Docker{$opName}失败：无法连接梦奈宝塔接口(" . $endpoint["api"] . ")，请检查主机/端口/SSL"];
+    }
+    if ($raw === 'URL ERROR') {
+        return ["code" => -1, "msg" => "Docker{$opName}失败：接口地址无效"];
+    }
+    if (is_string($raw) && strpos($raw, 'CURL_ERROR:') === 0) {
+        return ["code" => -1, "msg" => "Docker{$opName}失败：" . $raw];
+    }
+
+    $result = json_decode($raw, true);
+    if (!is_array($result) || !isset($result['code'])) {
+        $snippet = is_string($raw) ? mb_substr(strip_tags($raw), 0, 120) : '接口无响应或返回异常';
+        return ["code" => -1, "msg" => "Docker{$opName}失败：" . $snippet . "（" . $endpoint["api"] . "）"];
+    }
+
+    if ((string)$result['code'] === '200') {
+        return [
+            "code" => 1,
+            "msg" => isset($result['msg']) ? $result['msg'] : "Docker{$opName}成功",
+            "data" => (isset($result['data']) && is_array($result['data'])) ? $result['data'] : [],
+        ];
+    }
+
+    return ["code" => -1, "msg" => "Docker{$opName}失败：" . (isset($result['msg']) ? $result['msg'] : '接口返回异常')];
+}
+
 //续费
 function mnbt_renew($b,$data,$a,$times,$time){
 	$array["code"]="1";
@@ -351,7 +449,7 @@ function mnbt_renew($b,$data,$a,$times,$time){
 return $array;
 }
 
-function mnbt_CURL($data = array(), $timeout = 30)
+function mnbt_CURL($data = array(), $timeout = 300)
 {
     if (empty($data['url'])) {
         return 'URL ERROR';
@@ -372,7 +470,7 @@ function mnbt_CURL($data = array(), $timeout = 30)
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(isset($data['data']) ? $data['data'] : []));
     curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
     $body = curl_exec($ch);
     if ($body === false) {

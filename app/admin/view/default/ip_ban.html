@@ -353,7 +353,7 @@ function manualBan() {
     var duration = $('#ban-duration').val();
     var token = $('input[name="__token__"]').val();
 
-    if (!ip) { layer.msg('请输入IP地址', {icon: 2}); return; }
+    if (!ip) { GlassTip.error('请输入IP地址'); return; }
 
     var load = layer.load(1, {time: false});
     $.ajax({
@@ -366,12 +366,12 @@ function manualBan() {
             if (data.code == 1) {
                 layer.msg(data.msg, {icon: 1}, function() { window.location.reload(); });
             } else {
-                layer.msg(data.msg, {icon: 2});
+                GlassTip.error(data.msg);
             }
         },
         error: function() {
             layer.close(load);
-            layer.msg('请求异常', {icon: 2});
+            GlassTip.error('请求异常');
         }
     });
 }
@@ -398,12 +398,12 @@ function unbanIp(id, ip) {
                 if (data.code == 1) {
                     layer.msg(data.msg, {icon: 1}, function() { window.location.reload(); });
                 } else {
-                    layer.msg(data.msg, {icon: 2});
+                    GlassTip.error(data.msg);
                 }
             },
             error: function() {
                 layer.close(load);
-                layer.msg('请求异常', {icon: 2});
+                GlassTip.error('请求异常');
             }
         });
     });

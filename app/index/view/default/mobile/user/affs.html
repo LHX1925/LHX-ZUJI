@@ -1,0 +1,523 @@
+{php}$title = '推广中心'; $tab_active = 'profile'; $back_url = '/user';{/php}
+{include file="default/mobile/header" /}
+<main id="main-container">
+    <div class="content content-narrow">
+        <div class="affs-header glass-user-hero">
+            <div>
+                <h1>推广中心</h1>
+                <p>邀请好友，永久赚取佣金</p>
+            </div>
+            <div class="affs-commission-badge">
+                <i class="fas fa-percentage"></i>
+                <span>提成比例 {$affdiscount}%</span>
+            </div>
+        </div>
+
+        <div class="affs-stats">
+            <div class="affs-stat-card primary glass-stat-mini">
+                <div class="affs-stat-icon glass-stat-mini-icon"><i class="fas fa-coins"></i></div>
+                <div class="affs-stat-info">
+                    <span class="affs-stat-label">可提现金额</span>
+                    <span class="affs-stat-value">¥{$user.affmoney}</span>
+                </div>
+            </div>
+            <div class="affs-stat-card glass-stat-mini glass-stagger-1">
+                <div class="affs-stat-icon" style="background:#ECFDF5;color:#10B981;"><i class="fas fa-chart-line"></i></div>
+                <div class="affs-stat-info">
+                    <span class="affs-stat-label">累计收益</span>
+                    <span class="affs-stat-value">¥{$totalEarnings}</span>
+                </div>
+            </div>
+            <div class="affs-stat-card glass-stat-mini glass-stagger-2">
+                <div class="affs-stat-icon" style="background:#FEF3C7;color:#F59E0B;"><i class="fas fa-users"></i></div>
+                <div class="affs-stat-info">
+                    <span class="affs-stat-label">注册用户</span>
+                    <span class="affs-stat-value">{$referralCount}</span>
+                </div>
+            </div>
+            <div class="affs-stat-card glass-stat-mini glass-stagger-3">
+                <div class="affs-stat-icon" style="background:#EDE9FE;color:#8B5CF6;"><i class="fas fa-wallet"></i></div>
+                <div class="affs-stat-info">
+                    <span class="affs-stat-label">已提现</span>
+                    <span class="affs-stat-value">¥{$totalWithdrawn}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="affs-link-card glass-card glass-reveal glass-stagger-1">
+            <div class="affs-link-header">
+                <div>
+                    <h3><i class="fas fa-link"></i> 专属推广链接</h3>
+                    <p>用户通过此链接注册并消费，你将获得 {$affdiscount}% 佣金</p>
+                </div>
+                <span class="affs-min-withdraw">最小提现金额：¥{$affwithdrawal}</span>
+            </div>
+            <div class="affs-link-row">
+                <input type="text" id="referralLink" value="{$affurl}" readonly>
+                <button class="affs-copy-btn glass-btn glass-btn-primary" id="copyBtn">
+                    <i class="fas fa-copy"></i> 复制链接
+                </button>
+            </div>
+            <div class="affs-actions">
+                <button class="affs-btn affs-btn-primary glass-btn glass-btn-primary" onclick="txye()">
+                    <i class="fas fa-credit-card"></i> 提现到余额
+                </button>
+                <button class="affs-btn affs-btn-outline glass-btn glass-btn-outline" onclick="txzfb()">
+                    <i class="fab fa-alipay"></i> 提现到支付宝
+                </button>
+            </div>
+        </div>
+
+        <div class="affs-records glass-card glass-reveal glass-stagger-2">
+            <ul class="affs-tabs" role="tablist">
+                <li>
+                    <a class="affs-tab active" href="#affbuyrecord" data-toggle="tab" role="tab" aria-selected="true">
+                        <i class="fas fa-chart-line"></i> 收益记录
+                    </a>
+                </li>
+                <li>
+                    <a class="affs-tab" href="#withdrawrecord" data-toggle="tab" role="tab" aria-selected="false">
+                        <i class="fas fa-money-bill-wave"></i> 提现记录
+                    </a>
+                </li>
+                <li>
+                    <a class="affs-tab" href="#useraffilist" data-toggle="tab" role="tab" aria-selected="false">
+                        <i class="fas fa-users"></i> 注册用户
+                    </a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div id="affbuyrecord" class="tab-pane active" role="tabpanel">
+                    <div class="affs-table-wrap">
+                        <table class="affs-table glass-user-table">
+                            <thead>
+                                <tr><th>ID</th><th>信息</th><th>金额</th><th>时间</th></tr>
+                            </thead>
+                            <tbody>
+                                {foreach $affsymoney as $sy}
+                                <tr><td>{$sy.id}</td><td>{$sy.information}</td><td><span class="affs-amount">+¥{$sy.money}</span></td><td>{$sy.time|date="Y-m-d H:i:s",###}</td></tr>
+                                {/foreach}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="affs-pagination">{$affsymoney->render()}</div>
+                </div>
+                <div id="withdrawrecord" class="tab-pane" role="tabpanel">
+                    <div class="affs-table-wrap">
+                        <table class="affs-table glass-user-table">
+                            <thead>
+                                <tr><th>ID</th><th>信息</th><th>金额</th><th>时间</th><th>状态</th></tr>
+                            </thead>
+                            <tbody>
+                                {foreach $afftxjl as $tx}
+                                <tr>
+                                    <td>{$tx.id}</td>
+                                    <td>{$tx.information}</td>
+                                    <td><span class="affs-amount out">-¥{$tx.money}</span></td>
+                                    <td>{$tx.time|date="Y-m-d H:i:s",###}</td>
+                                    <td>{if $tx.state=="1"}<span class="affs-badge affs-badge-success glass-badge glass-badge-success">已打款</span>{else}<span class="affs-badge affs-badge-warning glass-badge glass-badge-warning">等待打款</span>{/if}</td>
+                                </tr>
+                                {/foreach}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="affs-pagination">{$afftxjl->render()}</div>
+                </div>
+                <div id="useraffilist" class="tab-pane" role="tabpanel">
+                    <div class="affs-table-wrap">
+                        <table class="affs-table glass-user-table">
+                            <thead>
+                                <tr><th>ID</th><th>昵称</th><th>注册时间</th></tr>
+                            </thead>
+                            <tbody>
+                                {foreach $affus as $u}
+                                <tr><td>{$u.id}</td><td>{$u.name}</td><td>{$u.time|date="Y-m-d H:i:s",###}</td></tr>
+                                {/foreach}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="affs-pagination">{$affus->render()}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<style>
+    .affs-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    .affs-header h1 {
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--text);
+        margin: 0 0 6px;
+    }
+    .affs-header p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    .affs-commission-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: var(--primary-bg);
+        color: var(--primary);
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 700;
+    }
+    .affs-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .affs-stat-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition: all 0.2s;
+    }
+    .affs-stat-card:hover {
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+    .affs-stat-card.primary {
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        color: #fff;
+        border: none;
+    }
+    .affs-stat-card.primary .affs-stat-label {
+        color: rgba(255,255,255,0.8);
+    }
+    .affs-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: var(--primary-bg);
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    .affs-stat-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .affs-stat-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+    .affs-stat-value {
+        font-size: 22px;
+        font-weight: 800;
+    }
+    .affs-link-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 28px;
+        margin-bottom: 24px;
+    }
+    .affs-link-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+    }
+    .affs-link-header h3 {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--text);
+        margin: 0 0 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .affs-link-header p {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    .affs-min-withdraw {
+        font-size: 13px;
+        color: var(--danger);
+        font-weight: 600;
+        background: #FEF2F2;
+        padding: 6px 12px;
+        border-radius: 999px;
+    }
+    .affs-link-row {
+        display: flex;
+        gap: 0;
+        margin-bottom: 20px;
+    }
+    .affs-link-row input {
+        flex: 1;
+        padding: 14px 18px;
+        border: 1.5px solid var(--border);
+        border-radius: 12px 0 0 12px;
+        font-size: 14px;
+        color: var(--text);
+        background: var(--bg);
+        outline: none;
+    }
+    .affs-copy-btn {
+        padding: 14px 22px;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 0 12px 12px 0;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .affs-copy-btn:hover {
+        background: var(--primary-dark);
+    }
+    .affs-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .affs-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+    .affs-btn-primary {
+        background: var(--primary);
+        color: #fff;
+    }
+    .affs-btn-primary:hover {
+        background: var(--primary-dark);
+        box-shadow: 0 6px 18px rgba(37,99,235,0.25);
+    }
+    .affs-btn-outline {
+        background: #fff;
+        color: var(--primary);
+        border: 1.5px solid var(--primary);
+    }
+    .affs-btn-outline:hover {
+        background: var(--primary-bg);
+    }
+    .affs-records {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+    }
+    .affs-tabs {
+        display: flex;
+        gap: 8px;
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px;
+        border-bottom: 1px solid var(--border-light);
+        padding-bottom: 12px;
+    }
+    .affs-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .affs-tab:hover {
+        color: var(--primary);
+        background: var(--primary-bg);
+        text-decoration: none;
+    }
+    .affs-tab.active {
+        background: var(--primary-bg);
+        color: var(--primary);
+    }
+    .affs-table-wrap {
+        overflow-x: auto;
+    }
+    .affs-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    .affs-table th {
+        text-align: left;
+        padding: 12px 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border-light);
+        white-space: nowrap;
+    }
+    .affs-table td {
+        padding: 14px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text);
+    }
+    .affs-table tr:last-child td {
+        border-bottom: none;
+    }
+    .affs-amount {
+        color: var(--success);
+        font-weight: 700;
+    }
+    .affs-amount.out {
+        color: var(--danger);
+    }
+    .affs-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .affs-badge-success {
+        background: #D1FAE5;
+        color: #065F46;
+    }
+    .affs-badge-warning {
+        background: #FEF3C7;
+        color: #92400E;
+    }
+    .affs-pagination {
+        text-align: center;
+        margin-top: 20px;
+    }
+    .affs-pagination .pagination {
+        justify-content: center;
+    }
+
+    /* 液态玻璃主题适配 */
+    body.glass-enabled .affs-stat-card,
+    body.glass-enabled .affs-link-card,
+    body.glass-enabled .affs-records,
+    body.glass-enabled .affs-btn-outline {
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        border-color: var(--glass-border);
+        box-shadow: var(--glass-shadow-sm), var(--glass-shadow-inset);
+    }
+    body.glass-enabled.glass-bg-image .affs-stat-card,
+    body.glass-enabled.glass-bg-image .affs-link-card,
+    body.glass-enabled.glass-bg-image .affs-records,
+    body.glass-enabled.glass-bg-image .affs-btn-outline {
+        background: rgba(255, 255, 255, var(--glass-opacity)) !important;
+        border-color: rgba(255, 255, 255, 0.35) !important;
+    }
+    body.glass-enabled .affs-link-row input,
+    body.glass-enabled .affs-form-control {
+        background: rgba(255, 255, 255, var(--glass-opacity-light));
+        backdrop-filter: blur(var(--glass-blur-light));
+        -webkit-backdrop-filter: blur(var(--glass-blur-light));
+        border-color: rgba(255, 255, 255, 0.4);
+        color: #1E293B;
+    }
+    body.glass-enabled .affs-link-row input:focus,
+    body.glass-enabled .affs-form-control:focus {
+        background: rgba(255, 255, 255, var(--glass-opacity-btn));
+        border-color: var(--glass-primary);
+        box-shadow: 0 0 0 4px var(--glass-primary-glow);
+    }
+
+    @media (max-width: 991px) {
+        .affs-stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .affs-link-row {
+            flex-direction: column;
+        }
+        .affs-link-row input,
+        .affs-copy-btn {
+            border-radius: 12px;
+            width: 100%;
+        }
+        .affs-copy-btn {
+            margin-top: 10px;
+        }
+        .affs-tabs {
+            flex-wrap: wrap;
+        }
+    }
+    @media (max-width: 576px) {
+        .affs-stats {
+            grid-template-columns: 1fr;
+        }
+        .affs-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+<script>
+    $(document).ready(function () {
+        $('#copyBtn').on('click', function () {
+            $('#referralLink').select();
+            document.execCommand("Copy");
+            showToast('推广链接复制成功！', 'success', 2500);
+        });
+
+        $('.affs-tab').on('click', function(e) {
+            e.preventDefault();
+            var target = $(this).attr('href');
+            $('.affs-tab').removeClass('active').attr('aria-selected', 'false');
+            $(this).addClass('active').attr('aria-selected', 'true');
+            $('.tab-pane').removeClass('active');
+            $(target).addClass('active');
+        });
+    });
+
+    function txye(){
+        layer.confirm('确定要全部提现到账户余额吗？', {icon:3}, function (){ txye1() });
+    }
+    function txye1(){
+        var load = layer.load(1,{time:false});
+        $.ajax({
+            type:'POST', url:'', data:{ act:'txye' }, dataType:'json',
+            success:function (data){ layer.close(load); if(data.code == 1){ showToast(data.msg || '操作成功','success',1800); setTimeout(function (){ location.href = '' },1800); }else{ showToast(data.msg || '提现失败','danger',2500); } }
+        });
+    }
+    function txzfb() {
+        layer.open({
+            type: 1, closeBtn: false, shift: 7, shadeClose: true, title:"提现到支付宝",
+            content: '<form><div class="block-content block-content-full"><div class="form-group"><label style="display:block;margin-bottom:6px;font-size:14px;font-weight:500;color:var(--text);">支付宝姓名</label><input type="text" name="zfbxm" id="zfbxm" value="" placeholder="请输入姓名" class="form-control"></div><div class="form-group"><label style="display:block;margin-bottom:6px;font-size:14px;font-weight:500;color:var(--text);">支付宝账号</label><input type="text" name="zfbzh" id="zfbzh" value="" placeholder="请输入账号" class="form-control"></div><div class="form-group"><button type="button" onclick="txzfb1()" class="btn btn-primary btn-block" style="width:100%;padding:12px;font-size:15px;font-weight:600;">提交</button></div></div></form>'
+        });
+    }
+    function txzfb1(){
+        var load = layer.load(1,{time:false});
+        var zfbzh=$("#zfbzh").val();
+        var zfbxm=$("#zfbxm").val();
+        $.ajax({
+            type:'POST', url:'', data:{ act:'txzfb', zfbzh:zfbzh, zfbxm:zfbxm }, dataType:'json',
+            success:function (data){ layer.close(load); if(data.code == 1){ showToast(data.msg || '操作成功','success',1800); setTimeout(function (){ location.href = '' },1800); }else{ showToast(data.msg || '提现失败','danger',2500); } }
+        });
+    }
+</script>
+{include file="default/mobile/footer" /}

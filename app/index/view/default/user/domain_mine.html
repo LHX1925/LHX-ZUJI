@@ -1,0 +1,66 @@
+{include file="default/user/header" title="我的域名" /}
+<main id="main-container">
+<div class="content">
+<style>
+    .dm-page { max-width: 900px; margin: 0 auto; padding: 20px 16px 40px; }
+    .dm-card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid #eef2f7; }
+    .dm-card h3 { font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 20px; }
+    .dm-table { width: 100%; border-collapse: collapse; }
+    .dm-table th, .dm-table td { padding: 12px 10px; text-align: left; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
+    .dm-table th { color: #64748b; font-weight: 600; }
+    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; }
+    .status-1 { background: #d1fae5; color: #065f46; }
+    .status-0 { background: #f1f5f9; color: #64748b; }
+    .status-2 { background: #fee2e2; color: #991b1b; }
+</style>
+
+<div class="dm-page">
+    <div class="dm-card">
+        <h3><i class="fas fa-user"></i> 我的域名</h3>
+        <table class="dm-table">
+            <thead>
+                <tr><th>域名</th><th>价格</th><th>注册商</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+                {if empty($domains)}
+                <tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:40px 0;">暂无上架域名</td></tr>
+                {/if}
+                {foreach $domains as $d}
+                <tr>
+                    <td style="font-family:Consolas,monospace;font-weight:600;">{$d.domain}</td>
+                    <td>¥{$d.price}</td>
+                    <td>{if $d.registrar=='aliyun'}阿里云万网{elseif $d.registrar=='dnspod'}腾讯云DNSPod{/if}</td>
+                    <td>
+                        {if $d.status==1}<span class="status-badge status-1">出售中</span>
+                        {elseif $d.status==2}<span class="status-badge status-2">已售出</span>
+                        {else}<span class="status-badge status-0">已下架</span>{/if}
+                    </td>
+                    <td>
+                        {if $d.status==1}
+                        <button class="btn btn-sm btn-outline-danger btn-del" data-id="{$d.id}">下架</button>
+                        {elseif $d.status==0}
+                        <button class="btn btn-sm btn-outline-success btn-relist" data-id="{$d.id}">重新上架</button>
+                        {/if}
+                    </td>
+                </tr>
+                {/foreach}
+            </tbody>
+        </table>
+        {$domains->render()}
+    </div>
+</div>
+</div>
+</main>
+{include file="default/user/footer" /}
+<script>
+$(function(){
+    $('.btn-del').on('click', function(){
+        var id = $(this).data('id');
+        if(!confirm('确认下架该域名？')) return;
+        $.post('__ROOT__/domain/del', {id:id}, function(res){
+            if(res.code == 1){ showToast(res.msg, 'success', 2000); setTimeout(function(){ location.reload(); }, 1000); }
+            else showToast(res.msg, 'danger', 2500);
+        }, 'json');
+    });
+});
+</script>

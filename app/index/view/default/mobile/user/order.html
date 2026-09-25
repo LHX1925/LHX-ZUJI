@@ -1,0 +1,41 @@
+{php}$title = '产品管理'; $tab_active = 'host';{/php}
+{include file="default/mobile/header" /}
+{if isset($isBanned) && $isBanned}
+<div class="app-card" style="border-left:4px solid #F59E0B;background:rgba(245,158,11,0.08);padding:14px 16px;margin-bottom:12px;font-size:13px;color:#92400E;">
+    <strong><i class="fas fa-exclamation-triangle"></i> 您的账号已被封禁，所有主机已停用</strong><br>
+    封禁至：<strong>{:date('Y-m-d H:i:s', $banEndTime)}</strong><br>
+    封禁原因：{$banReason|default:'管理员未填写原因'}
+</div>
+{/if}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">产品管理</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">管理云主机、域名与服务状态</p>
+</div>
+<div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+    <a href="__ROOT__/cart" class="app-btn" style="font-size:13px;padding:8px 16px;"><i class="fas fa-plus"></i> 新增产品</a>
+</div>
+{if isset($order) && count($order) > 0}
+{foreach $order as $o}
+<div class="app-card" style="margin-bottom:10px;padding:14px 16px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:14px;font-weight:700;color:var(--glass-text);">{$o.cartid}</div>
+            <div style="font-size:11px;color:var(--glass-text-muted);">订单号: {$o.ordernumber|default='YH'.date('Ymd',intval($o.atime?:time())).str_pad($o.id,6,'0',STR_PAD_LEFT)}</div>
+        </div>
+        {if $o.state=="0"}<span class="app-tag" style="background:rgba(245,158,11,0.15);color:#F59E0B;">待开通</span>
+        {elseif $o.state=="1"}<span class="app-tag" style="background:rgba(16,185,129,0.15);color:#10B981;">运行中</span>
+        {elseif $o.state=="2"}<span class="app-tag" style="background:rgba(245,158,11,0.15);color:#F59E0B;">暂停</span>
+        {elseif $o.state=="3"}<span class="app-tag" style="background:rgba(239,68,68,0.15);color:#EF4444;">已过期</span>
+        {else}<span class="app-tag">正常</span>{/if}
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--glass-text-muted);margin-bottom:10px;">
+        <span>账号: {$o.user}</span>
+        <span>{:date('Y-m-d', $o.atime)} ~ {:date('Y-m-d', $o.ztime)}</span>
+    </div>
+    <a href="__ROOT__/user/order/{$o.id}" class="app-btn" style="width:100%;text-align:center;font-size:13px;padding:8px;">管理产品</a>
+</div>
+{/foreach}
+{else}
+<div class="app-empty"><i class="fas fa-server"></i><p>暂无产品，点击右上角新增产品</p></div>
+{/if}
+{include file="default/mobile/footer" /}

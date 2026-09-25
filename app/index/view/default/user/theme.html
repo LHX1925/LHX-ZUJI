@@ -1,0 +1,346 @@
+{include file="default/user/header" title="个性化主题" /}
+<main id="main-container">
+    <div class="content">
+        <style>
+            .theme-page {
+                max-width: 760px;
+                margin: 0 auto;
+            }
+
+            .theme-hero {
+                background: #fff;
+                border: 1px solid var(--border);
+                border-radius: 20px;
+                padding: 28px 32px;
+                margin-bottom: 20px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+            }
+
+            body.glass-enabled .theme-hero,
+            body.glass-enabled .form-card {
+                background: var(--glass-bg);
+                backdrop-filter: blur(var(--glass-blur));
+                -webkit-backdrop-filter: blur(var(--glass-blur));
+                border-color: var(--glass-border);
+                box-shadow: var(--glass-shadow-sm), var(--glass-shadow-inset);
+            }
+
+            body.glass-enabled.glass-bg-image .theme-hero,
+            body.glass-enabled.glass-bg-image .form-card {
+                background: rgba(255, 255, 255, var(--glass-opacity)) !important;
+                border-color: rgba(255, 255, 255, 0.35) !important;
+                box-shadow: var(--glass-shadow), var(--glass-shadow-inset) !important;
+            }
+
+            .theme-hero h1 {
+                font-size: 24px;
+                font-weight: 800;
+                color: var(--text);
+                margin: 0 0 6px;
+            }
+
+            .theme-hero p {
+                font-size: 14px;
+                color: var(--text-secondary);
+                margin: 0;
+            }
+
+            .form-card {
+                background: #fff;
+                border: 1px solid var(--border);
+                border-radius: 20px;
+                padding: 28px 32px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+            }
+
+            .form-card h3 {
+                font-size: 17px;
+                font-weight: 800;
+                color: var(--text);
+                margin: 0 0 6px;
+            }
+
+            .form-card .form-tip {
+                font-size: 13px;
+                color: var(--text-secondary);
+                margin: 0 0 22px;
+            }
+
+            .form-row-modern {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                margin-bottom: 16px;
+            }
+
+            .form-row-modern label {
+                width: 90px;
+                flex-shrink: 0;
+                font-size: 14px;
+                font-weight: 500;
+                color: var(--text);
+                margin: 0;
+            }
+
+            .form-row-modern .form-control {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .form-control {
+                border: 1.5px solid var(--border);
+                border-radius: 10px;
+                padding: 11px 14px;
+                font-size: 14px;
+                color: var(--text);
+                outline: none;
+                transition: all 0.2s;
+                background: #fff;
+                width: 100%;
+            }
+
+            .form-control:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+            }
+
+            body.glass-enabled .form-control {
+                background: rgba(255, 255, 255, var(--glass-opacity-light));
+                backdrop-filter: blur(var(--glass-blur-light));
+                -webkit-backdrop-filter: blur(var(--glass-blur-light));
+                border: 1.5px solid rgba(255, 255, 255, 0.4);
+                color: #1E293B;
+            }
+
+            body.glass-enabled .form-control:focus {
+                background: rgba(255, 255, 255, var(--glass-opacity-btn));
+                border-color: var(--glass-primary);
+                box-shadow: 0 0 0 4px var(--glass-primary-glow);
+            }
+
+            .btn-save {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 12px 36px;
+                background: var(--primary);
+                border: none;
+                border-radius: 999px;
+                color: #fff;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .btn-save:hover {
+                background: var(--primary-dark);
+                box-shadow: 0 6px 20px rgba(37,99,235,0.3);
+            }
+
+            .btn-cancel {
+                padding: 12px 32px;
+                background: #E2E8F0;
+                border: none;
+                border-radius: 999px;
+                color: var(--text);
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            body.glass-enabled .btn-cancel {
+                background: rgba(226, 232, 240, 0.8);
+                color: var(--text);
+            }
+
+            body.glass-enabled .btn-cancel:hover {
+                background: rgba(203, 213, 225, 0.9);
+            }
+
+            .btn-cancel:hover {
+                background: #CBD5E1;
+            }
+
+            @media (max-width: 767px) {
+                .form-row-modern {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 8px;
+                }
+
+                .form-row-modern label {
+                    width: 100%;
+                }
+            }
+        </style>
+
+        <div class="theme-page">
+            <div class="theme-hero">
+                <h1>个性化主题</h1>
+                <p>按自己的喜好定制站点外观，未自定义的项将自动使用全站默认主题设置</p>
+            </div>
+
+            <div class="form-card">
+                <h3>主题外观</h3>
+                <p class="form-tip">保存后立即生效，可随时恢复默认</p>
+                <form id="themeForm">
+                    <div class="form-row-modern">
+                        <label>深浅色</label>
+                        <select name="theme_mode" class="form-control">
+                            <option value="" {if !isset($user.theme_mode) || $user.theme_mode == ''}selected{/if}>跟随后台默认</option>
+                            <option value="light" {if isset($user.theme_mode) && $user.theme_mode == 'light'}selected{/if}>浅色</option>
+                            <option value="dark" {if isset($user.theme_mode) && $user.theme_mode == 'dark'}selected{/if}>深色</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row-modern">
+                        <label>液态玻璃</label>
+                        <select name="theme_glass" class="form-control">
+                            <option value="" {if !isset($user.theme_glass) || $user.theme_glass == ''}selected{/if}>跟随后台默认</option>
+                            <option value="1" {if isset($user.theme_glass) && $user.theme_glass == '1'}selected{/if}>开启</option>
+                            <option value="0" {if isset($user.theme_glass) && $user.theme_glass == '0'}selected{/if}>关闭</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row-modern">
+                        <label>背景类型</label>
+                        <select name="theme_bg_type" class="form-control">
+                            <option value="" {if !isset($user.theme_bg_type) || $user.theme_bg_type == ''}selected{/if}>跟随后台默认</option>
+                            <option value="image" {if isset($user.theme_bg_type) && $user.theme_bg_type == 'image'}selected{/if}>图片</option>
+                            <option value="video" {if isset($user.theme_bg_type) && $user.theme_bg_type == 'video'}selected{/if}>视频</option>
+                            <option value="gif" {if isset($user.theme_bg_type) && $user.theme_bg_type == 'gif'}selected{/if}>GIF动图</option>
+                            <option value="none" {if isset($user.theme_bg_type) && $user.theme_bg_type == 'none'}selected{/if}>无背景</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row-modern">
+                        <label>背景地址</label>
+                        <input type="text" name="theme_bg_image" class="form-control" value="{$user.theme_bg_image|default=''}" placeholder="图片/视频/GIF 的 http(s) 地址，留空则使用后台默认">
+                    </div>
+
+                    <div class="form-row-modern">
+                        <label>自定义背景上传</label>
+                        <div style="display:flex;gap:10px;align-items:center;">
+                            <button type="button" class="btn-save" id="btnUploadBg" style="padding:10px 20px;white-space:nowrap;">
+                                <i class="fas fa-upload"></i> 上传背景图
+                            </button>
+                            <input type="file" id="bgFileInput" accept="image/*" style="display:none;">
+                            <span style="font-size:12px;color:#94a3b8;">直接上传图片作为背景，无需填写链接</span>
+                        </div>
+                        {if isset($user.custom_bg_image) && $user.custom_bg_image}
+                        <div style="margin-top:8px;">
+                            <span style="font-size:12px;color:#2563eb;">当前已上传背景</span>
+                            <img src="{$user.custom_bg_image}" style="max-width:120px;max-height:60px;border-radius:8px;margin-left:8px;vertical-align:middle;">
+                        </div>
+                        {/if}
+                    </div>
+
+                    <div class="form-row-modern">
+                        <label>背景音乐</label>
+                        <select name="music_enabled" class="form-control">
+                            <option value="1" {if !isset($user.music_enabled) || $user.music_enabled == '1'}selected{/if}>开启（进入官网自动播放）</option>
+                            <option value="0" {if isset($user.music_enabled) && $user.music_enabled == '0'}selected{/if}>关闭背景音乐</option>
+                        </select>
+                    </div>
+
+                    <div style="text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                        <button type="submit" class="btn-save">保存主题</button>
+                        <button type="button" class="btn-cancel" id="themeReset">恢复默认</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+{include file="default/user/footer" /}
+<script>
+    $("#themeForm").submit(function () {
+        var load = layer.load(1, {time: false});
+        $.ajax({
+            type: 'POST',
+            url: '__ROOT__/user/settheme',
+            data: {
+                theme_mode: $("select[name='theme_mode']").val(),
+                theme_glass: $("select[name='theme_glass']").val(),
+                theme_bg_type: $("select[name='theme_bg_type']").val(),
+                theme_bg_image: $("input[name='theme_bg_image']").val(),
+                music_enabled: $("select[name='music_enabled']").val()
+            },
+            dataType: 'json',
+            success: function (data) {
+                layer.close(load);
+                if (data.code == 1) {
+                    showToast(data.msg, 'success', 2500);
+                    setTimeout(function () { location.reload(); }, 1200);
+                } else {
+                    showToast(data.msg, 'danger', 2500);
+                }
+            },
+            error: function () {
+                layer.close(load);
+                showToast('网络错误，请稍后重试', 'danger', 2500);
+            }
+        });
+        return false;
+    });
+
+    // 自定义背景上传
+    $("#btnUploadBg").click(function () {
+        $("#bgFileInput").click();
+    });
+    $("#bgFileInput").change(function () {
+        var file = this.files[0];
+        if (!file) return;
+        if (file.size > 8 * 1024 * 1024) { showToast('图片不能超过8MB', 'warning', 2500); return; }
+        var load = layer.load(1, {time: false});
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append('act', 'upload_bg');
+        $.ajax({
+            type: 'POST',
+            url: '__ROOT__/user/settheme',
+            data: fd,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function (data) {
+                layer.close(load);
+                if (data.code == 1) {
+                    showToast(data.msg, 'success', 2500);
+                    setTimeout(function () { location.reload(); }, 1200);
+                } else {
+                    showToast(data.msg, 'danger', 2500);
+                }
+            },
+            error: function () {
+                layer.close(load);
+                showToast('网络错误，请稍后重试', 'danger', 2500);
+            }
+        });
+    });
+
+    $("#themeReset").click(function () {
+        var load = layer.load(1, {time: false});
+        $.ajax({
+            type: 'POST',
+            url: '__ROOT__/user/settheme',
+            data: { theme_mode: '', theme_glass: '', theme_bg_type: '', theme_bg_image: '' },
+            dataType: 'json',
+            success: function (data) {
+                layer.close(load);
+                if (data.code == 1) {
+                    showToast(data.msg, 'success', 2500);
+                    setTimeout(function () { location.reload(); }, 1200);
+                } else {
+                    showToast(data.msg, 'danger', 2500);
+                }
+            },
+            error: function () {
+                layer.close(load);
+                showToast('网络错误，请稍后重试', 'danger', 2500);
+            }
+        });
+    });
+</script>

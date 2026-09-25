@@ -14,7 +14,7 @@
 <link rel="stylesheet" type="text/css" href="__ROOT__/static/css/animate.min.css">
 <link rel="stylesheet" type="text/css" href="__ROOT__/static/css/admin-style.css">
 <link rel="stylesheet" type="text/css" href="__ROOT__/static/css/style.min.css">
-<link rel="stylesheet" type="text/css" href="__ROOT__/static/css/glass-theme.css?v=7">
+<link rel="stylesheet" type="text/css" href="__ROOT__/static/css/glass-theme.css?v=17">
 {if isset($web.glass_theme) && $web.glass_theme == 'pink_blue'}<link rel="stylesheet" type="text/css" href="__ROOT__/static/css/pink-blue-gradient.css?v=4">{/if}
   <script type="text/javascript" src="__ROOT__/static/js/glass-animations.js?v=5"></script>
 <style>
@@ -300,6 +300,7 @@ body {
   display: flex;
   align-items: center;
   gap: 24px;
+  flex-wrap: nowrap; /* 覆盖 Bootstrap .navbar 的 wrap，防止右侧功能区被挤到第二行 */
 }
 .navbar-brand {
   display: flex;
@@ -358,6 +359,7 @@ body {
   list-style: none;
   flex: 1 1 auto;
   min-width: 0;
+  flex-wrap: nowrap;
 }
 .top-nav > li {
   position: relative;
@@ -633,6 +635,138 @@ body {
   text-decoration: none;
   font-weight: 500;
 }
+/* ===== 全局搜索下拉 ===== */
+.global-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.global-search .search-icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--glass-text-muted);
+  font-size: 18px;
+  pointer-events: none;
+  z-index: 2;
+}
+.top-search input[type="text"] {
+  width: 220px;
+  height: 40px;
+  padding: 0 14px 0 40px;
+  border-radius: var(--glass-radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--glass-text);
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, width .15s;
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+.top-search input[type="text"]::placeholder {
+  color: var(--glass-text-muted);
+}
+.top-search input[type="text"]:focus {
+  border-color: var(--glass-primary);
+  box-shadow: 0 0 0 3px var(--glass-primary-glow);
+  width: 250px;
+}
+.search-results {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 340px;
+  max-height: 420px;
+  overflow-y: auto;
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur-strong));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  box-shadow: var(--glass-shadow-lg);
+  padding: 8px;
+  z-index: 1100;
+}
+.search-results .sr-group-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--glass-text-secondary);
+  padding: 8px 10px 4px;
+  letter-spacing: .03em;
+}
+.search-results .sr-group-title i {
+  font-size: 15px;
+  color: var(--glass-primary);
+}
+.search-results .sr-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--glass-radius-sm);
+  text-decoration: none;
+  color: var(--glass-text);
+  transition: background var(--glass-transition-fast);
+  cursor: pointer;
+}
+.search-results .sr-item:hover {
+  background: var(--glass-bg-light);
+}
+.search-results .sr-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--glass-primary), var(--glass-primary-light));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.search-results .sr-main {
+  flex: 1;
+  min-width: 0;
+}
+.search-results .sr-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-results .sr-sub {
+  font-size: 12px;
+  color: var(--glass-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.search-results .sr-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--glass-radius-full);
+  background: rgba(79, 124, 255, .12);
+  color: var(--glass-primary);
+  flex-shrink: 0;
+}
+.search-results .sr-empty {
+  padding: 22px 10px;
+  text-align: center;
+  color: var(--glass-text-muted);
+  font-size: 13px;
+}
+.search-results .sr-empty i {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 8px;
+}
 .mobile-nav-toggle {
   display: none;
   width: 40px;
@@ -652,21 +786,36 @@ body {
   background: var(--glass-bg-light);
   color: var(--glass-primary);
 }
-@media (max-width: 1200px) {
+@media (max-width: 1440px) and (min-width: 1201px) {
   .lyear-layout-header .navbar {
-    padding: 0 16px;
-    gap: 12px;
+    gap: 14px;
   }
   .top-search input {
     width: 150px;
     padding: 0 12px 0 34px;
   }
   .top-nav > li > a.nav-link {
-    padding: 8px 12px;
+    padding: 8px 10px;
     font-size: 13.5px;
   }
   .top-nav > li > a.nav-link.dropdown-toggle {
-    padding-right: 26px;
+    padding-right: 24px;
+  }
+}
+@media (max-width: 1200px) {
+  .lyear-layout-header .navbar {
+    padding: 0 16px;
+    gap: 12px;
+  }
+  .top-search {
+    display: none; /* 优先保菜单单行：中屏收起全局搜索 */
+  }
+  .top-nav > li > a.nav-link {
+    padding: 8px 10px;
+    font-size: 13.5px;
+  }
+  .top-nav > li > a.nav-link.dropdown-toggle {
+    padding-right: 24px;
   }
   .navbar-right {
     gap: 6px;
@@ -1014,13 +1163,21 @@ body {
 </style>
 </head>
 {php}
+// 兜底：控制器没传 $web 时（如活动/域名/抽奖等管理页），直接从数据库读取站点配置，
+// 确保背景图/背景视频在所有后台页面都能渲染
+if (!isset($web) || !is_array($web) || !isset($web['id'])) {
+    try {
+        $web = \think\Db::name('web')->where('id', 1)->find();
+        if (!$web) $web = array();
+    } catch (\Throwable $e) { $web = array(); }
+}
 $bgImagesAttr = isset($web['bg_images']) ? str_replace(["\r\n", "\r", "\n"], ",", $web['bg_images']) : '';
 $glassOpacity = isset($web['glass_opacity']) ? intval($web['glass_opacity']) / 100 : 0.72;
 $bgType = isset($web['bg_type']) ? $web['bg_type'] : 'image';
 $isVideoBg = ($bgType === 'video' && !empty($web['bg_image']));
 $isGifBg = ($bgType === 'gif' && !empty($web['bg_image']));
 $hasBg = !empty($web['bg_image']);
-$bgBlurPx = isset($web['bg_blur']) ? intval($web['bg_blur']) : 3;
+$bgBlurPx = isset($web['bg_blur']) ? intval($web['bg_blur']) : 0;
 $glassEnabled = (!isset($web['glass_enabled']) || $web['glass_enabled'] == "1");
 
 $bodyClass = $glassEnabled ? 'glass-enabled glass-admin' : 'no-glass-theme';
@@ -1040,13 +1197,12 @@ if (isset($web['bg_switch_interval']) && $web['bg_switch_interval'] > 0) $bodyAt
 if (isset($web['bg_video_loop'])) $bodyAttrs .= ' data-bg-video-loop="' . intval($web['bg_video_loop']) . '"';
 if (isset($web['bg_video_muted'])) $bodyAttrs .= ' data-bg-video-muted="' . intval($web['bg_video_muted']) . '"';
 
+echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs . '>';
 if ($glassEnabled && $isVideoBg) {
     echo '<video id="glass-bg-video" class="glass-bg-video" src="' . htmlspecialchars($web['bg_image'], ENT_QUOTES, 'UTF-8') . '" autoplay muted loop playsinline></video>';
 } elseif ($glassEnabled && $isGifBg) {
     echo '<div id="glass-bg-gif" class="glass-bg-gif" style="background-image:url(\'' . addslashes($web['bg_image']) . '\');"></div>';
 }
-
-echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs . '>';
 {/php}
 <div class="lyear-layout-web">
   <div class="lyear-layout-container">
@@ -1074,13 +1230,22 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
               <li data-menu="violation"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/violation"><i class="mdi mdi-alert-octagon-outline"></i> 违规通报</a></li>
               <li data-menu="pointsProducts"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/index/pointsProducts"><i class="mdi mdi-gift-outline"></i> 积分商城</a></li>
               <li data-menu="membershipLevels"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/index/membershipLevels"><i class="mdi mdi-crown-outline"></i> 会员等级</a></li>
+              <li><div class="dropdown-divider"></div></li>
+              <li data-menu="activity"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/activity/quiz"><i class="mdi mdi-script-text-outline"></i> 活动中心</a></li>
+              <li data-menu="lottery"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/activity/lottery"><i class="mdi mdi-dice-multiple-outline"></i> 每日抽奖</a></li>
+              <li data-menu="domain"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/activity/domain"><i class="mdi mdi-domain"></i> 域名商城</a></li>
               {/if}
             </ul>
           </li>
 
           {if $user.is_super || in_array('announcement', $adminPermissions)}
-          <li data-menu="announcement" class="glass-animate-in glass-stagger-2">
-            <a class="nav-link glass-topbar-link" href="__ROOT__/admin/announcements">公告管理</a>
+          <li data-menu="announcement" class="glass-animate-in glass-stagger-2">            <a class="nav-link glass-topbar-link" href="__ROOT__/admin/announcements">公告管理</a>
+          </li>
+          {/if}
+
+          {if $user.is_super || in_array('set', $adminPermissions)}
+          <li data-menu="mailPush" class="glass-animate-in glass-stagger-2">
+            <a class="nav-link glass-topbar-link" href="__ROOT__/admin/mailPush">邮件推送</a>
           </li>
           {/if}
 
@@ -1099,9 +1264,6 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
           <li class="nav-item dropdown glass-animate-in glass-stagger-3">
             <a class="nav-link glass-topbar-link dropdown-toggle" href="javascript:void(0)" data-bs-toggle="dropdown">主机服务</a>
             <ul class="dropdown-menu glass-dropdown">
-              {if $user.is_super || in_array('classification', $adminPermissions)}
-              <li data-menu="classification"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/classification"><i class="mdi mdi-shape-outline"></i> 分类</a></li>
-              {/if}
               {if $user.is_super || in_array('product', $adminPermissions)}
               <li data-menu="product"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/product"><i class="mdi mdi-package-variant-closed"></i> 产品</a></li>
               {/if}
@@ -1111,6 +1273,11 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
               {if $user.is_super || in_array('server', $adminPermissions)}
               <li><div class="dropdown-divider"></div></li>
               <li data-menu="admin_host"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/admin_host"><i class="mdi mdi-monitor-dashboard"></i> 主机管理</a></li>
+              <li data-menu="docker"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/docker"><i class="mdi mdi-docker"></i> Docker 开通</a></li>
+              <li data-menu="bt_server"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/bt_server"><i class="mdi mdi-chart-areaspline"></i> 服务器状态</a></li>
+              {/if}
+              {if $user.is_super || in_array('op_log', $adminPermissions)}
+              <li data-menu="sys_record"><a class="dropdown-item glass-dropdown-item" href="__ROOT__/admin/sys_record"><i class="mdi mdi-file-document-edit-outline"></i> 系统记录</a></li>
               {/if}
             </ul>
           </li>
@@ -1179,7 +1346,11 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
             </button>
           </li>
           <li class="top-search glass-search">
-            <input type="text" id="adminGlobalSearch" placeholder="搜索订单/用户" autocomplete="off">
+            <div class="global-search" id="globalSearch">
+              <i class="mdi mdi-magnify search-icon"></i>
+              <input type="text" id="adminGlobalSearch" placeholder="搜索订单 / 用户" autocomplete="off">
+              <div class="search-results glass-dropdown" id="searchResults" style="display:none"></div>
+            </div>
           </li>
           <li class="dropdown">
             <a href="javascript:void(0)" class="top-icon-btn" data-bs-toggle="dropdown">
@@ -1287,9 +1458,15 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
         <li data-menu="user"><a href="__ROOT__/admin/user"><i class="mdi mdi-account-group-outline"></i> 用户管理</a></li>
         <li data-menu="realnameReview"><a href="__ROOT__/admin/realnameReview"><i class="mdi mdi-card-account-details-outline"></i> 实名审核</a></li>
         <li data-menu="violation"><a href="__ROOT__/admin/violation"><i class="mdi mdi-alert-octagon-outline"></i> 违规通报</a></li>
+        <li data-menu="activity"><a href="__ROOT__/admin/activity/quiz"><i class="mdi mdi-script-text-outline"></i> 活动中心</a></li>
+        <li data-menu="lottery"><a href="__ROOT__/admin/activity/lottery"><i class="mdi mdi-dice-multiple-outline"></i> 每日抽奖</a></li>
+        <li data-menu="domain"><a href="__ROOT__/admin/activity/domain"><i class="mdi mdi-domain"></i> 域名商城</a></li>
         {/if}
         {if $user.is_super || in_array('announcement', $adminPermissions)}
         <li data-menu="announcement"><a href="__ROOT__/admin/announcements"><i class="mdi mdi-bullhorn-outline"></i> 公告管理</a></li>
+        {/if}
+        {if $user.is_super || in_array('set', $adminPermissions)}
+        <li data-menu="mailPush"><a href="__ROOT__/admin/mailPush"><i class="mdi mdi-email-fast-outline"></i> 邮件推送</a></li>
         {/if}
         {if $user.is_super || in_array('order', $adminPermissions)}
         <li data-menu="order"><a href="__ROOT__/admin/order"><i class="mdi mdi-clipboard-text-outline"></i> 订单管理</a></li>
@@ -1297,15 +1474,16 @@ echo '<body class="' . $bodyClass . '" style="' . $bodyStyle . '"' . $bodyAttrs 
         {if $user.is_super || in_array('ticket', $adminPermissions)}
         <li data-menu="ticket"><a href="__ROOT__/admin/ticket"><i class="mdi mdi-headset"></i> 工单管理</a></li>
         {/if}
-        {if $user.is_super || in_array('classification', $adminPermissions)}
-        <li data-menu="classification"><a href="__ROOT__/admin/classification"><i class="mdi mdi-shape-outline"></i> 分类</a></li>
-        {/if}
         {if $user.is_super || in_array('product', $adminPermissions)}
         <li data-menu="product"><a href="__ROOT__/admin/product"><i class="mdi mdi-package-variant-closed"></i> 产品</a></li>
         {/if}
         {if $user.is_super || in_array('server', $adminPermissions)}
         <li data-menu="server"><a href="__ROOT__/admin/server"><i class="mdi mdi-server-outline"></i> 服务器</a></li>
         <li data-menu="admin_host"><a href="__ROOT__/admin/admin_host"><i class="mdi mdi-monitor-dashboard"></i> 主机管理</a></li>
+        <li data-menu="bt_server"><a href="__ROOT__/admin/bt_server"><i class="mdi mdi-chart-areaspline"></i> 服务器状态</a></li>
+        {/if}
+        {if $user.is_super || in_array('op_log', $adminPermissions)}
+        <li data-menu="sys_record"><a href="__ROOT__/admin/sys_record"><i class="mdi mdi-file-document-edit-outline"></i> 系统记录</a></li>
         {/if}
 
         <li class="nav-group-label">数据</li>
@@ -1387,21 +1565,102 @@ window._csrfToken = '{$csrf_token|default=""}';
     markActive();
   }
 
-  // 全局搜索：回车跳转订单或用户搜索
-  var searchInput = document.getElementById('adminGlobalSearch');
-  if (searchInput) {
-    searchInput.addEventListener('keydown', function (e) {
+  // 全局实时搜索：输入即查用户/订单，下拉展示，点击/回车跳转
+  (function () {
+    var input = document.getElementById('adminGlobalSearch');
+    var box = document.getElementById('searchResults');
+    var wrap = document.getElementById('globalSearch');
+    if (!input || !box || !wrap) return;
+
+    // 由当前 URL 推导后台根路径，避免依赖模板常量在 JS 中未被替换的问题
+    var ADMIN_BASE = (function () {
+      var p = (location.pathname || '').replace(/\/+$/, '');
+      var i = p.lastIndexOf('/admin');
+      return (i !== -1 ? p.substring(0, i) : '') + '/admin';
+    })();
+
+    var timer = null;
+    function esc(s) { return (s === null || s === undefined) ? '' : String(s); }
+    function closeBox() { box.style.display = 'none'; box.innerHTML = ''; }
+    function openBox() { box.style.display = 'block'; }
+
+    function render(data) {
+      data = data || {};
+      var users = data.users || [];
+      var orders = data.orders || [];
+      if (!users.length && !orders.length) {
+        box.innerHTML = '<div class="sr-empty"><i class="mdi mdi-magnify"></i>无匹配的订单或用户</div>';
+        openBox();
+        return;
+      }
+      var html = '';
+      if (users.length) {
+        html += '<div class="sr-group-title"><i class="mdi mdi-account-group-outline"></i> 用户</div>';
+        users.forEach(function (u) {
+          var sub = [];
+          if (u.name) sub.push(esc(u.name));
+          if (u.qq) sub.push('QQ:' + esc(u.qq));
+          if (u.mail) sub.push(esc(u.mail));
+          html += '<a class="sr-item" href="' + ADMIN_BASE + '/user?search=' + encodeURIComponent(esc(u.user || u.id)) + '">' +
+            '<div class="sr-avatar"><i class="mdi mdi-account-outline"></i></div>' +
+            '<div class="sr-main"><div class="sr-title">' + esc(u.user || u.id) + '</div>' +
+            '<div class="sr-sub">' + esc(sub.join(' · ')) + '</div></div>' +
+            '<span class="sr-tag">#' + esc(u.id) + '</span></a>';
+        });
+      }
+      if (orders.length) {
+        html += '<div class="sr-group-title"><i class="mdi mdi-clipboard-text-outline"></i> 订单</div>';
+        orders.forEach(function (o) {
+          var sub = [];
+          if (o.user) sub.push(esc(o.user));
+          if (o.userid) sub.push('UID:' + esc(o.userid));
+          if (o.money) sub.push(esc(o.money) + '元');
+          html += '<a class="sr-item" href="' + ADMIN_BASE + '/order?search=' + encodeURIComponent(esc(o.id)) + '">' +
+            '<div class="sr-avatar" style="background:linear-gradient(135deg,#34d399,#0ea5e9)"><i class="mdi mdi-clipboard-text-outline"></i></div>' +
+            '<div class="sr-main"><div class="sr-title">订单 #' + esc(o.id) + '</div>' +
+            '<div class="sr-sub">' + esc(sub.join(' · ')) + '</div></div></a>';
+        });
+      }
+      box.innerHTML = html;
+      openBox();
+    }
+
+    function doSearch() {
+      var val = input.value.trim();
+      if (!val) { closeBox(); return; }
+      fetch(ADMIN_BASE + '/index/search?q=' + encodeURIComponent(val), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(function (r) { return r.json(); })
+      .then(render)
+      .catch(function () { /* 静默失败，不影响页面 */ });
+    }
+
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(doSearch, 250);
+    });
+    input.addEventListener('focus', function () {
+      if (input.value.trim()) doSearch();
+    });
+    input.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
-        var val = this.value.trim();
+        var val = input.value.trim();
         if (!val) return;
-        if (/^\d+$/.test(val)) {
-          location.href = '__ROOT__/admin/order?search=' + encodeURIComponent(val);
+        if (box.style.display === 'block' && box.querySelector('.sr-item')) {
+          location.href = box.querySelector('.sr-item').getAttribute('href');
         } else {
-          location.href = '__ROOT__/admin/user?search=' + encodeURIComponent(val);
+          location.href = ADMIN_BASE + '/user?search=' + encodeURIComponent(val);
         }
+      } else if (e.key === 'Escape') {
+        closeBox();
+        input.blur();
       }
     });
-  }
+    document.addEventListener('click', function (e) {
+      if (!wrap.contains(e.target)) closeBox();
+    });
+  })();
 
   // 移动端侧边栏切换
   var mobileSidebar = document.getElementById('mobileSidebar');

@@ -1,0 +1,90 @@
+{include file="default/user/header" title="域名商城" /}
+<main id="main-container">
+<div class="content">
+<style>
+    .domain-page { max-width: 1000px; margin: 0 auto; padding: 20px 16px 40px; }
+    .domain-hero { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 50%, #4f7cff 100%); border-radius: 20px; padding: 32px; color: #fff; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: 0 10px 30px rgba(37,99,235,0.25); position: relative; overflow: hidden; }
+    .domain-hero::before { content: ''; position: absolute; top: -50%; right: -10%; width: 50%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%); pointer-events: none; }
+    .domain-hero h2 { font-size: 24px; font-weight: 700; margin: 0 0 6px; position: relative; }
+    .domain-hero p { margin: 0; opacity: 0.95; font-size: 13px; position: relative; }
+    .domain-hero .btn-sell { background: #fff; color: #2563eb; padding: 12px 22px; border-radius: 10px; font-weight: 700; text-decoration: none; transition: all .2s; display: inline-flex; align-items: center; gap: 6px; }
+    .domain-hero .btn-sell:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.2); }
+    .domain-hero .btn-sell.alt { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+    .domain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+    .domain-card { background: var(--glass-bg, #fff); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-radius: 16px; padding: 22px; box-shadow: var(--glass-shadow-sm, 0 2px 10px rgba(0,0,0,0.05)); border: 1px solid var(--glass-border, #eef2f7); transition: all .25s ease; position: relative; overflow: hidden; }
+    .domain-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #0ea5e9, #2563eb); }
+    .domain-card:hover { transform: translateY(-4px); box-shadow: 0 14px 32px rgba(37,99,235,0.15); border-color: transparent; }
+    .domain-name { font-size: 18px; font-weight: 700; color: var(--glass-text, #1e293b); margin-bottom: 8px; font-family: 'Consolas', monospace; display: flex; align-items: center; gap: 6px; }
+    .domain-name i { color: #2563eb; }
+    .domain-price { font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #ea580c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
+    .domain-price small { font-size: 13px; color: var(--glass-text-secondary, #64748b); font-weight: 400; -webkit-text-fill-color: var(--glass-text-secondary, #64748b); margin-left: 4px; }
+    .domain-desc { font-size: 13px; color: var(--glass-text-secondary, #64748b); margin-bottom: 14px; line-height: 1.6; min-height: 40px; }
+    .domain-registrar { display: inline-block; font-size: 11px; padding: 4px 12px; border-radius: 999px; margin-bottom: 14px; font-weight: 600; }
+    .domain-registrar.aliyun { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #b45309; }
+    .domain-registrar.dnspod { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; }
+    .domain-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .domain-actions .btn { flex: 1; border-radius: 10px; font-weight: 600; transition: all .2s; }
+    .domain-actions .btn-buy { background: linear-gradient(135deg, #4f7cff, #2563eb); border: none; color: #fff; }
+    .domain-actions .btn-buy:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(37,99,235,0.35); }
+    .domain-empty { grid-column: 1/-1; text-align: center; color: var(--glass-text-muted, #94a3b8); padding: 60px 0; background: var(--glass-bg-light, #f8fafc); border-radius: 16px; border: 1px dashed var(--glass-border, #e2e8f0); }
+
+</style>
+
+<div class="domain-page">
+    <div class="domain-hero">
+        <div>
+            <h2><i class="fas fa-globe"></i> 域名商城</h2>
+            <p>选购心仪域名 · 支持阿里云 / 腾讯云注册商域名交易</p>
+        </div>
+        <div style="display:flex;gap:10px;position:relative;flex-wrap:wrap;">
+            <a href="__ROOT__/domain/mine" class="btn-sell alt"><i class="fas fa-user"></i> 我的域名</a>
+            <a href="__ROOT__/domain/add" class="btn-sell"><i class="fas fa-tag"></i> 上架域名</a>
+        </div>
+    </div>
+
+    <div class="domain-grid">
+        {if empty($domains)}
+        <div class="domain-empty">暂无域名上架，快来上架第一个域名吧</div>
+        {/if}
+        {foreach $domains as $d}
+        <div class="domain-card">
+            <div class="domain-name"><i class="fas fa-globe"></i>{$d.domain}</div>
+            <div class="domain-price">¥{$d.price}<small>元</small></div>
+            <div class="domain-desc">{if $d.description}{$d.description}{else}暂无描述{/if}</div>
+            <div>
+                <span class="domain-registrar {$d.registrar}">{if $d.registrar=='aliyun'}阿里云万网{elseif $d.registrar=='dnspod'}腾讯云DNSPod{/if}</span>
+            </div>
+            <div class="domain-actions">
+                <a href="__ROOT__/domain/detail/{$d.id}" class="btn btn-outline-primary btn-sm">查看详情</a>
+                {if $d.userid != $user.id}
+                <button class="btn btn-sm btn-buy" data-id="{$d.id}" data-domain="{$d.domain}" data-price="{$d.price}">立即购买</button>
+                {else}
+                <span class="btn btn-secondary btn-sm" style="flex:1;">我的域名</span>
+                {/if}
+            </div>
+        </div>
+        {/foreach}
+    </div>
+    {$domains->render()}
+</div>
+</div>
+</main>
+{include file="default/user/footer" /}
+<script>
+$(function(){
+    $('.btn-buy').on('click', function(){
+        var id = $(this).data('id');
+        var domain = $(this).data('domain');
+        var price = $(this).data('price');
+        if(!confirm('确认购买域名 ' + domain + '？价格：¥' + price)) return;
+        $.post('__ROOT__/domain/buy/' + id, {}, function(res){
+            if(res.code == 1){
+                showToast(res.msg, 'success', 2500);
+                setTimeout(function(){ location.reload(); }, 1500);
+            } else {
+                showToast(res.msg, 'danger', 2500);
+            }
+        }, 'json');
+    });
+});
+</script>

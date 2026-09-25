@@ -1,0 +1,251 @@
+{include file="default/header" title="每日抽奖管理" /}
+<main class="lyear-layout-content">
+  <div class="container-fluid glass-animate-in">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card admin-card mb-3">
+          <header class="card-header"><div class="card-title">抽奖基础配置</div></header>
+          <div class="card-body">
+            <form id="config-form" class="admin-form">
+              <input type="hidden" name="act" value="save_config">
+              <div class="row">
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">每日抽奖次数</label>
+                  <input type="number" name="daily_times" class="form-control" value="{$config.daily_times}" min="1">
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">是否要求实名</label>
+                  <select name="need_realname" class="form-select">
+                    <option value="0" {if $config.need_realname==0}selected{/if}>不要求</option>
+                    <option value="1" {if $config.need_realname==1}selected{/if}>要求实名</option>
+                  </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">抽奖状态</label>
+                  <select name="status" class="form-select">
+                    <option value="1" {if $config.status==1}selected{/if}>开启</option>
+                    <option value="0" {if $config.status==0}selected{/if}>关闭</option>
+                  </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">活动说明</label>
+                  <input type="text" name="notice" class="form-control" value="{$config.notice}" placeholder="抽奖活动说明">
+                </div>
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-admin-primary">保存配置</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card admin-card mb-3">
+          <header class="card-header"><div class="card-title">奖品管理</div></header>
+          <div class="card-body">
+            <form id="prize-form" class="admin-form mb-4">
+              <input type="hidden" name="act" value="save_prize">
+              <input type="hidden" name="id" id="p-id" value="0">
+              <div class="row">
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">奖品名称</label>
+                  <input type="text" name="name" id="p-name" class="form-control" required placeholder="例如：100积分">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">奖品类型</label>
+                  <select name="type" class="form-select" id="p-type">
+                    <option value="points">积分</option>
+                    <option value="balance">余额</option>
+                    <option value="host">主机</option>
+                    <option value="none">谢谢参与</option>
+                  </select>
+                </div>
+                <div class="col-md-2 mb-3" id="p-points">
+                  <label class="form-label">积分数</label>
+                  <input type="number" name="prize_points" class="form-control" value="100">
+                </div>
+                <div class="col-md-2 mb-3" id="p-balance" style="display:none;">
+                  <label class="form-label">余额（元）</label>
+                  <input type="number" name="prize_balance" class="form-control" value="5" step="0.01">
+                </div>
+                <div class="col-md-2 mb-3" id="p-host" style="display:none;">
+                  <label class="form-label">主机产品</label>
+                  <select name="prize_cartid" class="form-select">
+                    <option value="0">请选择</option>
+                    {foreach $carts as $cart}
+                    <option value="{$cart.id}">{$cart.name}</option>
+                    {/foreach}
+                  </select>
+                </div>
+                <div class="col-md-2 mb-3" id="p-days" style="display:none;">
+                  <label class="form-label">时长（天）</label>
+                  <input type="number" name="prize_host_days" class="form-control" value="30">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">中奖概率（0-1）</label>
+                  <input type="number" name="probability" class="form-control" value="0.05" step="0.0001" min="0" max="1" placeholder="0.05=5%">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">图标（emoji）</label>
+                  <input type="text" name="icon" class="form-control" placeholder="🎁" value="🎁">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">库存（-1不限）</label>
+                  <input type="number" name="stock" class="form-control" value="-1">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">排序</label>
+                  <input type="number" name="sort" class="form-control" value="0">
+                </div>
+                <div class="col-md-2 mb-3">
+                  <label class="form-label">状态</label>
+                  <select name="status" class="form-select">
+                    <option value="1">启用</option>
+                    <option value="0">禁用</option>
+                  </select>
+                </div>
+                <div class="col-md-12">
+                  <button type="submit" class="btn btn-admin-primary" id="p-submit-btn">添加奖品</button>
+                  <button type="button" class="btn btn-secondary" id="p-reset-btn">重置</button>
+                </div>
+              </div>
+            </form>
+
+            <table class="table table-hover">
+              <thead>
+                <tr><th>ID</th><th>名称</th><th>类型</th><th>奖励</th><th>概率</th><th>库存</th><th>状态</th><th>操作</th></tr>
+              </thead>
+              <tbody>
+                {foreach $prizes as $p}
+                <tr>
+                  <td>{$p.id}</td>
+                  <td>{$p.icon} {$p.name}</td>
+                  <td>
+                    {if $p.type=='points'}积分{elseif $p.type=='balance'}余额{elseif $p.type=='host'}主机{else}谢谢参与{/if}
+                  </td>
+                  <td>
+                    {if $p.type=='points'}{$p.prize_points}积分
+                    {elseif $p.type=='balance'}{$p.prize_balance}元
+                    {elseif $p.type=='host'}主机{$p.prize_host_days}天{else}-{/if}
+                  </td>
+                  <td>{$p.probability * 100}%</td>
+                  <td>{if $p.stock==-1}不限{else}{$p.stock}{/if}</td>
+                  <td>{if $p.status==1}<span class="badge bg-success">启用</span>{else}<span class="badge bg-secondary">禁用</span>{/if}</td>
+                  <td>
+                    <button class="btn btn-sm btn-outline-danger btn-del" data-id="{$p.id}">删除</button>
+                  </td>
+                </tr>
+                {/foreach}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card admin-card">
+          <header class="card-header"><div class="card-title">最近抽奖记录（参与用户 + 中奖用户）</div></header>
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-md-3">
+                <div class="stat-mini" style="background:#eff6ff;border-radius:10px;padding:12px;text-align:center;">
+                  <div style="font-size:24px;font-weight:700;color:#2563eb;">{$records|count}</div>
+                  <div style="font-size:12px;color:#64748b;">总参与次数</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stat-mini" style="background:#fef3c7;border-radius:10px;padding:12px;text-align:center;">
+                  <div style="font-size:24px;font-weight:700;color:#d97706;" id="winCount">-</div>
+                  <div style="font-size:12px;color:#64748b;">中奖次数</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stat-mini" style="background:#f0fdf4;border-radius:10px;padding:12px;text-align:center;">
+                  <div style="font-size:24px;font-weight:700;color:#16a34a;" id="uniqueUsers">-</div>
+                  <div style="font-size:12px;color:#64748b;">参与用户数</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stat-mini" style="background:#fdf2f8;border-radius:10px;padding:12px;text-align:center;">
+                  <div style="font-size:24px;font-weight:700;color:#ec4899;" id="winUsers">-</div>
+                  <div style="font-size:12px;color:#64748b;">中奖用户数</div>
+                </div>
+              </div>
+            </div>
+            <table class="table table-hover">
+              <thead>
+                <tr><th>用户</th><th>奖品</th><th>类型</th><th>结果</th><th>时间</th></tr>
+              </thead>
+              <tbody>
+                {foreach $records as $r}
+                <tr {if $r.prize_type != 'none'}style="background:rgba(245,158,11,0.06);"{/if}>
+                  <td>{:(isset($userNames[$r['userid']]) && $userNames[$r['userid']] !== '' ? htmlspecialchars($userNames[$r['userid']]) : '用户#' . $r['userid'])}</td>
+                  <td>{$r.prize_name}</td>
+                  <td>{if $r.prize_type=='none'}<span class="badge bg-secondary">未中奖</span>{elseif $r.prize_type=='points'}<span class="badge bg-primary">积分</span>{elseif $r.prize_type=='balance'}<span class="badge bg-warning">余额</span>{elseif $r.prize_type=='host'}<span class="badge bg-success">主机</span>{else}<span class="badge bg-info">{$r.prize_type}</span>{/if}</td>
+                  <td>{if $r.prize_type=='none'}<span class="text-muted">-</span>{else}<span style="color:#16a34a;font-weight:600;">{$r.prize_value|default='已发放'}</span>{/if}</td>
+                  <td>{:date('Y-m-d H:i:s', $r.create_time)}</td>
+                </tr>
+                {/foreach}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{include file="default/footer" /}
+<script>
+$(function(){
+    // 统计中奖/参与用户数
+    var winCount = 0, uniqueUsers = {}, winUsers = {};
+    $('table tbody tr').each(function(){
+        var type = $(this).find('.badge').text();
+        var userCell = $(this).find('td:first').text().trim();
+        uniqueUsers[userCell] = true;
+        if(type && type !== '未中奖'){ winCount++; winUsers[userCell] = true; }
+    });
+    $('#winCount').text(winCount);
+    $('#uniqueUsers').text(Object.keys(uniqueUsers).length);
+    $('#winUsers').text(Object.keys(winUsers).length);
+
+    $('#p-type').on('change', function(){
+        var t = $(this).val();
+        $('#p-points, #p-balance, #p-host, #p-days').hide();
+        if(t == 'points') $('#p-points').show();
+        if(t == 'balance') $('#p-balance').show();
+        if(t == 'host'){ $('#p-host').show(); $('#p-days').show(); }
+    });
+
+    $('#config-form').on('submit', function(e){
+        e.preventDefault();
+        $.post('', $(this).serialize(), function(res){
+            if(res.code == 1){ GlassTip.success(res.msg); setTimeout(function(){ location.reload(); }, 800); }
+            else GlassTip.error(res.msg);
+        }, 'json');
+    });
+
+    $('#prize-form').on('submit', function(e){
+        e.preventDefault();
+        $.post('', $(this).serialize(), function(res){
+            if(res.code == 1){ GlassTip.success(res.msg); setTimeout(function(){ location.reload(); }, 800); }
+            else GlassTip.error(res.msg);
+        }, 'json');
+    });
+
+    $('#p-reset-btn').on('click', function(){
+        $('#prize-form')[0].reset();
+        $('#p-id').val(0);
+        $('#p-type').val('points').trigger('change');
+        $('#p-submit-btn').text('添加奖品');
+    });
+
+    $('.btn-del').on('click', function(){
+        var id = $(this).data('id');
+        layer.confirm('确认删除该奖品？', function(idx){
+            $.post('', {act:'delete_prize', id:id}, function(res){
+                if(res.code == 1){ GlassTip.success(res.msg); setTimeout(function(){ location.reload(); }, 800); }
+                else GlassTip.error(res.msg);
+            }, 'json');
+            layer.close(idx);
+        });
+    });
+});
+</script>

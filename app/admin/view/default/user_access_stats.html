@@ -1,0 +1,141 @@
+{include file="default/header" title="用户访问详细统计"/}
+<style>
+.lyear-layout-content.page-wrap{position:relative!important;height:auto!important;width:100%!important;max-width:1500px!important;margin:0 auto!important;left:auto!important;padding:calc(64px + 24px) 20px 40px 20px!important}
+.page-wrap { --pri: #0ea5e9; --pri2: #0284c7; }
+.page-header-bar {
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  border-radius: 16px; padding: 20px 24px; margin-bottom: 20px;
+  color: #fff; box-shadow: 0 4px 20px rgba(14,165,233,0.25);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.page-header-bar h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.page-header-bar .sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+.content-card { background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.05); border: 1px solid #e8ecf1; overflow: hidden; margin-bottom: 20px; }
+.content-card-body { padding: 18px 20px; }
+.new-table { width:100%; border-collapse:collapse; font-size:13px; }
+.new-table thead th { background:#f8fafc; color:#475569; font-weight:600; padding:10px 12px; border-bottom:2px solid #e2e8f0; font-size:11px; text-transform:uppercase; letter-spacing:0.03em; white-space:nowrap; }
+.new-table tbody td { padding:10px 12px; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:middle; }
+.new-table tbody tr:hover { background:#fafbfc; }
+.mono { font-family:'SF Mono','Fira Code','Consolas',monospace; font-size:12px; color:#64748b; }
+.search-box { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+.form-input { padding:9px 14px; border:2px solid #e2e8f0; border-radius:10px; font-size:13px; background:#fff; color:#334155; transition:all 0.2s; }
+.form-input:focus { border-color:#0ea5e9; box-shadow:0 0 0 3px rgba(14,165,233,0.1); outline:none; }
+.form-select { padding:9px 14px; border:2px solid #e2e8f0; border-radius:10px; font-size:13px; background:#fff; color:#334155; }
+.new-btn { display:inline-flex; align-items:center; gap:5px; padding:8px 18px; border-radius:10px; border:none; font-size:13px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,#0ea5e9,#2563eb); color:#fff; box-shadow:0 3px 10px rgba(14,165,233,0.3); }
+.new-btn.out { background:#fff; color:#0ea5e9; border:2px solid #e2e8f0; box-shadow:none; }
+.brand-badge { display:inline-flex; align-items:center; gap:8px; }
+.brand-logo { width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:13px; flex-shrink:0; font-family:'PingFang SC','Microsoft YaHei',sans-serif; }
+.path-list { font-size:11px; color:#94a3b8; }
+.path-list span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:220px; }
+.new-badge { display:inline-flex; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.new-badge.success { background:#ecfdf5; color:#059669; }
+.new-badge.gray { background:#f1f5f9; color:#64748b; }
+@media (max-width:768px){
+  .page-header-bar { padding:14px 16px; border-radius:12px; }
+  .new-table thead { display:none; }
+  .new-table tbody td { display:block; text-align:right; padding:6px 8px; }
+  .new-table tbody td::before { content:attr(data-label); float:left; font-weight:600; color:#475569; font-size:10px; text-transform:uppercase; }
+  .new-table tbody tr { display:block; margin-bottom:6px; background:#fafbfc; border-radius:10px; padding:4px 8px; }
+  .search-box { flex-direction:column; align-items:stretch; }
+}
+</style>
+
+<main class="lyear-layout-content page-wrap">
+  <div class="container-fluid">
+    <div class="page-header-bar">
+      <div>
+        <h2>用户访问详细统计</h2>
+        <div class="sub">设备品牌/型号 · 登录IP · 关联用户 · 访问与退出时间 · 操作路径</div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="content-card-body">
+        <form method="get" action="">
+          <div class="search-box">
+            <input class="form-input" type="text" name="search" placeholder="搜索用户名/ID..." value="{$search|default=''}" style="min-width:220px;"/>
+            <select class="form-select" name="mobile" onchange="this.form.submit()">
+              <option value="">全部设备</option>
+              <option value="1" {if $mobileFilter=='1'}selected{/if}>仅移动端</option>
+            </select>
+            <button class="new-btn" type="submit"><i class="mdi mdi-magnify"></i> 搜索</button>
+            {if $search || $mobileFilter}<a href="?" class="new-btn out">清除</a>{/if}
+          </div>
+        </form>
+
+        <div class="table-responsive">
+          <table class="new-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>关联用户</th><th>设备（品牌/型号）</th><th>登录IP</th><th>关联用户IP</th><th>最近访问时间</th><th>最近退出时间</th><th>操作路径</th>
+              </tr>
+            </thead>
+            <tbody>
+{php}
+$brandStyles = [
+  'Apple'      => ['bg' => '#000000', 'txt' => 'A'],
+  'Huawei'     => ['bg' => '#C7000B', 'txt' => '华'],
+  'Honor'      => ['bg' => '#0A54A6', 'txt' => '荣'],
+  'Xiaomi'     => ['bg' => '#FF6900', 'txt' => '米'],
+  'OPPO'       => ['bg' => '#0B8235', 'txt' => 'O'],
+  'vivo'       => ['bg' => '#415FFF', 'txt' => 'v'],
+  'Samsung'    => ['bg' => '#1428A0', 'txt' => '三'],
+  'OnePlus'    => ['bg' => '#EB0028', 'txt' => '加'],
+  'Meizu'      => ['bg' => '#1976D2', 'txt' => '魅'],
+  'realme'     => ['bg' => '#FFC107', 'txt' => '真'],
+  'Motorola'   => ['bg' => '#5C6BC0', 'txt' => '摩'],
+  'Google'     => ['bg' => '#4285F4', 'txt' => 'G'],
+  'Lenovo'     => ['bg' => '#E2231A', 'txt' => '联'],
+  'ZTE'        => ['bg' => '#0066B3', 'txt' => '中'],
+  'PC'         => ['bg' => '#64748B', 'txt' => 'PC'],
+];
+{/php}
+{foreach $rows as $r}
+{php}
+$bs = isset($brandStyles[$r['brand']]) ? $brandStyles[$r['brand']] : ['bg' => '#94A3B8', 'txt' => '?'];
+$brandText = $r['brand_cn'] ?: '未知';
+$modelText = $r['model'] ?: '';
+$osText = $r['os'] ?: '';
+{/php}
+              <tr>
+                <td data-label="ID">{$r.id}</td>
+                <td data-label="关联用户">
+                  <strong style="color:#1a1a2e;">{$r.name}</strong>
+                  <div style="font-size:11px;color:#94a3b8;">账号：{$r.user}</div>
+                </td>
+                <td data-label="设备">
+                  <div class="brand-badge">
+                    <span class="brand-logo" style="background:{$bs.bg};color:#fff;">{$bs.txt}</span>
+                    <div>
+                      <div style="font-weight:600;color:#334155;">{$brandText}{if $modelText} <span style="color:#64748b;font-weight:400;">· {$modelText}</span>{/if}</div>
+                      <div style="font-size:11px;color:#94a3b8;">{if $osText}<i class="mdi mdi-monitor-cellphone" style="font-size:11px;"></i> {$osText}{else}未知系统{/if}</div>
+                    </div>
+                  </div>
+                </td>
+                <td data-label="登录IP"><span class="mono">{$r.login_ip|default='-'}</span></td>
+                <td data-label="关联用户IP"><span class="mono">{$r.last_login_ip|default='-'}</span></td>
+                <td data-label="最近访问时间">{if $r.last_visit>0}{:date('Y-m-d H:i:s',$r.last_visit)}{else}-{/if}</td>
+                <td data-label="最近退出时间">{if $r.last_logout>0}{:date('Y-m-d H:i:s',$r.last_logout)}{else}-{/if}</td>
+                <td data-label="操作路径">
+                  <div class="path-list">
+                    {if !empty($r.paths)}
+                      {foreach $r.paths as $p}<span>{:htmlspecialchars(mb_strlen($p)>40 ? mb_substr($p,0,40).'...' : $p)}</span>{/foreach}
+                    {else}<span>-</span>{/if}
+                  </div>
+                </td>
+              </tr>
+{/foreach}
+{if empty($rows)}
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8;"><i class="mdi mdi-cellphone" style="font-size:40px;display:block;margin-bottom:10px;"></i>暂无访问数据</td></tr>
+{/if}
+            </tbody>
+          </table>
+        </div>
+        {if !empty($rows) && !empty($paginator) && !empty($paginator->items())}
+        <div style="text-align:center;margin-top:16px;">{$paginator->render()}</div>
+        {/if}
+      </div>
+    </div>
+  </div>
+</main>
+{include file="default/footer" /}

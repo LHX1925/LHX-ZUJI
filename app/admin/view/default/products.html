@@ -11,8 +11,10 @@
 .page-header-bar h2 { margin: 0; font-size: 20px; font-weight: 700; }
 .page-header-bar .sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
 .content-card {
-  background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.05);
-  border: 1px solid #e8ecf1; overflow: hidden; margin-bottom: 20px;
+  background: #fff; border-radius: 16px;
+  border: 1px solid #cfd8e3;
+  box-shadow: 0 1px 2px rgba(16,42,87,0.05), 0 10px 26px rgba(16,42,87,0.07);
+  overflow: hidden; margin-bottom: 20px;
 }
 .content-card-header {
   padding: 14px 20px; border-bottom: 1px solid #f1f5f9;
@@ -94,14 +96,15 @@
             </div>
             <div class="form-group">
               <label class="form-label">价格</label>
-              <input class="form-input" type="text" name="money" value="{$product.money}" placeholder="">
+              <input class="form-input" type="text" name="money" id="baseMoney" value="{$product.money}" placeholder="">
+              <span class="form-hint" style="color:#94a3b8;">套餐基础单价（一个计费周期的价格）。下方「各周期自定义价格」中留空的时长会按此单价 × 时长计算。</span>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">周期</label>
-              <select name="cycle" class="form-select">
+              <select name="cycle" id="cycleSelect" class="form-select">
                 <option value="day" {if $product.cycle=="day"}selected{/if}>日付</option>
                 <option value="month" {if $product.cycle=="month"}selected{/if}>月付</option>
                 <option value="season" {if $product.cycle=="season"}selected{/if}>季付</option>
@@ -170,16 +173,67 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">分类</label>
-              <select name="product" class="form-select">
-                <option value="">无</option>
-{volist name="data2" id="d2"}
-                <option value="{$d2.id}" {if $product.product==$d2.id}selected{/if}>{$d2.name}</option>
-{/volist}
+              <label class="form-label">开放 Docker 容器开通</label>
+              <select name="docker_enabled" class="form-select">
+                <option value="0" {if !isset($product.docker_enabled) || $product.docker_enabled=="0"}selected{/if}>否</option>
+                <option value="1" {if isset($product.docker_enabled) && $product.docker_enabled=="1"}selected{/if}>是</option>
               </select>
+              <span class="form-hint" style="color:#94a3b8;">
+                需同时在「系统设置 → 扩展功能 → Docker 容器开通」中开启总开关；开通价格在该处统一配置，本页只控制该产品是否开放。
+              </span>
             </div>
+          </div>
+
+          <div class="config-section">
+            <h3>自定义配置加价（用户购买时每多配 1MB 加收的金额）</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">存储空间（¥/MB）</label>
+                <input class="form-input" type="text" name="price_space_mb" value="{$product.price_space_mb|default='0'}" placeholder="如 0.01">
+                <span class="form-hint" style="color:#94a3b8;">用户存储空间超出套餐默认（{$product.data2|default='0'}MB）后，每加 1MB 加收此金额，0 表示免费加配</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">数据库（¥/MB）</label>
+                <input class="form-input" type="text" name="price_db_mb" value="{$product.price_db_mb|default='0'}" placeholder="如 0.02">
+                <span class="form-hint" style="color:#94a3b8;">用户数据库超出套餐默认（{$product.data3|default='0'}MB）后，每加 1MB 加收此金额，0 表示免费加配</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">月流量（¥/GB）</label>
+                <input class="form-input" type="text" name="price_traffic_gb" value="{$product.price_traffic_gb|default='0'}" placeholder="如 1.5">
+                <span class="form-hint" style="color:#94a3b8;">用户月流量超出套餐默认（{$product.data4|default='0'}GB）后，每加 1GB 加收此金额，0 表示免费加配。<br>留 0 时会自动沿用旧的「¥/MB」配置（{$product.price_traffic_mb|default='0'} ¥/MB ≈ {if floatval($product.price_traffic_mb) > 0}{:number_format(floatval($product.price_traffic_mb)*1024,2)}{else}0.00{/if} ¥/GB）。</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">域名绑定（¥/个）</label>
+                <input class="form-input" type="text" name="price_domain" value="{$product.price_domain|default='0'}" placeholder="如 0.5">
+                <span class="form-hint" style="color:#94a3b8;">用户域名绑定数超出套餐默认（{$product.data5|default='0'}个）后，每多 1 个加收此金额，0 表示免费加配</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">积分价（积分/期）</label>
+                <input class="form-input" type="text" name="points_price" value="{$product.points_price|default='0'}" placeholder="如 1000">
+                <span class="form-hint" style="color:#94a3b8;">大于 0 时，前台购买页会多出「积分支付」选项，用户按此积分数购买（不扣金额）。0 表示不支持积分购买</span>
+              </div>
+              <div class="form-group"></div>
+            </div>
+          </div>
+
+          <div class="config-section">
+            <h3>各周期自定义价格</h3>
+            <p style="font-size:12px;color:#94a3b8;margin:-8px 0 16px;line-height:1.7;">
+              按套餐的计费周期，为每个购买时长单独定价（例如月付套餐可设置：1个月 ¥10、3个月 ¥25、1年 ¥90）。
+              留空的周期按「基础单价 × 时长」自动计算。用户购买与续费均按这里设置的价格结算。
+            </p>
+            <div id="cyclePriceTip" style="display:none;margin:-6px 0 16px;padding:10px 12px;border-radius:8px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:12px;line-height:1.7;"></div>
+            <input type="hidden" name="cycle_prices" id="cyclePricesInput" value='{:json_encode($cyclePrices)}'>
+            <div id="cyclePriceRows"></div>
+          </div>
+
+          <div class="form-row">
             <div class="form-group">
-              <label class="form-label">服务器</label>
+              <label class="form-label">默认服务器 <small style="color:#94a3b8;">（套餐默认线路，购买页可自由改选其他 mnbt 线路）</small></label>
               <select name="serverid" class="form-select">
                 <option value="">无</option>
 {volist name="data3" id="d3"}
@@ -248,8 +302,108 @@
 </main>
 {include file="default/footer" /}
 <script>
+    // ===== 各周期自定义价格 =====
+    // 与前台购买页、续费结算口径一致：键为「时长倍数」（相对套餐自身计费单位）
+    var CYCLE_PRICE_OPTIONS = {
+        day:          [{t:7,l:'一周'},{t:30,l:'一个月'},{t:90,l:'一季'},{t:365,l:'一年'},{t:1095,l:'三年'}],
+        month:        [{t:1,l:'一个月'},{t:3,l:'一季'},{t:12,l:'一年'},{t:36,l:'三年'}],
+        season:       [{t:1,l:'一季'},{t:4,l:'一年'},{t:12,l:'三年'}],
+        year:         [{t:1,l:'一年'},{t:3,l:'三年'}],
+        unrestricted: [{t:1,l:'一次性'}]
+    };
+    var CYCLE_UNIT_LABEL = {day:'天', month:'月', season:'季', year:'年', unrestricted:'次'};
+    var CUR_CYCLE_PRICES = {:json_encode($cyclePrices)};
+    var cyclePriceState = {};
+    (function () {
+        for (var k in CUR_CYCLE_PRICES) {
+            if (CUR_CYCLE_PRICES.hasOwnProperty(k)) { cyclePriceState[k] = CUR_CYCLE_PRICES[k]; }
+        }
+    })();
+
+    function cycleMoney(n) { return '¥' + (Math.round(parseFloat(n || 0) * 100) / 100); }
+
+    function renderCyclePrices(keep) {
+        var cycle = $('#cycleSelect').val() || 'month';
+        var unit = CYCLE_UNIT_LABEL[cycle] || '期';
+        var opts = CYCLE_PRICE_OPTIONS[cycle] || [{t:1,l:'一期'}];
+        var base = parseFloat($('#baseMoney').val()) || 0;
+        if (keep !== false) {
+            $('#cyclePriceRows input[data-mult]').each(function () {
+                var m = parseInt($(this).attr('data-mult')) || 0;
+                var v = $.trim($(this).val());
+                if (m > 0) {
+                    if (v !== '') { cyclePriceState[m] = v; } else { delete cyclePriceState[m]; }
+                }
+            });
+        }
+        // 计费周期变更后，旧的时长倍数不再适用（如「12 个月」≠「12 年」），清理不属于当前周期的配置
+        var valid = {};
+        opts.forEach(function (o) { valid[o.t] = true; });
+        for (var k in cyclePriceState) {
+            if (cyclePriceState.hasOwnProperty(k) && !valid[k]) { delete cyclePriceState[k]; }
+        }
+        // 基础单价为 0 时：只有填了价的时长档位才会出现在购买页（避免未定价档位被 0 元成交）
+        var zeroBase = !(base > 0);
+        if (zeroBase) {
+            $('#cyclePriceTip')
+                .html('<b>当前基础单价为 0</b>：购买页<b>只会展示你已填价的时长档位</b>，留空的档位不对外出售（防止用户以 0 元下单）。若希望所有档位都能购买，请先把上面的「价格」填成大于 0 的单价。')
+                .show();
+        } else {
+            $('#cyclePriceTip').hide();
+        }
+        var html = '<div class="form-row">';
+        opts.forEach(function (o) {
+            var preset = (cyclePriceState[o.t] !== undefined && cyclePriceState[o.t] !== '') ? cyclePriceState[o.t] : '';
+            var hint, ph;
+            if (zeroBase) {
+                var presetNum = parseFloat(preset);
+                hint = (preset !== '' && !isNaN(presetNum) && presetNum > 0)
+                    ? '已定价 ' + cycleMoney(presetNum) + '（购买页可购买该时长）'
+                    : '留空 = 不在购买页展示';
+                ph = '未定价';
+            } else {
+                hint = '留空 = ' + cycleMoney(base) + ' × ' + o.t + ' = ' + cycleMoney(base * o.t);
+                ph = Math.round(base * o.t * 100) / 100;
+            }
+            html += '<div class="form-group">'
+                + '<label class="form-label">' + o.l + ' <small style="color:#94a3b8;">（' + o.t + ' ' + unit + '）</small></label>'
+                + '<input class="form-input" type="number" step="0.01" min="0" data-mult="' + o.t + '" value="' + preset + '" placeholder="' + ph + '">'
+                + '<span class="form-hint" style="color:#94a3b8;">' + hint + '</span>'
+                + '</div>';
+        });
+        html += '</div>';
+        $('#cyclePriceRows').html(html);
+    }
+
+    function collectCyclePrices() {
+        // 先同步当前可见输入，再合并 cyclePriceState 中其余已配置项，避免切周期后丢失已填价格
+        $('#cyclePriceRows input[data-mult]').each(function () {
+            var m = parseInt($(this).attr('data-mult')) || 0;
+            var v = $.trim($(this).val());
+            if (m > 0) {
+                if (v !== '') { cyclePriceState[m] = v; } else { delete cyclePriceState[m]; }
+            }
+        });
+        var out = {};
+        for (var k in cyclePriceState) {
+            if (!cyclePriceState.hasOwnProperty(k)) { continue; }
+            var m = parseInt(k) || 0;
+            var v = parseFloat(cyclePriceState[k]);
+            if (m > 0 && !isNaN(v) && v > 0) { out[m] = Math.round(v * 100) / 100; }
+        }
+        return JSON.stringify(out);
+    }
+
+    $(function () {
+        renderCyclePrices(false);
+        $('#cycleSelect').on('change', function () { renderCyclePrices(true); });
+        $('#baseMoney').on('input', function () { renderCyclePrices(true); });
+    });
+
     $("form").submit(function (){
-        var load = layer.msg('修改中，请稍后...',{icon:16,shade:0.8,time:false});
+        // 提交前把各周期价格打包成 JSON 放进隐藏域
+        $('#cyclePricesInput').val(collectCyclePrices());
+        var load = layer.msg('修改中，请稍后...', {icon:16, shade:0.8, time:false});
 
 var form = $('form').serializeArray();
 

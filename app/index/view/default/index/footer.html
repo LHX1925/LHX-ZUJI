@@ -198,5 +198,27 @@
 </script>
 <script src="__ROOT__/static/js/glass-animations.js"></script>
 {include file="default/live2d_widget" /}
+<script>
+// 背景音乐：无播放器UI，自动播放（浏览器可能拦截，首次用户交互时尝试恢复播放）
+(function(){
+    var player = document.getElementById('bgMusicPlayer');
+    if(!player) return;
+    if(window.__BG_MUSIC_VOLUME__ !== undefined){
+        player.volume = window.__BG_MUSIC_VOLUME__;
+    }
+    player.muted = false;
+    player.loop = true;
+    var tryPlay = function(){
+        var p = player.play();
+        if(p && p.then){ p.catch(function(){}); }
+    };
+    tryPlay();
+    // 浏览器自动播放策略：首次任意交互后恢复播放
+    var resume = function(){ tryPlay(); };
+    document.addEventListener('click', resume, { once: true });
+    document.addEventListener('touchstart', resume, { once: true });
+    document.addEventListener('keydown', resume, { once: true });
+})();
+</script>
 </body>
 </html>

@@ -1,0 +1,220 @@
+{php}
+// 品牌开屏加载动画（复刻企业官网加载动画：LOGO + 品牌名 + 加载提示 + 进度条）
+// 内容可由后台自定义（loading_logo / loading_brand / loading_text / loading_subtext）
+$loadingWeb = function_exists('web_config') ? web_config() : [];
+$loadingEnabled = isset($loadingWeb['loading_enabled']) ? intval($loadingWeb['loading_enabled']) : 1;
+
+$loadingController = '';
+$loadingAction = '';
+try {
+    $loadingReq = \think\Request::instance();
+    $loadingController = strtolower($loadingReq->controller());
+    $loadingAction = strtolower($loadingReq->action());
+} catch (\Throwable $e) {}
+
+// 仅首页（进入官网）显示加载动画，且总开关开启
+$loadingShow = ($loadingController === 'index' && $loadingAction === 'index') && $loadingEnabled === 1;
+
+// LOGO：优先加载动画专属 logo，否则网站 logo
+$loadingLogo = '';
+if (!empty($loadingWeb['loading_logo'])) {
+    $loadingLogo = $loadingWeb['loading_logo'];
+} elseif (!empty($loadingWeb['logo'])) {
+    $loadingLogo = $loadingWeb['logo'];
+}
+if ($loadingLogo !== '' && strpos($loadingLogo, 'http') !== 0) {
+    try {
+        $loadingLogo = rtrim(request()->domain(), '/') . '/' . ltrim($loadingLogo, '/');
+    } catch (\Exception $e) {
+        $loadingLogo = '/' . ltrim($loadingLogo, '/');
+    }
+}
+$loadingLogoIcon = (isset($loadingWeb['logo_icon']) && $loadingWeb['logo_icon'] !== '') ? $loadingWeb['logo_icon'] : 'fas fa-server';
+
+// 品牌英文名 / 中文提示 / 副文字（空则回退默认）
+$loadingBrand = (isset($loadingWeb['loading_brand']) && $loadingWeb['loading_brand'] !== '')
+    ? $loadingWeb['loading_brand']
+    : ((isset($loadingWeb['name']) && $loadingWeb['name'] !== '') ? $loadingWeb['name'] : 'LHX CLOUD');
+$loadingText = (isset($loadingWeb['loading_text']) && $loadingWeb['loading_text'] !== '')
+    ? $loadingWeb['loading_text']
+    : '正在为您加载官网...';
+$loadingSubtext = isset($loadingWeb['loading_subtext']) ? $loadingWeb['loading_subtext'] : '';
+
+$loadingBrandHtml = htmlspecialchars($loadingBrand, ENT_QUOTES, 'UTF-8');
+$loadingTextHtml = htmlspecialchars($loadingText, ENT_QUOTES, 'UTF-8');
+$loadingSubtextHtml = htmlspecialchars($loadingSubtext, ENT_QUOTES, 'UTF-8');
+$loadingLogoHtml = htmlspecialchars($loadingLogo, ENT_QUOTES, 'UTF-8');
+$loadingLogoIconHtml = htmlspecialchars($loadingLogoIcon, ENT_QUOTES, 'UTF-8');
+{/php}
+{if $loadingShow}
+<style>
+    .lhx-preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483000;
+        background: linear-gradient(135deg, #f7f9ff 0%, #eef2ff 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        transition: opacity 0.8s ease;
+        -webkit-overflow-scrolling: touch;
+    }
+    .lhx-preloader.fade-out {
+        opacity: 0;
+        pointer-events: none;
+    }
+    .lhx-preloader.hidden {
+        display: none;
+    }
+    .lhx-preloader-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .lhx-preloader-logo {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+    .lhx-preloader-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 8px;
+        display: block;
+    }
+    .lhx-preloader-logo .lhx-preloader-icon {
+        font-size: 34px;
+        color: #3b82f6;
+        line-height: 1;
+    }
+    .lhx-preloader-brand {
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #1f2937;
+        margin-bottom: 12px;
+        text-align: center;
+    }
+    .lhx-preloader-text {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+    .lhx-preloader-subtext {
+        font-size: 13px;
+        color: #9ca3af;
+        margin-top: 12px;
+        text-align: center;
+    }
+    .lhx-preloader-progress {
+        width: 260px;
+        max-width: 78vw;
+        height: 5px;
+        background: #e5e7eb;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+    .lhx-preloader-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #f59e0b);
+        border-radius: 999px;
+        transition: width 0.06s linear;
+    }
+</style>
+<div id="lhxPreloader" class="lhx-preloader" role="status" aria-label="页面加载中">
+    <div class="lhx-preloader-inner">
+        <div class="lhx-preloader-logo">
+            {if $loadingLogoHtml}
+            <img src="{$loadingLogoHtml}" alt="logo">
+            {else}
+            <i class="{$loadingLogoIconHtml} lhx-preloader-icon"></i>
+            {/if}
+        </div>
+        <div class="lhx-preloader-brand">{$loadingBrandHtml}</div>
+        <div class="lhx-preloader-text">{$loadingTextHtml}</div>
+        <div class="lhx-preloader-progress"><div class="lhx-preloader-bar" id="lhxPreloaderBar"></div></div>
+        {if $loadingSubtextHtml}
+        <div class="lhx-preloader-subtext">{$loadingSubtextHtml}</div>
+        {/if}
+    </div>
+</div>
+<script>
+(function () {
+    var preloader = document.getElementById('lhxPreloader');
+    var bar = document.getElementById('lhxPreloaderBar');
+    if (!preloader || !bar) return;
+
+    var progress = 0;
+    var done = false;
+    var loaded = false;
+    var timer = null;
+
+    function finish() {
+        if (done) return;
+        done = true;
+        if (timer) clearInterval(timer);
+        // 快速拉到 100%
+        var step = setInterval(function () {
+            progress = Math.min(100, progress + 14);
+            bar.style.width = progress + '%';
+            if (progress >= 100) {
+                clearInterval(step);
+                setTimeout(function () {
+                    preloader.classList.add('fade-out');
+                    setTimeout(function () {
+                        preloader.classList.add('hidden');
+                    }, 800);
+                }, 350);
+            }
+        }, 24);
+    }
+
+    function simulateLoad() {
+        timer = setInterval(function () {
+            if (done) return;
+            // 模拟加载：随机增长，封顶 92%，等待 window.load 后补齐
+            var target = loaded ? 100 : 92;
+            if (progress < target) {
+                progress += Math.random() * 1.8;
+                if (progress > target) progress = target;
+                bar.style.width = progress + '%';
+            }
+            if (loaded && progress >= 100) {
+                finish();
+            }
+        }, 50);
+    }
+
+    window.addEventListener('load', function () {
+        loaded = true;
+        // 资源加载完成，稍作停留后补齐进度并淡出
+        setTimeout(function () {
+            if (!done) finish();
+        }, 200);
+    });
+
+    // 兜底：最长 6 秒强制淡出，避免异常导致卡在加载页
+    setTimeout(function () {
+        if (!done) {
+            loaded = true;
+            finish();
+        }
+    }, 6000);
+
+    simulateLoad();
+})();
+</script>
+{/if}

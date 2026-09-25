@@ -1,44 +1,305 @@
-<footer id="page-footer" class="glass-footer">
-                <div class="content py-3">
-                    <div class="row font-size-sm">
-                        <div class="col-sm-6 py-1 text-center text-sm-left">
-                            <a href="/">{$webname}</a> &copy; {:date('Y')}
-                        </div>
-                        <div class="col-sm-6 py-1 text-center text-sm-right">
-                            {if isset($templateset['网站备案号']) && $templateset['网站备案号']}
-                            <a href="//beian.miit.gov.cn/">{$templateset['网站备案号']}</a>
-                            {/if}
-                        </div>
+<footer id="page-footer" class="glass-footer console-footer">
+    <style>
+        .console-footer .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .console-footer .footer-grid {
+            display: grid;
+            grid-template-columns: 1.8fr 1fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 40px;
+            padding-top: 40px;
+        }
+        .console-footer .footer-brand .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--glass-text);
+            text-decoration: none;
+            margin-bottom: 16px;
+        }
+        .console-footer .footer-brand .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--glass-primary-light), var(--glass-primary));
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .console-footer .footer-brand .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .console-footer .footer-brand p {
+            font-size: 13px;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            max-width: 340px;
+            color: var(--glass-text-secondary);
+        }
+        .console-footer .footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .console-footer .footer-contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--glass-text-secondary);
+        }
+        .console-footer .footer-contact-item i {
+            color: var(--glass-primary);
+            width: 16px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .console-footer .footer-col h4 {
+            font-size: 14px;
+            color: var(--glass-text);
+            margin-bottom: 20px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .console-footer .footer-col ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .console-footer .footer-col ul li {
+            margin-bottom: 12px;
+        }
+        .console-footer .footer-col a {
+            color: var(--glass-text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            transition: all var(--glass-transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .console-footer .footer-col a:hover {
+            color: var(--glass-primary);
+            transform: translateX(3px);
+        }
+        .console-footer .footer-bottom {
+            padding: 24px 0;
+            border-top: 1px solid var(--glass-border);
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .console-footer .footer-bottom p {
+            margin: 0;
+            color: var(--glass-text-secondary);
+        }
+        .console-footer .footer-bottom a {
+            color: var(--glass-text-secondary);
+            text-decoration: none;
+            transition: color var(--glass-transition);
+        }
+        .console-footer .footer-bottom a:hover {
+            color: var(--glass-primary);
+        }
+        .console-footer .footer-bottom-links {
+            display: flex;
+            gap: 20px;
+        }
+        .console-footer .footer-licenses {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            color: var(--glass-text-muted);
+            font-size: 12px;
+        }
+        .console-footer .footer-licenses a {
+            color: var(--glass-text-muted);
+        }
+        .console-footer .footer-licenses a:hover {
+            color: var(--glass-primary);
+        }
+        .console-footer .footer-runtime {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: var(--glass-bg-light, rgba(255,255,255,0.5));
+            border: 1px solid var(--glass-border);
+            font-size: 13px;
+            color: var(--glass-text-secondary);
+            margin-bottom: 20px;
+        }
+        .console-footer .footer-runtime i {
+            color: var(--glass-primary);
+        }
+        .console-footer .footer-runtime b {
+            color: var(--glass-text);
+            font-weight: 600;
+        }
+        @media (max-width: 992px) {
+            .console-footer .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 36px;
+            }
+            .console-footer .footer-brand {
+                grid-column: 1 / -1;
+            }
+        }
+        @media (max-width: 576px) {
+            .console-footer .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            .console-footer .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="__ROOT__/" class="logo">
+                    <div class="logo-icon">
+                        {if isset($web.logo) && $web.logo}
+                        <img src="{$web.logo}" alt="logo">
+                        {else}
+                        <i class="{$web.logo_icon|default='fa fa-server'}"></i>
+                        {/if}
+                    </div>
+                    <span>{$webname}</span>
+                </a>
+                <p>专注于提供稳定、安全、易用的虚拟主机服务。通过自主控制面板与多地域数据中心，帮助用户快速部署网站与应用，让托管更简单。</p>
+                {php}
+                $serviceEmail = !empty($web['service_email']) ? $web['service_email'] : (!empty($web['emailname']) ? $web['emailname'] : '');
+                $qqGroup = isset($web['qq_group']) ? $web['qq_group'] : '';
+                $qqNumber = $qqGroup;
+                if ($qqGroup && !preg_match('/^\d+$/', $qqGroup)) {
+                    if (preg_match('/group_code=(\d+)/', $qqGroup, $m)) {
+                        $qqNumber = $m[1];
+                    } elseif (preg_match('/\/q\/([a-zA-Z0-9]+)/', $qqGroup, $m)) {
+                        $qqNumber = '官方QQ群';
+                    }
+                }
+                {/php}
+                <div class="footer-contact">
+                    <div class="footer-contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>{$serviceEmail|default='未设置'}</span>
+                    </div>
+                    {if $qqGroup}
+                    <div class="footer-contact-item">
+                        <i class="fab fa-qq"></i>
+                        <span>官方 QQ 群：{$qqNumber|default='官方QQ群'}</span>
+                    </div>
+                    {/if}
+                    <div class="footer-contact-item">
+                        <i class="fas fa-clock"></i>
+                        <span>工作日 09:00 - 21:00 在线支持</span>
                     </div>
                 </div>
-            </footer>
+            </div>
 
-            <nav class="mobile-tab-bar" aria-label="底部导航">
-                <a class="mobile-tab-item" href="__ROOT__/user/index">
-                    <i class="fas fa-home"></i>
-                    <span>首页</span>
-                </a>
-                <a class="mobile-tab-item" href="__ROOT__/cart">
-                    <i class="fas fa-box"></i>
-                    <span>产品</span>
-                </a>
-                <a class="mobile-tab-item" href="__ROOT__/user/transaction">
-                    <i class="fas fa-file-invoice"></i>
-                    <span>订单</span>
-                </a>
-                <a class="mobile-tab-item" href="__ROOT__/user/pay">
-                    <i class="fas fa-wallet"></i>
-                    <span>资产</span>
-                </a>
-                <a class="mobile-tab-item" href="__ROOT__/user/information">
-                    <i class="fas fa-user"></i>
-                    <span>我的</span>
-                </a>
-            </nav>
+            <div class="footer-col">
+                <h4>产品服务</h4>
+                <ul>
+                    <li><a href="__ROOT__/cart">虚拟主机</a></li>
+                    <li><a href="__ROOT__/cart">产品套餐</a></li>
+                    <li><a href="__ROOT__/cart">价格说明</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>帮助支持</h4>
+                <ul>
+                    <li><a href="__ROOT__/help">帮助中心</a></li>
+                    <li><a href="__ROOT__/user/submitticket">提交工单</a></li>
+                    <li><a href="__ROOT__/announcements">网站公告</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>关于我们</h4>
+                <ul>
+                    <li><a href="__ROOT__/login">用户登录</a></li>
+                    <li><a href="__ROOT__/register">注册账号</a></li>
+                    <li><a href="__ROOT__/help">联系我们</a></li>
+                </ul>
+            </div>
         </div>
+
+        <div class="footer-bottom">
+            <p>
+                <i class="fas fa-shield-alt" style="margin-right:4px;color:var(--glass-primary);"></i>本站已稳定运行
+                <b id="runTimeText" style="font-weight:600;color:var(--glass-text);">—</b>
+            </p>
+            <p>&copy; {:date('Y')} {$webname}
+                {if isset($web.icp) && $web.icp}<a href="//beian.miit.gov.cn/">{$web.icp}</a>{/if}
+                {if isset($templateset['网站备案号']) && $templateset['网站备案号']}<a href="//beian.miit.gov.cn/">{$templateset['网站备案号']}</a>{/if}
+            </p>
+            <div class="footer-licenses">
+                {if isset($web.business_license) && $web.business_license}<span>营业执照：{$web.business_license}</span>{/if}
+                {if isset($web.police_beian) && $web.police_beian}<a href="http://www.beian.gov.cn/" target="_blank">公安备案：{$web.police_beian}</a>{/if}
+                {if isset($web.telecom_license) && $web.telecom_license}<span>增值电信业务经营许可证：{$web.telecom_license}</span>{/if}
+            </div>
+            <div class="footer-bottom-links">
+                <a href="#">服务条款</a>
+                <a href="#">隐私政策</a>
+                <a href="__ROOT__/announcements">公告中心</a>
+            </div>
+        </div>
+    </div>
+</footer>
+        </div>
+        <script>
+        (function(){
+            var startStr = '{:isset($web.run_start_time) && $web.run_start_time ? $web.run_start_time : ""}';
+            var startTs = 0;
+            if (startStr) {
+                var d2 = startStr.replace(/-/g, '/');
+                d2 = d2.replace('T', ' ');
+                startTs = new Date(d2).getTime();
+            }
+            if (!startTs || isNaN(startTs)) {
+                var el0 = document.getElementById('runTimeText');
+                if (el0) el0.textContent = '—';
+                return;
+            }
+            function pad(n){ return n < 10 ? '0' + n : n; }
+            function tick(){
+                var diff = Math.floor((Date.now() - startTs) / 1000);
+                if (diff < 0) diff = 0;
+                var d = Math.floor(diff / 86400);
+                var h = Math.floor((diff % 86400) / 3600);
+                var m = Math.floor((diff % 3600) / 60);
+                var s = Math.floor(diff % 60);
+                var el = document.getElementById('runTimeText');
+                if (el) el.textContent = d + ' 天 ' + pad(h) + ' 时 ' + pad(m) + ' 分 ' + pad(s) + ' 秒';
+            }
+            tick();
+            setInterval(tick, 1000);
+        })();
+        </script>
         <script src="/static/assets/js/oneui.core.min.js"></script>
         <script src="/static/assets/js/oneui.app.min.js"></script>
-        <script src="/static/assets/vendor/layer/layer.js"></script>
+        <script src="/static/js/glass-toast.js"></script>
+        <script src="/static/js/layer-modern.js?v=1"></script>
 <script src="/static/js/glass-animations.js"></script>
 {include file="default/live2d_widget" /}
     </body>

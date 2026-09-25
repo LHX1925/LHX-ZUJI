@@ -1,0 +1,349 @@
+{include file="default/user/header" title="活动中心" /}
+<main id="main-container">
+<div class="content">
+<style>
+    .act-page { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; }
+    .act-hero { background: linear-gradient(135deg, #4f7cff, #7c3aed, #ec4899); border-radius: 20px; padding: 36px 32px; color: #fff; margin-bottom: 24px; box-shadow: 0 8px 30px rgba(124,58,237,0.3); position: relative; overflow: hidden; }
+    .act-hero::before { content: ''; position: absolute; top: -50%; right: -10%; width: 60%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%); pointer-events: none; }
+    .act-hero h2 { font-size: 26px; font-weight: 700; margin: 0 0 8px; position: relative; }
+    .act-hero p { margin: 0; opacity: 0.95; font-size: 14px; position: relative; }
+    .act-section-title { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; color: var(--glass-text, #1e293b); margin: 28px 0 16px; }
+    .act-section-title i { color: #4f7cff; }
+    .act-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .act-card { background: var(--glass-bg, #fff); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-radius: 16px; padding: 22px; box-shadow: var(--glass-shadow-sm, 0 2px 10px rgba(0,0,0,0.05)); border: 1px solid var(--glass-border, #eef2f7); transition: all .25s ease; cursor: pointer; position: relative; overflow: hidden; }
+    .act-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #4f7cff, #7c3aed); }
+    .act-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(79,124,255,0.15); border-color: transparent; }
+    .act-card .act-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 14px; }
+    .act-icon.points { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #4f7cff; }
+    .act-icon.host { background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #16a34a; }
+    .act-icon.balance { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #d97706; }
+    .act-card h3 { font-size: 16px; font-weight: 700; color: var(--glass-text, #1e293b); margin: 0 0 6px; }
+    .act-card .act-desc { font-size: 13px; color: var(--glass-text-secondary, #64748b); margin: 0 0 14px; line-height: 1.5; }
+    .act-card .act-prize { display: inline-block; padding: 4px 12px; background: linear-gradient(135deg, #eff6ff, #f5f3ff); border: 1px solid #e0e7ff; border-radius: 999px; font-size: 12px; color: #4f7cff; font-weight: 600; }
+
+    /* 每日抽奖 - 九宫格 */
+    .lottery-wrap { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; align-items: start; }
+    .lottery-box { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 50%, #f59e0b 100%); border-radius: 20px; padding: 28px 24px; box-shadow: 0 10px 30px rgba(238,90,82,0.35); text-align: center; position: relative; overflow: hidden; }
+    .lottery-box::before { content: ''; position: absolute; top: -40px; left: -40px; right: -40px; height: 80px; background: radial-gradient(ellipse, rgba(255,255,255,0.25), transparent 70%); pointer-events: none; }
+    .lottery-banner { color: #fff; font-size: 22px; font-weight: 800; margin-bottom: 4px; text-shadow: 0 2px 6px rgba(0,0,0,0.2); position: relative; }
+    .lottery-banner i { margin-right: 4px; }
+    .lottery-tip { color: rgba(255,255,255,0.95); font-size: 13px; margin-bottom: 18px; position: relative; }
+    .lottery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 380px; margin: 0 auto; position: relative; }
+    .lottery-cell { background: var(--glass-bg-strong, #fff); border-radius: 12px; padding: 14px 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 96px; }
+    .lottery-cell .lc-icon { font-size: 30px; line-height: 1; margin-bottom: 4px; }
+    .lottery-cell .lc-name { font-size: 13px; font-weight: 600; color: var(--glass-text, #1e293b); }
+    .lottery-cell .lc-stock { font-size: 11px; color: var(--glass-text-muted, #94a3b8); margin-top: 3px; }
+    .lottery-cell.empty .lc-icon { opacity: 0.3; }
+    .lottery-cell.empty .lc-name { color: #cbd5e1; }
+    .lottery-go { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%); border-radius: 12px; padding: 14px 6px; min-height: 96px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; cursor: pointer; box-shadow: 0 6px 18px rgba(238,90,82,0.5); border: 2px solid rgba(255,255,255,0.3); transition: all .2s; }
+    .lottery-go:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(238,90,82,0.6); }
+    .lottery-go.disabled { opacity: 0.55; cursor: not-allowed; }
+    .lottery-go.disabled:hover { transform: none; }
+    .lottery-go .go-label { font-size: 28px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .lottery-go .go-sub { font-size: 12px; margin-top: 4px; opacity: 0.95; }
+    .lottery-go .go-remain { font-size: 11px; margin-top: 2px; opacity: 0.9; }
+    .lottery-footer { color: rgba(255,255,255,0.95); font-size: 12px; margin-top: 16px; position: relative; }
+    .lottery-footer a { color: #fff; text-decoration: underline; margin-left: 6px; }
+    .lottery-info { background: var(--glass-bg, #fff); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-radius: 20px; padding: 28px; box-shadow: var(--glass-shadow-sm, 0 4px 20px rgba(0,0,0,0.06)); border: 1px solid var(--glass-border, #eef2f7); }
+    .lottery-info h3 { font-size: 17px; font-weight: 700; color: var(--glass-text, #1e293b); margin: 0 0 14px; }
+    .lottery-stat { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+    .lottery-stat .val { font-weight: 700; color: #4f7cff; }
+    .lottery-prize-list { list-style: none; padding: 0; margin: 16px 0 0; }
+    .lottery-prize-list li { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; font-size: 13px; color: var(--glass-text-secondary, #475569); border-bottom: 1px dashed #f1f5f9; }
+    .lottery-prize-list .pname { display: flex; align-items: center; gap: 8px; }
+    .lottery-notice { margin-top: 14px; font-size: 12px; color: var(--glass-text-muted, #94a3b8); background: var(--glass-bg-light, #f8fafc); padding: 10px 14px; border-radius: 8px; line-height: 1.6; }
+
+    /* 用户参与记录榜 */
+    .win-record-panel { background: var(--glass-bg, #fff); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); border-radius: 20px; padding: 22px 24px; box-shadow: var(--glass-shadow-sm, 0 4px 20px rgba(0,0,0,0.06)); border: 1px solid var(--glass-border, #eef2f7); margin-top: 4px; }
+    .win-record-panel .wr-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .win-record-panel .wr-title { font-size: 17px; font-weight: 700; color: var(--glass-text, #1e293b); }
+    .win-record-panel .wr-title i { color: #f59e0b; margin-right: 6px; }
+    .win-record-list { display: flex; flex-direction: column; gap: 10px; max-height: 320px; overflow-y: auto; }
+    .win-record-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--glass-bg-light, #f8fafc); transition: all .15s; }
+    .win-record-item:hover { background: rgba(79,124,255,0.08); }
+    .win-record-item .wr-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; object-fit: cover; border: 2px solid rgba(245,158,11,0.5); background: #e2e8f0; }
+    .win-record-item .wr-avatar.placeholder { display: flex; align-items: center; justify-content: center; font-size: 18px; color: #94a3b8; }
+    .win-record-item .wr-info { flex: 1; min-width: 0; }
+    .win-record-item .wr-name { font-size: 14px; font-weight: 600; color: var(--glass-text, #1e293b); }
+    .win-record-item .wr-time { font-size: 12px; color: var(--glass-text-muted, #94a3b8); margin-top: 2px; }
+    .win-record-item .wr-prize { font-size: 13px; font-weight: 600; color: #d97706; flex-shrink: 0; max-width: 45%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .win-record-list::-webkit-scrollbar { width: 4px; }
+    .win-record-list::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.4); border-radius: 4px; }
+    .win-record-empty { text-align: center; color: var(--glass-text-muted, #94a3b8); padding: 30px 0; font-size: 13px; }
+
+    /* 中奖记录内嵌在奖品设置下 */
+    .win-record-inline { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--glass-border, #f1f5f9); }
+    .win-record-inline .wr-title { font-size: 14px; font-weight: 600; color: var(--glass-text, #1e2937); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .win-record-inline .win-record-list { max-height: 220px; }
+
+    /* 答题正确率排行榜 */
+    .quiz-rank-list { display: flex; flex-direction: column; gap: 10px; }
+    .quiz-rank-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--glass-bg-light, #f8fafc); transition: all .15s; }
+    .quiz-rank-item:hover { background: rgba(124,58,237,0.08); }
+    .quiz-rank-item .qr-rank { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; color: #fff; background: #cbd5e1; }
+    .quiz-rank-item:nth-child(1) .qr-rank { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+    .quiz-rank-item:nth-child(2) .qr-rank { background: linear-gradient(135deg, #cbd5e1, #94a3b8); }
+    .quiz-rank-item:nth-child(3) .qr-rank { background: linear-gradient(135deg, #f0a97a, #cd7f32); }
+    .quiz-rank-item .qr-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; object-fit: cover; border: 2px solid rgba(124,58,237,0.35); background: #e2e8f0; }
+    .quiz-rank-item .qr-avatar.placeholder { display: flex; align-items: center; justify-content: center; font-size: 18px; color: #94a3b8; }
+    .quiz-rank-item .qr-info { flex: 1; min-width: 0; }
+    .quiz-rank-item .qr-name { font-size: 14px; font-weight: 600; color: var(--glass-text, #1e293b); }
+    .quiz-rank-item .qr-sub { font-size: 12px; color: var(--glass-text-muted, #94a3b8); margin-top: 2px; }
+    .quiz-rank-item .qr-acc { font-size: 16px; font-weight: 800; color: #7c3aed; flex-shrink: 0; }
+    .quiz-rank-item .qr-acc small { font-size: 12px; font-weight: 600; color: var(--glass-text-muted, #94a3b8); }
+
+    @media (max-width: 768px) {
+        .lottery-wrap { grid-template-columns: 1fr; }
+        .lottery-grid { max-width: 100%; }
+    }
+</style>
+
+<div class="act-page">
+    <div class="act-hero">
+        <h2><i class="fas fa-gift"></i> 活动中心</h2>
+        <p>答题赢好礼 · 每日抽奖 · 学习红色历史文化，赢取丰厚奖励</p>
+    </div>
+
+    <!-- 每日抽奖 -->
+    <div class="act-section-title"><i class="fas fa-dice"></i> 每日抽奖</div>
+    <div class="lottery-wrap">
+        <div class="lottery-box">
+            <div class="lottery-banner"><i class="fas fa-gift"></i>每日幸运抽奖</div>
+            <div class="lottery-tip">每人最多参与 {$lotteryConfig.daily_times} 次</div>
+            <div class="lottery-grid">
+                {php}
+                // 九宫格布局：3x3，中间（第 5 格）是 GO 按钮，其余 8 格为奖项
+                $prizes = isset($lotteryPrizes) && is_array($lotteryPrizes) ? $lotteryPrizes : [];
+                $pid = 0;
+                for ($i = 0; $i < 9; $i++) {
+                    if ($i == 4) {
+                        // 中间：GO 按钮
+                        $goClass = ($lotteryConfig['status'] != '1' || $lotteryRemain <= 0) ? 'lottery-go disabled' : 'lottery-go';
+                        echo '<div class="'.$goClass.'" id="lotteryGo">';
+                        echo '<div class="go-label">GO</div>';
+                        echo '<div class="go-sub">立即抽奖</div>';
+                        echo '<div class="go-remain">剩余 <span id="remainTimes">'.$lotteryRemain.'</span> 次</div>';
+                        echo '</div>';
+                    } else {
+                        $p = isset($prizes[$pid]) ? $prizes[$pid] : null;
+                        $pid++;
+                        if ($p) {
+                            $icon = !empty($p['icon']) ? $p['icon'] : '🎁';
+                            $name = htmlspecialchars($p['name']);
+                            if ($p['stock'] == -1) {
+                                $stock = '无限';
+                            } elseif ($p['stock'] == 0) {
+                                $stock = '已抽完';
+                            } else {
+                                $stock = '剩 '.$p['stock'];
+                            }
+                            echo '<div class="lottery-cell"><div class="lc-icon">'.$icon.'</div><div class="lc-name">'.$name.'</div><div class="lc-stock">'.$stock.'</div></div>';
+                        } else {
+                            echo '<div class="lottery-cell empty"><div class="lc-icon">🎁</div><div class="lc-name">敬请期待</div><div class="lc-stock">-</div></div>';
+                        }
+                    }
+                }
+                {/php}
+            </div>
+            <div class="lottery-footer">
+                已抽 <span id="drawnCount">{$lotteryTodayCount}</span> 次 · <a href="javascript:;" id="viewRecords">查看参与记录</a>
+            </div>
+        </div>
+        <div class="lottery-info">
+            <h3><i class="fas fa-list"></i> 奖品设置</h3>
+            <div class="lottery-stat">
+                <span>每日抽奖次数</span>
+                <span class="val">{$lotteryConfig.daily_times} 次</span>
+            </div>
+            <div class="lottery-stat">
+                <span>今日已抽</span>
+                <span class="val">{$lotteryTodayCount} 次</span>
+            </div>
+            <ul class="lottery-prize-list" id="prizeList">
+                {if isset($lotteryPrizes) && !empty($lotteryPrizes)}
+                {foreach $lotteryPrizes as $p}
+                <li>
+                    <span class="pname">{$p.icon|default='🎁'} {$p.name}</span>
+                    <span class="prob">{$p.probability * 100}%</span>
+                </li>
+                {/foreach}
+                {/if}
+            </ul>
+            {if $lotteryConfig.need_realname == 1}
+            <div class="lottery-notice">参与抽奖需完成实名认证</div>
+            {/if}
+            {if $lotteryConfig.notice}
+            <div class="lottery-notice">{$lotteryConfig.notice}</div>
+            {/if}
+            <!-- 中奖记录（奖品设置下方） -->
+            <div class="win-record-inline" id="winRecordInline">
+                <div class="wr-title"><i class="fas fa-crown"></i> 近期幸运用户</div>
+                <div class="win-record-list" id="winRecordList">
+                    <div class="win-record-empty">加载中...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 答题正确率排行榜 -->
+    <div class="act-section-title"><i class="fas fa-chart-line"></i> 答题正确率排行榜</div>
+    <div class="win-record-panel">
+        <div class="wr-head">
+            <div class="wr-title"><i class="fas fa-medal"></i>正确率 TOP 榜</div>
+            <span style="font-size:12px;color:var(--glass-text-muted,#94a3b8);">按正确率排名</span>
+        </div>
+        <div class="quiz-rank-list" id="quizRankList">
+            <div class="win-record-empty">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 答题活动 -->
+    <div class="act-section-title"><i class="fas fa-question-circle"></i> 答题活动</div>
+    <div class="act-grid">
+        {if empty($activities)}
+        <div style="grid-column:1/-1;text-align:center;color:var(--glass-text-muted,#94a3b8);padding:40px 0;">暂无答题活动，敬请期待</div>
+        {/if}
+        {foreach $activities as $a}
+        <div class="act-card" onclick="location.href='__ROOT__/user/quiz/{$a.id}'">
+            <div class="act-icon {$a.type}">
+                {if $a.type == 'points'}<i class="fas fa-star"></i>
+                {elseif $a.type == 'host'}<i class="fas fa-server"></i>
+                {else}<i class="fas fa-yen-sign"></i>{/if}
+            </div>
+            <h3>{$a.name}</h3>
+            <p class="act-desc">每次 {$a.question_count} 题，答对 {$a.pass_count} 题即通过 · 每日 {$a.daily_limit} 次</p>
+            <span class="act-prize">{$a.prize_text}</span>
+        </div>
+        {/foreach}
+    </div>
+</div>
+</div>
+</main>
+{include file="default/user/footer" /}
+<script>
+$(function(){
+    // 加载中奖记录榜
+    function loadWinRecords() {
+        $.get('__ROOT__/user/lottery_public_records', function(res){
+            var $list = $('#winRecordList');
+            if (res.code == 1 && res.records && res.records.length) {
+                var html = '';
+                res.records.forEach(function(r){
+                    var avatarHtml = r.avatar
+                        ? '<img class="wr-avatar" src="' + r.avatar + '" alt="avatar" onerror="this.style.display=\'none\'">'
+                        : '<div class="wr-avatar placeholder"><i class="fas fa-user"></i></div>';
+                    html += '<div class="win-record-item">'
+                        + avatarHtml
+                        + '<div class="wr-info"><div class="wr-name">' + (r.name || '') + '</div>'
+                        + '<div class="wr-time">' + r.time + '</div></div>'
+                        + '<div class="wr-prize">' + r.prize_name + '</div></div>';
+                });
+                $list.html(html);
+            } else {
+                $list.html('<div class="win-record-empty">暂无中奖记录</div>');
+            }
+        }, 'json').fail(function(){
+            $('#winRecordList').html('<div class="win-record-empty">加载失败</div>');
+        });
+    }
+    loadWinRecords();
+    // 每 30 秒刷新
+    setInterval(loadWinRecords, 30000);
+
+    // 加载答题正确率排行榜
+    function loadQuizRank() {
+        $.get('__ROOT__/user/quiz_rank', function(res){
+            var $list = $('#quizRankList');
+            if (res.code == 1 && res.rank && res.rank.length) {
+                var html = '';
+                res.rank.forEach(function(r){
+                    var avatarHtml = r.avatar
+                        ? '<img class="qr-avatar" src="' + r.avatar + '" alt="avatar" onerror="this.style.display=\'none\'">'
+                        : '<div class="qr-avatar placeholder"><i class="fas fa-user"></i></div>';
+                    html += '<div class="quiz-rank-item">'
+                        + '<div class="qr-rank">' + r.rank + '</div>'
+                        + avatarHtml
+                        + '<div class="qr-info"><div class="qr-name">' + (r.name || '') + '</div>'
+                        + '<div class="qr-sub">答对 ' + r.score + '/' + r.questions + ' 题 · 参与 ' + r.times + ' 次</div></div>'
+                        + '<div class="qr-acc">' + r.accuracy + '%</div></div>';
+                });
+                $list.html(html);
+            } else {
+                $list.html('<div class="win-record-empty">暂无答题记录</div>');
+            }
+        }, 'json').fail(function(){
+            $('#quizRankList').html('<div class="win-record-empty">加载失败</div>');
+        });
+    }
+    loadQuizRank();
+    setInterval(loadQuizRank, 60000);
+
+    $('#lotteryGo').on('click', function(){
+        var $btn = $(this);
+        if ($btn.hasClass('disabled')) return;
+        $btn.css('pointer-events', 'none').addClass('shake');
+        $.ajax({
+            type: 'POST', url: '__ROOT__/user/lottery', dataType: 'json',
+            success: function(res){
+                $btn.css('pointer-events','').removeClass('shake');
+                if (res.code == 1) {
+                    if (res.prize && res.prize.type == 'none') {
+                        showToast(res.msg || '很遗憾，未中奖', 'warning', 2500);
+                    } else {
+                        showToast(res.msg || '恭喜中奖', 'success', 3000);
+                    }
+                    var remain = parseInt($('#remainTimes').text()) - 1;
+                    if (remain < 0) remain = 0;
+                    $('#remainTimes').text(remain);
+                    $('#drawnCount').text(parseInt($('#drawnCount').text()) + 1);
+                    if (remain <= 0) {
+                        $btn.addClass('disabled');
+                        $btn.find('.go-label').text('已用完');
+                    }
+                } else {
+                    showToast(res.msg, 'danger', 2500);
+                }
+            },
+            error: function(){
+                $btn.css('pointer-events','').removeClass('shake');
+                showToast('网络错误', 'danger', 2500);
+            }
+        });
+    });
+
+    $('#viewRecords').on('click', function(){
+        layer && layer.open ? layer.open({
+            type: 1, title: '我的抽奖记录', area: ['520px','420px'],
+            content: '<div style="padding:18px;"><div id="lotteryRecords">加载中...</div></div>',
+            success: function(layero, idx){
+                $.get('__ROOT__/user/lottery_records', function(res){
+                    if (res.code == 1 && res.records && res.records.length) {
+                        var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">'
+                            + '<tr style="background:#f8fafc;color:#64748b;"><th style="padding:8px;text-align:left;">时间</th><th style="padding:8px;">奖品</th><th style="padding:8px;">状态</th></tr>';
+                        res.records.forEach(function(r){
+                            html += '<tr style="border-bottom:1px solid #f1f5f9;">'
+                                + '<td style="padding:8px;">'+r.time+'</td>'
+                                + '<td style="padding:8px;text-align:center;">'+r.prize_name+'</td>'
+                                + '<td style="padding:8px;text-align:center;color:'+(r.prize_type=='none'?'#94a3b8':'#16a34a')+';">'+(r.prize_type=='none'?'未中奖':'已中奖')+'</td></tr>';
+                        });
+                        html += '</table>';
+                        $('#lotteryRecords').html(html);
+                    } else {
+                        $('#lotteryRecords').html('<div style="text-align:center;color:#94a3b8;padding:40px 0;">暂无抽奖记录</div>');
+                    }
+                }, 'json');
+            }
+        }) : null;
+    });
+});
+</script>
+<style>
+.lottery-go.shake { animation: lotteryShake 0.6s ease; }
+@keyframes lotteryShake {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    20% { transform: translateX(-4px) rotate(-2deg); }
+    40% { transform: translateX(4px) rotate(2deg); }
+    60% { transform: translateX(-4px) rotate(-1deg); }
+    80% { transform: translateX(4px) rotate(1deg); }
+}
+</style>

@@ -1,0 +1,2327 @@
+{include file="default/user/header" title="用户开发者中心" /}
+<main id="main-container">
+    <div class="content">
+        <style>
+            .dev-page { max-width: 1120px; margin: 0 auto; }
+            .dev-hero {
+                background: #fff; border: 1px solid var(--border); border-radius: 20px;
+                padding: 28px 32px; margin-bottom: 18px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+                display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+            }
+            .dev-hero h1 { font-size: 26px; font-weight: 800; color: var(--text); margin: 0 0 6px; }
+            .dev-hero p { font-size: 14px; color: var(--text-secondary); margin: 0; line-height: 1.7; }
+            .dev-card {
+                background: #fff; border: 1px solid var(--border); border-radius: 20px;
+                padding: 26px 30px; margin-bottom: 18px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+            }
+            .dev-card h2 { font-size: 18px; font-weight: 800; color: var(--text); margin: 0 0 6px; display: flex; align-items: center; gap: 8px; }
+            .dev-card h2 i { color: var(--primary); }
+            .dev-card .sub { font-size: 13px; color: var(--text-secondary); margin: 0 0 18px; }
+
+            body.glass-enabled .dev-hero,
+            body.glass-enabled .dev-card {
+                background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));
+                -webkit-backdrop-filter: blur(var(--glass-blur));
+                border-color: var(--glass-border);
+                box-shadow: var(--glass-shadow-sm), var(--glass-shadow-inset);
+            }
+
+            .dev-form { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+            .dev-input {
+                flex: 1; min-width: 220px; border: 1.5px solid var(--border); border-radius: 12px;
+                padding: 12px 16px; font-size: 14px; color: var(--text); outline: none; background: #fff; transition: all .2s;
+            }
+            .dev-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+            .btn-primary-dev {
+                padding: 12px 30px; background: var(--primary); border: none; border-radius: 999px; color: #fff;
+                font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; white-space: nowrap;
+            }
+            .btn-primary-dev:hover { background: var(--primary-dark); box-shadow: 0 6px 20px rgba(37,99,235,0.3); }
+
+            .key-list { display: flex; flex-direction: column; gap: 12px; }
+            .key-item {
+                display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+                border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; background: #fafbfc;
+            }
+            body.glass-enabled .key-item { background: rgba(255,255,255,var(--glass-opacity-light)); }
+            .key-item .ki-left { flex: 1; min-width: 0; }
+            .key-item .ki-name { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 4px; }
+            .key-item .ki-key {
+                font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+                font-size: 13px; color: var(--text-secondary); word-break: break-all; margin: 0;
+            }
+            .key-item .ki-meta { font-size: 12px; color: var(--text-muted); margin: 6px 0 0; }
+            .ki-actions { display: flex; gap: 8px; align-items: center; }
+            .btn-mini {
+                padding: 8px 16px; border: none; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer;
+                transition: all .2s; white-space: nowrap;
+            }
+            .btn-copy { background: #e0e7ff; color: #4f46e5; }
+            .btn-copy:hover { background: #c7d2fe; }
+            .btn-off { background: #fef3c7; color: #b45309; }
+            .btn-on { background: #dcfce7; color: #15803d; }
+            .btn-del { background: #fee2e2; color: #dc2626; }
+            .btn-del:hover { background: #fecaca; }
+
+            .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+            .badge-on { background: #dcfce7; color: #15803d; }
+            .badge-off { background: #f1f5f9; color: #64748b; }
+
+            .doc-block { margin-top: 16px; }
+            .doc-block h3 { font-size: 15px; font-weight: 800; color: var(--text); margin: 18px 0 8px; }
+            .doc-block p, .doc-block li { font-size: 13.5px; color: var(--text-secondary); line-height: 1.8; }
+            pre.code {
+                background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 16px 18px; overflow-x: auto;
+                font-size: 12.5px; line-height: 1.7; font-family: 'SFMono-Regular', Consolas, Menlo, monospace;
+            }
+            .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+            .tbl th, .tbl td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+            .tbl th { background: #f8fafc; color: var(--text); font-weight: 700; }
+            body.glass-enabled .tbl th { background: rgba(255,255,255,var(--glass-opacity-light)); }
+            .tbl td code { background: #f1f5f9; padding: 2px 6px; border-radius: 6px; font-size: 12px; color: #334155; }
+            .tag { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-right: 4px; }
+            .tag-get { background: #dbeafe; color: #1d4ed8; }
+            .tag-post { background: #dcfce7; color: #15803d; }
+            .callout {
+                background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 14px 16px;
+                font-size: 13px; color: #92400e; line-height: 1.7; margin: 12px 0;
+            }
+            .modal-mask { position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; }
+            .modal-box { background: #fff; border-radius: 20px; padding: 28px; max-width: 560px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+            .modal-box h3 { margin: 0 0 14px; font-size: 17px; font-weight: 800; color: var(--text); }
+            .modal-box .mk-key { font-family: Consolas, Menlo, monospace; font-size: 13px; background: #f1f5f9; border-radius: 10px; padding: 14px; word-break: break-all; color: #334155; }
+            .modal-box .tip { font-size: 12.5px; color: #b45309; margin: 12px 0 0; }
+
+            .api-item { border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin: 14px 0; background: #fafbfc; }
+            body.glass-enabled .api-item { background: rgba(255,255,255,var(--glass-opacity-light)); }
+            .api-item h4 { margin: 0 0 8px; font-size: 14px; font-weight: 800; color: var(--text); }
+            .api-item .api-desc { font-size: 13px; color: var(--text-secondary); margin: 0 0 10px; line-height: 1.7; }
+            .api-item .tbl { margin: 0 0 10px; }
+            .api-item pre.code { margin: 0; }
+            .dev-test { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+            .dev-test select, .dev-test input { border: 1.5px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 13px; color: var(--text); outline: none; background: #fff; }
+            .dev-test select:focus, .dev-test input:focus { border-color: var(--primary); }
+            .dev-test input { flex: 1; min-width: 260px; }
+            .dev-params { width: 100%; border: 1.5px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 13px; font-family: Consolas, Menlo, monospace; color: var(--text); outline: none; background: #fff; min-height: 64px; resize: vertical; box-sizing: border-box; }
+            .dev-params:focus { border-color: var(--primary); }
+            .dev-result { margin-top: 10px; }
+            .dev-result pre { margin: 0; max-height: 320px; overflow: auto; }
+            .btn-test { padding: 10px 26px; background: var(--primary); border: none; border-radius: 999px; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .2s; }
+            .btn-test:hover { background: var(--primary-dark); }
+        </style>
+
+        <div class="dev-page">
+            <div class="dev-hero">
+                <div>
+                    <h1>用户开发者中心</h1>
+                    <p>申请专属 API 密钥，通过开放接口调用官网功能，将本站能力集成到你的应用中。</p>
+                </div>
+                <i class="fas fa-code" style="font-size:42px;color:var(--primary);opacity:.5;"></i>
+            </div>
+
+            <!-- 申请密钥 -->
+            <div class="dev-card">
+                <h2><i class="fas fa-key"></i> 申请专属密钥</h2>
+                <p class="sub">每个密钥独立管理，最多可创建 20 个。请妥善保管，密钥仅创建时完整显示一次。</p>
+                <div class="dev-form">
+                    <input type="text" id="keyName" class="dev-input" placeholder="密钥名称，例如：我的网站对接" maxlength="60">
+                    <button type="button" class="btn-primary-dev" id="btnCreateKey">立即申请</button>
+                </div>
+            </div>
+
+            <!-- 密钥列表 -->
+            <div class="dev-card">
+                <h2><i class="fas fa-list-ul"></i> 我的密钥</h2>
+                <p class="sub">可随时停用、启用或删除密钥。</p>
+                <div class="key-list" id="keyList">
+                    {if empty($keys)}
+                    <div style="text-align:center;padding:30px 0;color:var(--text-muted);font-size:14px;">暂无密钥，请先申请一个专属密钥</div>
+                    {else}
+                    {foreach $keys as $k}
+                    <div class="key-item" data-id="{$k.id}">
+                        <div class="ki-left">
+                            <p class="ki-name">{$k.name}</p>
+                            <p class="ki-key">{$k.api_key}</p>
+                            <p class="ki-meta">创建于 {:date('Y-m-d H:i:s', $k['created_at'])}{if $k['last_used_at']} · 最近使用 {:date('Y-m-d H:i:s', $k['last_used_at'])}{/if}</p>
+                        </div>
+                        <div class="ki-actions">
+                            <span class="badge {if $k.status==1}badge-on{else}badge-off{/if}">{if $k.status==1}启用中{else}已停用{/if}</span>
+                            <button type="button" class="btn-mini btn-copy" data-key="{$k.api_key}">复制</button>
+                            {if $k.status==1}
+                            <button type="button" class="btn-mini btn-off" data-toggle="0">停用</button>
+                            {else}
+                            <button type="button" class="btn-mini btn-on" data-toggle="1">启用</button>
+                            {/if}
+                            <button type="button" class="btn-mini btn-del" data-del="1">删除</button>
+                        </div>
+                    </div>
+                    {/foreach}
+                    {/if}
+                </div>
+            </div>
+
+            <!-- 调用文档 -->
+            <div class="dev-card">
+                <h2><i class="fas fa-book"></i> 接口调用文档
+                    <span style="margin-left:auto;">
+                        <button type="button" class="btn-mini btn-copy" id="btnDownloadDoc" style="padding:9px 20px;font-size:13px;font-weight:700;">
+                            <i class="fas fa-download"></i> 下载 Markdown 文档
+                        </button>
+                    </span>
+                </h2>
+                <p class="sub">以下为开放接口的完整调用说明，可点击右上角按钮下载 Markdown 格式完整文档（含全部 51 个接口、参数说明、示例与常见错误排查）。</p>
+
+                <div class="doc-block">
+                    <h3>〇、快速开始（三步上手）</h3>
+                    <p>第一次使用？跟着下面三步，1 分钟内完成第一次接口调用：</p>
+                    <ul style="margin:0;padding-left:20px;">
+                        <li><strong>第一步：申请密钥</strong> —— 在本页上方“申请专属密钥”处填写名称并提交，复制生成的 <code>LHX-</code> 开头密钥（仅完整显示一次，请妥善保管）。</li>
+                        <li><strong>第二步：测试调用</strong> —— 在下方“在线调试工具”中选择 <code>user.info</code>、粘贴密钥、点击发送，看到返回的账户信息即表示调用成功。</li>
+                        <li><strong>第三步：阅读下文</strong> —— 按需查阅接口总览与详细说明，把接口集成到你的网站、小程序或自动化脚本中。看不懂的名词先看“关键概念速查”。</li>
+                    </ul>
+                </div>
+
+                <div class="doc-block">
+                    <h3>关键概念速查（新手必读）</h3>
+                    <p>接口中反复出现的几个 ID，一次看懂，后续不再迷惑：</p>
+                    <table class="tbl">
+                        <thead><tr><th>名称</th><th>含义</th><th>从哪里获取</th><th>用于哪些接口</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>order_id</code></td><td>主机订单ID，一个主机对应一个</td><td><code>host.list</code> 返回的 <code>id</code></td><td>host.status / host.reset / host.suspend / host.unsuspend / host.delete / host.upgrade / order.renew / transfer.publish 等</td></tr>
+                            <tr><td><code>cartid</code></td><td>产品ID（套餐）</td><td><code>product.list</code> 返回的产品 <code>id</code></td><td>cart.add；host.upgrade 的 newcartid</td></tr>
+                            <tr><td>购物车项 <code>id</code></td><td>加入购物车后生成的临时项ID</td><td><code>cart.list</code> 返回的 <code>id</code></td><td>cart.delete；cart.checkout 的 ids</td></tr>
+                            <tr><td><code>payid</code></td><td>支付方式ID</td><td><code>pay.ways</code> 返回的 <code>id</code></td><td>pay.create</td></tr>
+                            <tr><td><code>ordernumber</code></td><td>充值商户订单号</td><td><code>pay.create</code> 返回</td><td>pay.status</td></tr>
+                            <tr><td><code>transfer_id</code></td><td>转让单ID</td><td><code>transfer.market</code> 返回的 <code>id</code>；发布后由 <code>transfer.publish</code> 返回</td><td>transfer.buy / transfer.contact / transfer.detail / transfer.cancel / transfer.message.*</td></tr>
+                            <tr><td><code>state</code></td><td>主机状态枚举</td><td>host.list / host.status 返回</td><td>判断主机状态：0=待开通 1=正常 2=已暂停 3=已终止</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="doc-block">
+                    <h3>一、接口地址</h3>
+                    <pre class="code">{$apiBase}</pre>
+                    <p>所有接口统一通过该地址访问，使用 <code>action</code> 参数区分不同功能，共支持三种调用方式：</p>
+                    <pre class="code"># 方式一：GET 参数（查询类接口常用，例如用户信息、主机列表）
+{$apiBase}?action=user.info
+
+# 方式二：POST 表单 / JSON 体（写入类接口，例如提交工单、续费、签到）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=ticket.submit&title=标题" "{$apiBase}"
+
+# 方式三：URL 路径风格（action 写在路径中，与 ?action=xxx 等效）
+{$apiBase}/user.info          （等同 action=user.info）</pre>
+                </div>
+
+                <div class="doc-block">
+                    <h3>二、认证方式</h3>
+                    <p>除登录接口（<code>login</code> / <code>qrlogin.create</code> / <code>qrlogin.status</code>）外，每次请求必须携带你的专属密钥（密钥以 <code>LHX-</code> 开头），二选一：</p>
+                    <pre class="code"># 方式一：请求头（推荐）
+X-API-Key: 你的密钥
+
+# 方式二：URL 或请求体参数
+api_key=你的密钥</pre>
+                </div>
+
+                <div class="doc-block">
+                    <h3>三、通用返回格式</h3>
+                    <p>所有接口统一返回 JSON 格式：</p>
+                    <pre class="code">{
+  "code": 1,        // 状态码：1=成功，-1=失败
+  "msg": "ok",      // 提示信息（失败时为具体原因，如“API 密钥无效”）
+  "data": { ... }   // 业务数据（对象或数组，仅成功时返回）
+}</pre>
+                    <ul style="margin:0;padding-left:20px;">
+                        <li>成功示例：<code>{"code":1,"msg":"ok","data":{...}}</code></li>
+                        <li>失败示例：<code>{"code":-1,"msg":"API 密钥无效"}</code></li>
+                        <li>业务失败时 HTTP 状态码通常仍为 <code>200</code>，请以 <code>code</code> 字段判断成功与否，以 <code>msg</code> 读取失败原因。</li>
+                    </ul>
+                </div>
+
+                <div class="callout">
+                    <strong>安全限制：</strong>开发者 API 已覆盖官网全部用户功能：<strong>购买主机、余额充值、转让市场买卖、主机重置密码/暂停/恢复/删除、续费、升降级</strong>等均可通过接口完成。仅<strong>不支持修改账号与密码</strong>（<code>user.password</code>、<code>user.account</code> 被禁止）。
+                </div>
+
+                <div class="doc-block">
+                    <h3>四、接口总览</h3>
+                    <table class="tbl">
+                        <thead>
+                            <tr><th>action</th><th>方法</th><th>必填参数</th><th>说明</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>login</code></td><td><span class="tag tag-post">POST</span></td><td>account, password</td><td>账号密码登录（无需密钥，成功返回 API 密钥）</td></tr>
+                            <tr><td><code>qrlogin.create</code></td><td><span class="tag tag-post">POST</span></td><td>无</td><td>生成扫码登录二维码（返回 token 与二维码地址）</td></tr>
+                            <tr><td><code>qrlogin.status</code></td><td><span class="tag tag-post">POST</span></td><td>token</td><td>轮询扫码登录状态（确认后返回 API 密钥）</td></tr>
+                            <tr><td><code>user.info</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>获取当前用户信息（账号、余额、积分、会员等）</td></tr>
+                            <tr><td><code>user.update</code></td><td><span class="tag tag-post">POST</span></td><td>name, qq</td><td>修改昵称/QQ/地址（不含账号密码）</td></tr>
+                            <tr><td><code>host.list</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>我的主机/服务列表</td></tr>
+                            <tr><td><code>host.status</code></td><td><span class="tag tag-get">GET</span></td><td>order_id</td><td>实时主机状态（空间/数据库/流量/续费/运行时间/网络/连接信息）</td></tr>
+                            <tr><td><code>host.panel</code></td><td><span class="tag tag-get">GET</span></td><td>order_id</td><td>一键登录控制面板（返回登录地址与表单字段，可 POST 提交自动登录）</td></tr>
+                            <tr><td><code>order.list</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>订单列表（分页 page/limit）</td></tr>
+                            <tr><td><code>order.detail</code></td><td><span class="tag tag-get">GET</span></td><td>id</td><td>订单详情</td></tr>
+                            <tr><td><code>order.renew</code></td><td><span class="tag tag-post">POST</span></td><td>order_id, time</td><td>续费主机（余额支付）</td></tr>
+                            <tr><td><code>ticket.list</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>工单列表（分页）</td></tr>
+                            <tr><td><code>ticket.detail</code></td><td><span class="tag tag-get">GET</span></td><td>id</td><td>工单详情</td></tr>
+                            <tr><td><code>ticket.submit</code></td><td><span class="tag tag-post">POST</span></td><td>title, content</td><td>提交工单</td></tr>
+                            <tr><td><code>ticket.reply</code></td><td><span class="tag tag-post">POST</span></td><td>id, content</td><td>回复工单</td></tr>
+                            <tr><td><code>ticket.close</code></td><td><span class="tag tag-post">POST</span></td><td>id</td><td>关闭工单</td></tr>
+                            <tr><td><code>announcement.list</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>公告列表（分页）</td></tr>
+                            <tr><td><code>announcement.detail</code></td><td><span class="tag tag-get">GET</span></td><td>id</td><td>公告详情</td></tr>
+                            <tr><td><code>checkin</code></td><td><span class="tag tag-post">POST</span></td><td>无</td><td>每日签到</td></tr>
+                            <tr><td><code>points.shop</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>积分商城商品列表</td></tr>
+                            <tr><td><code>points.exchange</code></td><td><span class="tag tag-post">POST</span></td><td>product_id</td><td>积分兑换（不支持兑换主机）</td></tr>
+                            <tr><td><code>cdkey.use</code></td><td><span class="tag tag-post">POST</span></td><td>cdkey</td><td>使用卡密（仅余额类）</td></tr>
+                            <tr><td><code>aff.info</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>推广信息</td></tr>
+                            <tr><td><code>aff.enable</code></td><td><span class="tag tag-post">POST</span></td><td>无</td><td>开启推广</td></tr>
+                            <tr><td><code>aff.withdraw</code></td><td><span class="tag tag-post">POST</span></td><td>无</td><td>推广余额提现到账户余额</td></tr>
+                            <tr><td><code>payrecord.list</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>充值记录（分页）</td></tr>
+                            <tr><td><code>transaction.list</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>余额/交易明细（分页）</td></tr>
+                            <tr><td><code>host.reset</code></td><td><span class="tag tag-post">POST</span></td><td>order_id</td><td>重置主机面板密码（不传 password 自动生成随机密码）</td></tr>
+                            <tr><td><code>host.suspend</code></td><td><span class="tag tag-post">POST</span></td><td>order_id</td><td>暂停主机</td></tr>
+                            <tr><td><code>host.unsuspend</code></td><td><span class="tag tag-post">POST</span></td><td>order_id</td><td>恢复（解除暂停）主机</td></tr>
+                            <tr><td><code>host.delete</code></td><td><span class="tag tag-post">POST</span></td><td>order_id</td><td>删除主机（不可恢复）</td></tr>
+                            <tr><td><code>host.upgrade</code></td><td><span class="tag tag-post">POST</span></td><td>order_id, newcartid</td><td>升级/降级主机（余额支付差价）</td></tr>
+                            <tr><td><code>product.list</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>产品分类与产品列表（购买前查看）</td></tr>
+                            <tr><td><code>cart.add</code></td><td><span class="tag tag-post">POST</span></td><td>cartid, user, password, time</td><td>加入购物车（购买主机）</td></tr>
+                            <tr><td><code>cart.list</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>购物车列表（含15分钟有效期）</td></tr>
+                            <tr><td><code>cart.delete</code></td><td><span class="tag tag-post">POST</span></td><td>id</td><td>删除购物车项</td></tr>
+                            <tr><td><code>cart.checkout</code></td><td><span class="tag tag-post">POST</span></td><td>ids</td><td>余额结算购买主机</td></tr>
+                            <tr><td><code>pay.ways</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>可用支付方式列表</td></tr>
+                            <tr><td><code>pay.create</code></td><td><span class="tag tag-post">POST</span></td><td>payid, money</td><td>创建充值订单（返回支付链接/二维码）</td></tr>
+                            <tr><td><code>pay.status</code></td><td><span class="tag tag-get">GET</span></td><td>ordernumber 或 pay_order_id</td><td>充值订单状态（未支付自动向支付上游核实补账）</td></tr>
+                            <tr><td><code>transfer.market</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>转让市场列表（分页）</td></tr>
+                            <tr><td><code>transfer.list</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>我的转让记录与可转让主机</td></tr>
+                            <tr><td><code>transfer.publish</code></td><td><span class="tag tag-post">POST</span></td><td>order_id, price, email_code</td><td>发布主机到转让市场</td></tr>
+                            <tr><td><code>transfer.buy</code></td><td><span class="tag tag-post">POST</span></td><td>transfer_id</td><td>购买转让市场主机（余额支付）</td></tr>
+                            <tr><td><code>transfer.contact</code></td><td><span class="tag tag-get">GET</span></td><td>transfer_id</td><td>获取卖家联系方式</td></tr>
+                            <tr><td><code>transfer.detail</code></td><td><span class="tag tag-get">GET</span></td><td>transfer_id</td><td>转让主机配置详情</td></tr>
+                            <tr><td><code>transfer.cancel</code></td><td><span class="tag tag-post">POST</span></td><td>transfer_id</td><td>取消转让</td></tr>
+                            <tr><td><code>transfer.sendcode</code></td><td><span class="tag tag-post">POST</span></td><td>无</td><td>发送转让邮箱验证码（发布转让前）</td></tr>
+                            <tr><td><code>transfer.message.send</code></td><td><span class="tag tag-post">POST</span></td><td>transfer_id, content</td><td>发送转让留言</td></tr>
+                            <tr><td><code>transfer.message.list</code></td><td><span class="tag tag-get">GET</span></td><td>transfer_id</td><td>转让留言列表</td></tr>
+                            <tr><td><code>transfer.unread</code></td><td><span class="tag tag-get">GET</span></td><td>无</td><td>未读转让留言数</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="doc-block">
+                    <h3>五、接口详细说明</h3>
+                    <p>以下按功能分类列出每个接口的请求参数与返回数据说明，可结合上方的接口总览表使用。</p>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">登录认证（无需密钥）</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>login</code> — 账号密码登录</h4>
+                        <p class="api-desc">用账号（用户名或邮箱）+ 密码登录，成功后自动签发或复用你的 API 密钥。此接口无需携带 <code>X-API-Key</code>。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>account</td><td>string</td><td>是</td><td>用户名或邮箱</td></tr>
+                                <tr><td>password</td><td>string</td><td>是</td><td>登录密码</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">curl -X POST -d "account=你的账号&password=你的密码" "{$apiBase}/login"</pre>
+                        <p>返回示例（成功）：</p>
+                        <pre class="code">{
+  "code": 1,
+  "msg": "登录成功",
+  "data": {
+    "api_key": "LHX-xxxxxxxx...",   // 后续调用接口时使用
+    "userid": 1,
+    "username": "demo",
+    "nickname": "昵称",
+    "email": "a@b.com",
+    "balance": 0,
+    "points": 0
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>qrlogin.create</code> — 生成扫码登录二维码</h4>
+                        <p class="api-desc">生成一次性扫码登录 token（5 分钟有效）。把返回的 <code>qrurl</code> 生成二维码，让用户在手机（已登录官网）上扫码确认，随后轮询 <code>qrlogin.status</code> 获取密钥。</p>
+                        <pre class="code">curl -X POST "{$apiBase}/qrlogin.create"</pre>
+                        <p>返回示例：</p>
+                        <pre class="code">{
+  "code": 1,
+  "token": "a1b2c3...",                              // 轮询时使用
+  "qrurl": "https://你的站点/qrlogin/confirm?token=a1b2c3...",
+  "expire": 300
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>qrlogin.status</code> — 轮询扫码登录状态</h4>
+                        <p class="api-desc">轮询扫码结果：<code>pending</code> 未扫码、<code>scanned</code> 已扫码待确认、<code>confirmed</code> 已确认（此时返回 API 密钥）、<code>expired</code> 已失效。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>token</td><td>string</td><td>是</td><td>qrlogin.create 返回的 token</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">curl -X POST -d "token=a1b2c3..." "{$apiBase}/qrlogin.status"</pre>
+                        <p>返回示例（已确认）：</p>
+                        <pre class="code">{
+  "code": 1,
+  "status": "confirmed",
+  "msg": "登录成功",
+  "data": {
+    "api_key": "LHX-xxxxxxxx...",
+    "userid": 1,
+    "username": "demo"
+  }
+}</pre>
+                    </div>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">用户信息</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>user.info</code> — 获取当前用户信息</h4>
+                        <p class="api-desc">返回密钥所属账号的基本资料、余额、积分、会员等级与推广信息。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=user.info"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "id": 1,                  // 用户ID
+    "username": "demo",       // 登录账号
+    "nickname": "张三",        // 昵称
+    "email": "demo@qq.com",   // 邮箱
+    "qq": "123456",           // QQ号
+    "address": "",            // 联系地址
+    "balance": 100.5,         // 账户余额（元）
+    "points": 200,            // 当前积分
+    "membership_level": 1,    // 会员等级（0=普通会员）
+    "total_recharge": 500,    // 累计充值（元）
+    "realname_status": 1,     // 实名状态：0=未认证 1=已认证
+    "aff": "a1b2c3",          // 推广码（未开通为空）
+    "affmoney": 10,           // 推广佣金余额（元）
+    "avatar": "/static/images/avatar.png"  // 头像地址
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>user.update</code> — 修改个人资料</h4>
+                        <p class="api-desc">修改昵称、QQ、联系地址（不支持修改账号与密码）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>name</td><td>string</td><td>是</td><td>新昵称</td></tr>
+                                <tr><td>qq</td><td>string</td><td>是</td><td>QQ号（4-12位纯数字）</td></tr>
+                                <tr><td>address</td><td>string</td><td>否</td><td>联系地址</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=user.update&name=昵称&qq=123456&address=地址" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "修改资料成功" }</pre>
+                    </div>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">主机管理</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>host.list</code> — 我的主机/服务列表</h4>
+                        <p class="api-desc">返回当前账号名下所有有效主机（不含已终止订单）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=host.list"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": [
+    {
+      "id": 123,              // 订单ID（调用 host.status 等接口时使用）
+      "user": "demo",         // 主机用户名
+      "cartid": 5,
+      "product_name": "云主机A型",  // 产品名称
+      "state": "1",           // 状态：0=待开通 1=正常 2=已暂停 3=已终止
+      "state_text": "正常"
+    }
+  ]
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>host.status</code> — 实时主机状态</h4>
+                        <p class="api-desc">连接主机面板查询实时状态（空间、数据库、流量、续费时间、运行时间、网络与连接信息等），具体字段由面板接口返回。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>order_id</td><td>int</td><td>是</td><td>主机订单ID（可通过 host.list 获取）</td></tr>
+                                <tr><td>host_user</td><td>string</td><td>否</td><td>主机用户名，不填则使用订单默认用户名</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=host.status&order_id=123"</pre>
+                        <pre class="code">// 返回（面板查询成功时 code=1，面板实时数据在 data.panel 中）
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "order_id": 123,          // 订单ID
+    "host_user": "demo",       // 主机用户名
+    "state": "1",             // 站内状态：0=待开通 1=正常 2=已暂停 3=已终止
+    "state_text": "正常",
+    "opened_at": "2026-08-24 10:00:00",   // 开通时间
+    "expire_at": "2027-08-24 10:00:00",   // 到期时间
+    "panel": {                // 面板实时数据（字段以面板实际返回为准）
+      "space_used": "512MB",  // 已用空间
+      "space_total": "2GB",   // 总空间
+      "db_used": "1",         // 已用数据库数
+      "db_total": "2",        // 数据库总数
+      "run_time": "10天",      // 已运行时间
+      "end_time": "2027-01-01" // 面板到期时间
+    }
+  }
+}
+
+// 面板查询失败时 code=-1，但 data 中仍返回站内主机状态（state/state_text 等），可据此判断主机在站内的状态</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>host.panel</code> — 一键登录控制面板</h4>
+                        <p class="api-desc">返回主机控制面板的登录地址与表单字段，调用方按返回的 method 提交 fields 即可跳转登录面板（等效于官网“一键登录”）。别名：host.panel.login、host.login、host.sso。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>order_id</td><td>int</td><td>是</td><td>主机订单ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=host.panel&order_id=123"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "order_id": 123,
+    "panel_type": "mnbt",     // 面板类型：mnbt=梦奈宝塔 easypanel=EasyPanel
+    "login_url": "http://面板地址/user/idcdl.php?gn=logine",
+    "method": "POST",          // 提交方式：POST 或 GET
+    "fields": {               // 需要提交到 login_url 的表单字段
+      "username": "demo",
+      "password": "******"
+    }
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>host.reset</code> — 重置主机面板密码</h4>
+                        <p class="api-desc">重置主机控制面板密码，并同步更新站内记录。不传 password 时自动生成 10 位随机密码并在返回中给出。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>order_id</td><td>int</td><td>是</td><td>主机订单ID</td></tr>
+                                <tr><td>password</td><td>string</td><td>否</td><td>新面板密码（6-50位，不能含中文），不填则自动生成随机密码</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=host.reset&order_id=123" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "密码已重置", "data": { "order_id": 123, "password": "Ab3k9xQm2" } }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>host.suspend</code> — 暂停主机</h4>
+                        <p class="api-desc">暂停指定主机（等效官网"暂停"操作），暂停后主机不可用，可随时通过 host.unsuspend 恢复。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>order_id</td><td>int</td><td>是</td><td>主机订单ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=host.suspend&order_id=123" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "暂停成功" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>host.unsuspend</code> — 恢复主机</h4>
+                        <p class="api-desc">解除暂停，恢复主机运行。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>order_id</td><td>int</td><td>是</td><td>主机订单ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=host.unsuspend&order_id=123" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "恢复成功" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>host.delete</code> — 删除主机</h4>
+                        <p class="api-desc">删除指定主机，<strong>不可恢复</strong>，请谨慎操作。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>order_id</td><td>int</td><td>是</td><td>主机订单ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=host.delete&order_id=123" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "删除成功" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>host.upgrade</code> — 升级/降级主机</h4>
+                        <p class="api-desc">将主机升级或降级到其他产品，差额使用账户余额支付（与官网升降级规则一致）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>order_id</td><td>int</td><td>是</td><td>主机订单ID</td></tr>
+                                <tr><td>newcartid</td><td>int</td><td>是</td><td>目标产品ID（可通过 product.list 获取）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=host.upgrade&order_id=123&newcartid=9" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "升降级成功" }</pre>
+                    </div>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">订单</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>order.list</code> — 订单列表</h4>
+                        <p class="api-desc">分页返回当前账号的订单列表。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>page</td><td>int</td><td>否</td><td>页码，默认 1</td></tr>
+                                <tr><td>limit</td><td>int</td><td>否</td><td>每页数量，默认 20，最大 50</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=order.list&page=1&limit=20"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "total": 8,        // 订单总数
+    "page": 1,         // 当前页码
+    "limit": 20,       // 每页数量
+    "list": [
+      {
+        "id": 123,     // 订单ID
+        "userid": 1,
+        "user": "demo",
+        "cartid": 5,
+        "product_name": "云主机A型",
+        "state": "1",
+        "state_text": "正常",
+        ...            // 其余为订单原始字段（价格、开通时间等）
+      }
+    ]
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>order.detail</code> — 订单详情</h4>
+                        <p class="api-desc">返回指定订单的完整信息。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>id</td><td>int</td><td>是</td><td>订单ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=order.detail&id=123"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "id": 123,
+    "user": "demo",
+    "product_name": "云主机A型",
+    "state": "1",
+    "state_text": "正常",
+    ...              // 订单原始字段
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>order.renew</code> — 续费主机</h4>
+                        <p class="api-desc">使用账户余额为指定主机续费，费用与官网续费一致。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>order_id</td><td>int</td><td>是</td><td>主机订单ID</td></tr>
+                                <tr><td>time</td><td>int</td><td>是</td><td>续费时长（单位与官网续费页一致，通常为月）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=order.renew&order_id=123&time=1" "{$apiBase}"
+
+// 请求（POST JSON）
+curl -X POST -H "X-API-Key: 你的密钥" -H "Content-Type: application/json" \
+  -d '{"action":"order.renew","order_id":123,"time":1}' "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "续费成功" }</pre>
+                    </div>
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">工单</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>ticket.list</code> — 工单列表</h4>
+                        <p class="api-desc">分页返回当前账号提交的工单，content 字段为对话记录数组。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>page</td><td>int</td><td>否</td><td>页码，默认 1</td></tr>
+                                <tr><td>limit</td><td>int</td><td>否</td><td>每页数量，默认 20，最大 50</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=ticket.list&page=1&limit=20"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "total": 3, "page": 1, "limit": 20,
+    "list": [
+      {
+        "id": 8,          // 工单ID（ticket.detail 等接口使用）
+        "title": "主机无法连接",  // 工单标题
+        "content": [      // 对话记录数组
+          { "user": "用户", "msg": "主机连不上", "time": "2026-08-24 10:00" },
+          { "user": "管理员", "msg": "已处理", "time": "2026-08-24 10:30" }
+        ],
+        "state": "1",     // 状态：1=处理中 0=已关闭
+        ...
+      }
+    ]
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>ticket.detail</code> — 工单详情</h4>
+                        <p class="api-desc">返回指定工单的完整信息与对话记录。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>id</td><td>int</td><td>是</td><td>工单ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=ticket.detail&id=8"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "id": 8,
+    "title": "主机无法连接",
+    "content": [ ... ],   // 对话记录数组（同 ticket.list）
+    ...
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>ticket.submit</code> — 提交工单</h4>
+                        <p class="api-desc">向官网提交新工单。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>title</td><td>string</td><td>是</td><td>工单标题</td></tr>
+                                <tr><td>content</td><td>string</td><td>是</td><td>问题描述</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=ticket.submit&title=主机无法连接&content=请帮我查看" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "提交成功" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>ticket.reply</code> — 回复工单</h4>
+                        <p class="api-desc">对指定工单追加回复。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>id</td><td>int</td><td>是</td><td>工单ID</td></tr>
+                                <tr><td>content</td><td>string</td><td>是</td><td>回复内容</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=ticket.reply&id=8&content=已恢复，谢谢" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "回复成功" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>ticket.close</code> — 关闭工单</h4>
+                        <p class="api-desc">关闭指定工单，关闭后不可再回复。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>id</td><td>int</td><td>是</td><td>工单ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=ticket.close&id=8" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "关闭成功" }</pre>
+                    </div>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">公告</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>announcement.list</code> — 公告列表</h4>
+                        <p class="api-desc">分页返回官网已发布的公告（仅状态正常的公告）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>page</td><td>int</td><td>否</td><td>页码，默认 1</td></tr>
+                                <tr><td>limit</td><td>int</td><td>否</td><td>每页数量，默认 20，最大 50</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=announcement.list&page=1&limit=20"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "total": 5, "page": 1, "limit": 20,
+    "list": [
+      { "id": 3, "title": "机房维护通知", "content": "...", "time": "..." }
+    ]
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>announcement.detail</code> — 公告详情</h4>
+                        <p class="api-desc">返回指定公告的完整内容。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>id</td><td>int</td><td>是</td><td>公告ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=announcement.detail&id=3"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": { "id": 3, "title": "机房维护通知", "content": "...", ... }
+}</pre>
+                    </div>
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">签到 / 积分</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>checkin</code> — 每日签到</h4>
+                        <p class="api-desc">每日签到一次，成功可获得签到积分/余额（以官网签到规则为准），重复签到会返回失败提示。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=checkin" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "签到成功，获得 10 积分" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>points.shop</code> — 积分商城商品列表</h4>
+                        <p class="api-desc">返回当前积分与可兑换商品列表。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=points.shop"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "points": 200,           // 当前积分
+    "products": [            // 商品列表
+      { "id": 2, "name": "余额红包5元", "points": 50, "type": "balance", ... }
+    ]
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>points.exchange</code> — 积分兑换</h4>
+                        <p class="api-desc">使用积分兑换商品（余额、解封等类型，不支持兑换主机）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>product_id</td><td>int</td><td>是</td><td>商品ID（可通过 points.shop 获取）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=points.exchange&product_id=2" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "兑换成功" }</pre>
+                    </div>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">卡密</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>cdkey.use</code> — 使用卡密</h4>
+                        <p class="api-desc">兑换卡密（仅支持余额类等非主机类卡密，主机类卡密请前往官网兑换）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>cdkey</td><td>string</td><td>是</td><td>卡密字符串</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=cdkey.use&cdkey=你的卡密" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "兑换成功" }</pre>
+                    </div>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">推广</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>aff.info</code> — 推广信息</h4>
+                        <p class="api-desc">返回推广码、推广链接、佣金余额与官网推广配置。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=aff.info"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "aff_code": "a1b2c3",          // 推广码
+    "aff_url": "https://域名/aff/a1b2c3",  // 推广链接
+    "affmoney": 10,               // 佣金余额（元）
+    "affdiscount": 0.9,           // 被推广人购买折扣
+    "affwithdrawal": 50           // 最低提现金额（元）
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>aff.enable</code> — 开启推广</h4>
+                        <p class="api-desc">为当前账号开启推广功能，成功返回推广码。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数（已开启则返回失败）</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=aff.enable" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "开启推广成功", "data": { "aff": "a1b2c3" } }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>aff.withdraw</code> — 佣金提现到余额</h4>
+                        <p class="api-desc">将推广佣金全部转入账户余额（需达到官网最低提现金额）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=aff.withdraw" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "已成功提现到账户余额", "data": { "amount": 10 } }</pre>
+                    </div>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">财务</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>payrecord.list</code> — 充值记录</h4>
+                        <p class="api-desc">分页返回当前账号的充值/支付记录。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>page</td><td>int</td><td>否</td><td>页码，默认 1</td></tr>
+                                <tr><td>limit</td><td>int</td><td>否</td><td>每页数量，默认 20，最大 50</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=payrecord.list&page=1&limit=20"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "total": 6, "page": 1, "limit": 20,
+    "list": [ { "id": 12, "money": 100, "type": "支付宝", "state": "1", ... } ]
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>transaction.list</code> — 余额/交易明细</h4>
+                        <p class="api-desc">分页返回当前账号的余额变动明细。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>page</td><td>int</td><td>否</td><td>页码，默认 1</td></tr>
+                                <tr><td>limit</td><td>int</td><td>否</td><td>每页数量，默认 20，最大 50</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=transaction.list&page=1&limit=20"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "total": 30, "page": 1, "limit": 20,
+    "list": [ { "id": 55, "money": -10, "type": "购买主机", "time": "...", ... } ]
+  }
+}</pre>
+                    </div>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">产品与购买</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>product.list</code> — 产品分类与产品列表</h4>
+                        <p class="api-desc">返回官网在售的产品分类及每个分类下的产品（含产品ID、价格、周期等），购买前先调用此接口获取 cartid。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=product.list"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "categories": [
+      {
+        "id": 1, "name": "虚拟主机",   // 分类
+        "products": [
+          { "id": 5, "name": "云主机A型", "money": "10.00", "cycle": "month", ... }  // id 即 cartid（cart.add 使用）
+        ]
+      }
+    ]
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>cart.add</code> — 加入购物车（购买主机）</h4>
+                        <p class="api-desc">将产品加入购物车（与官网购买流程一致），随后可通过 cart.checkout 用余额结算开通主机。购物车项 15 分钟内未结算将自动过期。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>cartid</td><td>int</td><td>是</td><td>产品ID（通过 product.list 获取）</td></tr>
+                                <tr><td>user</td><td>string</td><td>是</td><td>面板账号（3-50位，以字母开头，可含字母数字下划线连字符）</td></tr>
+                                <tr><td>password</td><td>string</td><td>是</td><td>面板密码（6-50位，不能含中文）</td></tr>
+                                <tr><td>time</td><td>int</td><td>是</td><td>购买时长（正整数，单位与产品周期一致，通常为月）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=cart.add&cartid=5&user=test01&password=abc123&time=1" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "已加入购物车" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>cart.list</code> — 购物车列表</h4>
+                        <p class="api-desc">返回当前账号购物车中未结算的项目（含产品名称、单价、到期时间）及合计金额。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=cart.list"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "total": 10,       // 合计金额（元）
+    "list": [
+      { "id": 31, "cartid": 5, "product_name": "云主机A型", "money": "10.00", "expire_at": 1756080000, ... }  // id 为购物车项ID（cart.delete / cart.checkout 使用）
+    ]
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>cart.delete</code> — 删除购物车项</h4>
+                        <p class="api-desc">删除购物车中指定的未结算项目。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>id</td><td>int</td><td>是</td><td>购物车项ID（可通过 cart.list 获取）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=cart.delete&id=31" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "已删除" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>cart.checkout</code> — 余额结算购买主机</h4>
+                        <p class="api-desc">使用账户余额结算购物车并开通主机（与官网购买流程一致）。<strong>开发者 API 仅支持余额支付</strong>，请先通过 pay.create 充值余额（在线支付需要浏览器会话，接口无法直接跳转支付页）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>ids</td><td>string</td><td>是</td><td>要结算的购物车项ID（逗号分隔，如 31,32；可通过 cart.list 获取）</td></tr>
+                                <tr><td>paytype</td><td>string</td><td>否</td><td>支付方式，固定传 balance（默认）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=cart.checkout&ids=31&paytype=balance" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "购买成功" }</pre>
+                    </div>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">余额充值</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>pay.ways</code> — 可用支付方式列表</h4>
+                        <p class="api-desc">返回官网已启用的支付方式（id 即 payid，pay.create 使用），插件配置等敏感字段已去除。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=pay.ways"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "list": [ { "id": 1, "name": "支付宝", "plugins": "epay", ... } ]  // id 即 payid
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>pay.create</code> — 创建充值订单</h4>
+                        <p class="api-desc">创建余额充值订单：易支付返回支付链接（pay_url），支付宝当面付返回二维码链接（qr_code）。用户扫码/打开链接完成支付后，余额自动到账（pay.status 可查询并主动补账）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>payid</td><td>int</td><td>是</td><td>支付方式ID（通过 pay.ways 获取）</td></tr>
+                                <tr><td>money</td><td>number</td><td>是</td><td>充值金额（元，≥0.01，小数点后最多两位）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=pay.create&payid=1&money=50" "{$apiBase}"</pre>
+                        <pre class="code">// 返回（易支付）
+{
+  "code": 1, "msg": "充值订单已创建",
+  "data": {
+    "pay_order_id": 88,              // 站内充值订单ID（pay.status 使用）
+    "ordernumber": "20260824103015123",  // 商户订单号（pay.status 使用）
+    "money": 50,
+    "pay_url": "https://支付网关/submit.php?...",  // 支付链接，引导用户打开完成支付
+    "type": "alipay"                 // 支付通道：alipay/wxpay/qqpay
+  }
+}
+
+// 返回（支付宝当面付）
+{
+  "code": 1, "msg": "充值订单已创建",
+  "data": {
+    "pay_order_id": 88, "ordernumber": "20260824103015123", "money": 50,
+    "qr_code": "https://qr.alipay.com/...",  // 二维码支付链接（可生成二维码展示给用户）
+    "type": "alipay_f2f"
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>pay.status</code> — 充值订单状态</h4>
+                        <p class="api-desc">查询充值订单支付状态。订单未支付时会<strong>自动向支付上游核实一次</strong>，若上游已支付则立即补账到余额（防止异步通知丢失），因此支付完成后轮询此接口即可确认到账。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>ordernumber</td><td>string</td><td>二选一</td><td>商户订单号（pay.create 返回）</td></tr>
+                                <tr><td>pay_order_id</td><td>int</td><td>二选一</td><td>站内充值订单ID（pay.create 返回）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=pay.status&ordernumber=20260824103015123"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "ordernumber": "20260824103015123",
+    "money": 50,
+    "state": "1",           // 1=已支付 2=未支付
+    "state_text": "已支付",
+    "paid": true,           // 是否已支付（已支付时余额已到账）
+    "paid_time": "2026-08-24 10:31:05"
+  }
+}</pre>
+                    </div>
+
+                    <h4 style="font-size:14px;font-weight:800;color:var(--text);margin:16px 0 4px;">转让市场</h4>
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>transfer.market</code> — 转让市场列表</h4>
+                        <p class="api-desc">分页返回转让市场中可购买的转让主机（含产品名称、主机到期时间、转让价格、卖家信息等）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>page</td><td>int</td><td>否</td><td>页码，默认 1</td></tr>
+                                <tr><td>limit</td><td>int</td><td>否</td><td>每页数量，默认 20，最大 50</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=transfer.market&page=1&limit=20"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "total": 3, "page": 1, "limit": 20,
+    "list": [
+      {
+        "id": 12,                  // 转让ID（transfer.buy / transfer.detail 使用）
+        "order_id": 123,           // 原主机订单ID
+        "price": "8.00",           // 转让价格（元）
+        "host_user": "demo",       // 主机账号
+        "atime": "...", "ztime": "...",   // 开通时间 / 到期时间
+        "product_name": "云主机A型",
+        "seller_name": "张三", "seller_qq": "123456", "seller_id": 2,
+        ...
+      }
+    ]
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>transfer.list</code> — 我的转让记录与可转让主机</h4>
+                        <p class="api-desc">返回我发布的转让记录（含状态），以及我名下当前可发起转让的运行中主机列表（发布转让时使用其中的 order_id）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=transfer.list"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": {
+    "my_transfers": [ { "id": 12, "order_id": 123, "price": "8.00", "status": 0, "status_text": "待转让", ... } ],
+    "sellable_orders": [ { "id": 123, "user": "demo", "product_name": "云主机A型", "ztime": "...", ... } ]  // id 为发布转让用的 order_id
+  }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>transfer.sendcode</code> — 发送转让邮箱验证码</h4>
+                        <p class="api-desc">向账号绑定的邮箱发送发布转让所需的验证码（10 分钟内有效，60 秒内只能发送一次）。验证码与账号绑定，无需会话 Cookie，API 调用方可直接使用。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数（需先在官网绑定邮箱）</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=transfer.sendcode" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "验证码已发送至邮箱" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>transfer.publish</code> — 发布主机到转让市场</h4>
+                        <p class="api-desc">将运行中的主机发布到转让市场出售。发布前需先调用 transfer.sendcode 获取邮箱验证码；发布后主机仍归你所有，待有买家购买后才转移归属。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>order_id</td><td>int</td><td>是</td><td>要转让的主机订单ID（通过 transfer.list 的 sellable_orders 获取）</td></tr>
+                                <tr><td>price</td><td>number</td><td>是</td><td>转让价格（元，不能超过原购买价格；免费主机只能为0）</td></tr>
+                                <tr><td>email_code</td><td>string</td><td>是</td><td>邮箱验证码（先调用 transfer.sendcode 获取）</td></tr>
+                                <tr><td>target_userid</td><td>int</td><td>否</td><td>指定买家用户ID（0 或留空表示所有人可购买）</td></tr>
+                                <tr><td>contact_info</td><td>string</td><td>否</td><td>联系方式备注（QQ/微信等）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=transfer.publish&order_id=123&price=8&email_code=123456&contact_info=QQ123456" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "主机已成功发布到转让市场", "data": { "transfer_id": 12 } }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>transfer.buy</code> — 购买转让市场主机</h4>
+                        <p class="api-desc">使用账户余额购买转让市场中的主机，购买成功后主机立即转移到你的账号名下，面板密码自动重置（不传 password 时自动生成随机密码）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>transfer_id</td><td>int</td><td>是</td><td>转让ID（通过 transfer.market 获取）</td></tr>
+                                <tr><td>password</td><td>string</td><td>否</td><td>新面板密码（6-50位，不能含中文），不填则自动生成随机密码</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=transfer.buy&transfer_id=12" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "主机转让成功！" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>transfer.contact</code> — 获取卖家联系方式</h4>
+                        <p class="api-desc">返回转让卖家的账号、QQ 与联系方式（购买前咨询用）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>transfer_id</td><td>int</td><td>是</td><td>转让ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=transfer.contact&transfer_id=12"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "ok", "seller_name": "张三", "seller_qq": "123456", "contact_info": "QQ123456" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>transfer.detail</code> — 转让主机配置详情</h4>
+                        <p class="api-desc">返回转让主机的完整配置详情（产品、服务器、到期时间、价格、卖家等）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>transfer_id</td><td>int</td><td>是</td><td>转让ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=transfer.detail&transfer_id=12"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1, "msg": "ok",
+  "data": { "id": 12, "price": "8.00", "host_user": "demo", "product_name": "云主机A型", "product_desc": "...", "server_name": "...", ... }
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>transfer.cancel</code> — 取消转让</h4>
+                        <p class="api-desc">取消我发布的待转让记录（仅待转让状态可取消）。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>transfer_id</td><td>int</td><td>是</td><td>转让ID</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=transfer.cancel&transfer_id=12" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "已取消转让" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-post">POST</span> <code>transfer.message.send</code> — 发送转让留言</h4>
+                        <p class="api-desc">向卖家发送咨询留言（500字以内）。买家可直接向卖家发送；卖家只能回复已咨询过的买家。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>transfer_id</td><td>int</td><td>是</td><td>转让ID</td></tr>
+                                <tr><td>content</td><td>string</td><td>是</td><td>留言内容（不超过500字）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求（POST 表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=transfer.message.send&transfer_id=12&content=你好，主机还在吗？" "{$apiBase}"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "msg": "发送成功" }</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>transfer.message.list</code> — 转让留言列表</h4>
+                        <p class="api-desc">获取某条转让的对话记录（仅买卖双方可见），返回后对方发来的未读消息会自动标记已读。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody>
+                                <tr><td>transfer_id</td><td>int</td><td>是</td><td>转让ID</td></tr>
+                                <tr><td>last_id</td><td>int</td><td>否</td><td>只获取大于该ID的新消息（增量拉取）</td></tr>
+                            </tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=transfer.message.list&transfer_id=12"</pre>
+                        <pre class="code">// 返回
+{
+  "code": 1,
+  "data": [ { "id": 3, "content": "你好，主机还在吗？", "sender_name": "李四", "is_mine": false, "time_str": "10:30", ... } ]
+}</pre>
+                    </div>
+
+                    <div class="api-item">
+                        <h4><span class="tag tag-get">GET</span> <code>transfer.unread</code> — 未读转让留言数</h4>
+                        <p class="api-desc">返回当前账号收到的未读转让留言总数。</p>
+                        <table class="tbl">
+                            <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+                            <tbody><tr><td colspan="4" style="color:var(--text-muted);">无需参数</td></tr></tbody>
+                        </table>
+                        <pre class="code">// 请求
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=transfer.unread"</pre>
+                        <pre class="code">// 返回
+{ "code": 1, "count": 2 }</pre>
+                    </div>
+                </div>
+
+                <div class="doc-block">
+                    <h3>六、在线调试工具</h3>
+                    <p>选择接口、粘贴密钥、填入参数后点击发送，即可在本页实时查看接口返回（请求由你的浏览器直接发出，支持跨域）。</p>
+                    <div class="dev-test">
+                        <select id="apiTestAction"></select>
+                        <input type="text" id="apiTestKey" class="dev-input" style="flex:1;min-width:260px;" placeholder="粘贴你的 LHX- 密钥">
+                        <button type="button" class="btn-test" id="btnApiTest">发送请求</button>
+                    </div>
+                    <p style="margin:0 0 6px;font-size:12.5px;color:var(--text-muted);">请求参数（JSON 格式，留空表示无参数）：</p>
+                    <textarea id="apiTestParams" class="dev-params" placeholder='例如：{"order_id": 1}'></textarea>
+                    <p style="margin:10px 0 6px;font-size:12.5px;color:var(--text-muted);">接口说明：<span id="apiTestDesc" style="color:var(--text-secondary);">-</span></p>
+                    <div class="dev-result">
+                        <pre class="code" id="apiTestResult">// 响应结果将显示在这里</pre>
+                    </div>
+                </div>
+
+                <div class="doc-block">
+                    <h3>七、调用示例（curl / JS / PHP / Python）</h3>
+                    <pre class="code"># 1. 获取用户信息（GET）
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=user.info"
+
+# 2. 查看主机实时状态（GET）
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=host.status&order_id=123"
+
+# 3. 一键登录控制面板（GET，返回 login_url/method/fields）
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=host.panel&order_id=123"
+
+# 4. 提交工单（POST，表单）
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=ticket.submit&title=标题&content=内容" "{$apiBase}"
+
+# 5. 续费主机（POST，JSON）
+# 注意：Windows 终端（CMD/PowerShell）不支持单引号，请改用双引号并转义内部引号：
+#   curl -X POST -H "X-API-Key: 你的密钥" -H "Content-Type: application/json" -d "{\"action\":\"order.renew\",\"order_id\":123,\"time\":1}" "{$apiBase}"
+# Linux/Mac 可直接使用：
+curl -X POST -H "X-API-Key: 你的密钥" -H "Content-Type: application/json" \
+  -d '{"action":"order.renew","order_id":123,"time":1}' "{$apiBase}"
+
+# 6. 浏览器网页调用（JS fetch，接口已开启 CORS 跨域，任意网站均可直接调用）
+fetch('{$apiBase}?action=user.info', {
+    headers: { 'X-API-Key': '你的密钥' }
+}).then(function(r){ return r.json(); }).then(function(d){ console.log(d); });
+
+# 7. 浏览器表单 POST（跨域预检由接口自动处理）
+fetch('{$apiBase}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'api_key=你的密钥&action=checkin'
+}).then(function(r){ return r.json(); }).then(function(d){ console.log(d); });
+
+# 8. PHP 调用（file_get_contents，GET）
+&lt;?php
+$opts = ['http' => [
+    'header' => "X-API-Key: 你的密钥\r\n",
+    'timeout' => 30,
+]];
+echo file_get_contents('{$apiBase}?action=user.info', false, stream_context_create($opts));
+?&gt;
+
+# 9. PHP 调用（curl，POST）
+&lt;?php
+$ch = curl_init('{$apiBase}');
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => http_build_query(['api_key' => '你的密钥', 'action' => 'checkin']),
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 30,
+    CURLOPT_SSL_VERIFYPEER => false,
+]);
+echo curl_exec($ch);
+curl_close($ch);
+?&gt;
+
+# 10. Python 调用（requests，GET）
+import requests
+r = requests.get('{$apiBase}', params={"action": "user.info"}, headers={"X-API-Key": "你的密钥"}, timeout=30)
+print(r.json())
+
+# 11. Python 调用（requests，POST 表单）
+import requests
+r = requests.post('{$apiBase}', data={"action": "ticket.submit", "title": "标题", "content": "内容"}, headers={"X-API-Key": "你的密钥"}, timeout=30)
+print(r.json())
+
+# 12. Python 调用（requests，POST JSON）
+import requests
+r = requests.post('{$apiBase}', json={"action": "order.renew", "order_id": 123, "time": 1}, headers={"X-API-Key": "你的密钥"}, timeout=30)
+print(r.json())
+
+# 13. jQuery 调用（$.ajax，POST 表单）
+$.ajax({
+    url: '{$apiBase}',
+    type: 'POST',
+    data: { action: 'checkin', api_key: '你的密钥' },
+    dataType: 'json',
+    success: function(d){ console.log(d); },
+    error: function(xhr){ console.log('请求失败', xhr.status); }
+});
+
+# 14. 一键登录控制面板（先调 host.panel，再自动提交表单跳转面板）
+fetch('{$apiBase}?action=host.panel&order_id=123', { headers: { 'X-API-Key': '你的密钥' } })
+  .then(function(r){ return r.json(); }).then(function(d){
+    if(d.code != 1){ alert(d.msg); return; }
+    var form = document.createElement('form');
+    form.method = d.data.method; form.action = d.data.login_url; form.target = '_blank';
+    for(var k in d.data.fields){
+        var input = document.createElement('input');
+        input.type = 'hidden'; input.name = k; input.value = d.data.fields[k];
+        form.appendChild(input);
+    }
+    document.body.appendChild(form); form.submit();
+});
+
+# 15. 购买主机全流程（查看产品 → 加购 → 余额结算）
+fetch('{$apiBase}?action=product.list', { headers: { 'X-API-Key': '你的密钥' } })
+  .then(function(r){ return r.json(); }).then(function(d){
+    var cartid = d.data.categories[0].products[0].id;   // 取第一个产品ID
+    return fetch('{$apiBase}', {
+        method: 'POST',
+        headers: { 'X-API-Key': '你的密钥', 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=cart.add&cartid=' + cartid + '&user=test01&password=abc123&time=1'
+    });
+}).then(function(r){ return r.json(); }).then(function(d){
+    if(d.code != 1){ console.log(d.msg); return; }
+    return fetch('{$apiBase}?action=cart.list', { headers: { 'X-API-Key': '你的密钥' } });
+}).then(function(r){ return r.json(); }).then(function(d){
+    var ids = d.data.list.map(function(i){ return i.id; }).join(',');
+    return fetch('{$apiBase}', {
+        method: 'POST',
+        headers: { 'X-API-Key': '你的密钥', 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'action=cart.checkout&ids=' + ids + '&paytype=balance'
+    });
+}).then(function(r){ return r.json(); }).then(function(d){ console.log(d); });
+
+# 16. 余额充值全流程（查支付方式 → 下单 → 轮询到账）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=pay.create&payid=1&money=50" "{$apiBase}"
+# 把返回的 pay_url / qr_code 展示给用户扫码支付，然后每 5 秒轮询一次：
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=pay.status&ordernumber=返回的ordernumber"
+# 返回 paid=true 时余额已到账
+
+# 17. 转让市场买卖全流程（卖家：发验证码 → 发布；买家：浏览 → 购买）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=transfer.sendcode" "{$apiBase}"
+curl -X POST -H "X-API-Key: 你的密钥" \
+  -d "action=transfer.publish&order_id=123&price=8&email_code=123456" "{$apiBase}"
+curl -H "X-API-Key: 你的密钥" "{$apiBase}?action=transfer.market&page=1"
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=transfer.buy&transfer_id=12" "{$apiBase}"
+
+# 18. 主机管理（重置密码 / 暂停 / 恢复 / 删除）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=host.reset&order_id=123" "{$apiBase}"
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=host.suspend&order_id=123" "{$apiBase}"
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=host.unsuspend&order_id=123" "{$apiBase}"
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=host.delete&order_id=123" "{$apiBase}"</pre>
+                </div>
+
+                <div class="doc-block">
+                    <h3>八、常见错误</h3>
+                    <table class="tbl">
+                        <thead><tr><th>msg（错误提示）</th><th>原因</th><th>解决办法</th></tr></thead>
+                        <tbody>
+                            <tr><td>缺少 API 密钥</td><td>未携带密钥</td><td>在请求头 <code>X-API-Key</code> 或参数 <code>api_key</code> 中提供密钥</td></tr>
+                            <tr><td>API 密钥无效</td><td>密钥不存在或已被删除</td><td>在开发者中心重新申请密钥</td></tr>
+                            <tr><td>API 密钥已被停用</td><td>密钥处于停用状态</td><td>在“我的密钥”中重新启用</td></tr>
+                            <tr><td>账号不存在或已禁用 / 账号已被封禁</td><td>密钥所属账号状态异常</td><td>联系管理员处理</td></tr>
+                            <tr><td>缺少 action 参数</td><td>未指定要调用的接口，或请求体未被正确解析（如 Windows 终端 curl 用了单引号、fetch 发送 JSON 未设置 Content-Type）</td><td>优先用 <code>/api/接口名</code> 路径方式或 GET 的 <code>?action=</code> 参数；Windows curl 改用双引号包裹 JSON；fetch 需带 <code>Content-Type: application/x-www-form-urlencoded</code></td></tr>
+                            <tr><td>未知的 action：xxx</td><td>接口名拼写错误</td><td>对照“接口总览”表检查 action 名称</td></tr>
+                            <tr><td>该操作被禁止</td><td>调用了修改账号密码等被禁止的操作</td><td>此类操作请前往官网完成</td></tr>
+                            <tr><td>请使用 POST 请求</td><td>写操作使用了 GET 方式</td><td>改用 POST 提交</td></tr>
+                            <tr><td>订单/工单不存在或不属于当前用户</td><td>id 错误或越权访问他人数据</td><td>检查 id 是否属于当前账号</td></tr>
+                            <tr><td>连接失败 / API返回格式错误</td><td>主机面板接口异常</td><td>稍后重试，或联系管理员检查面板服务器</td></tr>
+                            <tr><td>接口异常：...</td><td>服务端内部错误</td><td>联系管理员并提供完整错误信息</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="doc-block">
+                    <h3>九、说明</h3>
+                    <ul style="margin:0;padding-left:20px;">
+                        <li>接口返回均为 JSON，<code>code=1</code> 表示成功。</li>
+                        <li>接口已开启 CORS 跨域支持，可直接在任意网站的网页（HTML/JS）、PHP、Python 等客户端中调用，无需服务端代理。</li>
+                        <li>POST 接口支持两种请求格式：<code>application/x-www-form-urlencoded</code> 表单（推荐）与 <code>application/json</code> JSON 体，参数名一致，两种均可。</li>
+                        <li>接口不限请求频率，但请勿滥用，否则管理员有权封禁账号或密钥。</li>
+                        <li>列表类接口默认 <code>page=1</code>、<code>limit=20</code>，可通过参数调整（limit 上限 50）。</li>
+                        <li>写操作（POST）建议通过 HTTPS 访问，避免密钥泄露。</li>
+                        <li>密钥泄露时请立即在“我的密钥”中停用或删除，并重新申请。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{include file="default/user/footer" /}
+
+<!-- 可下载的完整 Markdown 接口文档（占位符 __API_BASE__ 在下载时替换为真实接口地址） -->
+<script type="text/plain" id="apiDocMarkdown">{literal}# 开发者 API 接口文档（完整版）
+
+> 接口地址：__API_BASE__　认证密钥：LHX- 开头的专属密钥（开发者中心申请）
+> 返回格式：统一 JSON，code=1 成功，code=-1 失败，失败原因见 msg
+
+---
+
+## 目录
+
+1. 快速开始（三步上手）
+2. 接口地址与认证方式
+3. 通用返回格式
+4. 关键概念速查（新手必读）
+5. 接口总览（51 个）
+6. 接口详细说明
+7. 常见业务流程（购买主机 / 充值余额 / 转让市场）
+8. 常见错误与排查
+9. 多语言调用示例（curl / JS / PHP / Python）
+10. 注意事项
+
+---
+
+## 一、快速开始（三步上手）
+
+**第一步：申请密钥。** 登录官网 → 用户开发者中心 → “申请专属密钥”，填写名称提交，复制生成的 LHX- 开头密钥（仅完整显示一次，请妥善保管）。
+
+**第二步：测试调用。** 用浏览器或 curl 测试最简单的接口（获取自己的账户信息）：
+
+```
+curl -H "X-API-Key: 你的密钥" "__API_BASE__?action=user.info"
+```
+
+看到 `"code":1` 和账户信息即表示调用成功。
+
+**第三步：集成开发。** 按需查阅“接口总览”和“接口详细说明”，把接口集成到你的网站、小程序、自动化脚本中。看不懂的 ID 先看“关键概念速查”。
+
+---
+
+## 二、接口地址与认证方式
+
+### 2.1 接口地址
+
+所有接口统一通过该地址访问：
+
+```
+__API_BASE__
+```
+
+### 2.2 三种调用方式
+
+方式一：GET 参数（查询类接口常用，参数拼接在 URL 上）
+
+```
+__API_BASE__?action=user.info
+__API_BASE__?action=host.status&order_id=123
+```
+
+方式二：POST 表单 / JSON 体（写入类接口，如提交工单、续费、购买）
+
+```
+# 表单格式（application/x-www-form-urlencoded，推荐）
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=ticket.submit&title=标题&content=内容" "__API_BASE__"
+
+# JSON 格式（application/json）
+curl -X POST -H "X-API-Key: 你的密钥" -H "Content-Type: application/json" -d '{"action":"order.renew","order_id":123,"time":1}' "__API_BASE__"
+```
+
+方式三：URL 路径风格（action 写在路径中，与 ?action=xxx 等效）
+
+```
+__API_BASE__/user.info        （等同 action=user.info）
+```
+
+### 2.3 认证方式（二选一）
+
+除登录接口（login / qrlogin.create / qrlogin.status）外，每次请求必须携带你的专属密钥：
+
+```
+方式一：请求头（推荐）  X-API-Key: 你的密钥
+方式二：URL 或请求体参数  api_key=你的密钥
+```
+
+登录接口无需密钥，账号密码登录直接返回密钥，扫码登录确认后返回密钥，拿到密钥后再调用其他接口。
+
+### 2.4 跨域说明
+
+接口已开启 CORS 跨域支持，可直接在任意网站的网页（HTML/JS）、PHP、Python 等客户端中调用，无需服务端代理。浏览器跨域请求携带自定义请求头时会先发一次 OPTIONS 预检，接口已自动处理。
+
+---
+
+## 三、通用返回格式
+
+所有接口统一返回 JSON：
+
+```json
+{
+  "code": 1,        // 状态码：1=成功，-1=失败，-2=需要实名认证
+  "msg": "ok",      // 提示信息（失败时为具体原因，如“API 密钥无效”）
+  "data": { ... }   // 业务数据（对象或数组，仅成功时返回）
+}
+```
+
+注意：
+- 业务失败时 HTTP 状态码通常仍为 200，请以 code 字段判断成功与否，以 msg 读取失败原因。
+- code=-2 表示该操作需要先完成实名认证（返回中会带 realname_required=1），请到官网完成实名后再调用。
+- 写操作（POST）接口必须用 POST 请求，用 GET 会返回“请使用 POST 请求”。
+
+---
+
+## 四、关键概念速查（新手必读）
+
+| 名称 | 含义 | 从哪里获取 | 用于哪些接口 |
+| --- | --- | --- | --- |
+| order_id | 主机订单ID，一个主机对应一个 | host.list 返回的 id | host.status / host.reset / host.suspend / host.unsuspend / host.delete / host.upgrade / order.renew / transfer.publish |
+| cartid | 产品ID（套餐） | product.list 返回的产品 id | cart.add；host.upgrade 的 newcartid |
+| 购物车项 id | 加购后生成的临时项ID | cart.list 返回的 id | cart.delete；cart.checkout 的 ids |
+| payid | 支付方式ID | pay.ways 返回的 id | pay.create |
+| ordernumber | 充值商户订单号 | pay.create 返回 | pay.status |
+| transfer_id | 转让单ID | transfer.market 返回的 id；transfer.publish 返回 | transfer.buy / transfer.contact / transfer.detail / transfer.cancel / transfer.message.* |
+| state | 主机状态枚举 | host.list / host.status 返回 | 0=待开通 1=正常 2=已暂停 3=已终止 |
+
+---
+
+## 五、接口总览（51 个）
+
+| 分类 | action | 方法 | 必填参数 | 说明 |
+| --- | --- | --- | --- | --- |
+| 登录 | login | POST | account, password | 账号密码登录（无需密钥，成功返回 API 密钥） |
+| 登录 | qrlogin.create | POST | 无 | 生成扫码登录二维码（返回 token 与二维码地址） |
+| 登录 | qrlogin.status | POST | token | 轮询扫码登录状态（确认后返回 API 密钥） |
+| 用户 | user.info | GET | 无 | 获取当前用户信息（余额、积分、会员等） |
+| 用户 | user.update | POST | name, qq | 修改昵称/QQ/地址 |
+| 主机 | host.list | GET | 无 | 我的主机列表 |
+| 主机 | host.status | GET | order_id | 实时主机状态（面板实时数据） |
+| 主机 | host.panel | GET | order_id | 一键登录控制面板 |
+| 主机 | host.reset | POST | order_id | 重置主机面板密码 |
+| 主机 | host.suspend | POST | order_id | 暂停主机 |
+| 主机 | host.unsuspend | POST | order_id | 恢复主机 |
+| 主机 | host.delete | POST | order_id | 删除主机（不可恢复） |
+| 主机 | host.upgrade | POST | order_id, newcartid | 升级/降级主机 |
+| 订单 | order.list | GET | 无 | 订单列表（分页） |
+| 订单 | order.detail | GET | id | 订单详情 |
+| 订单 | order.renew | POST | order_id, time | 续费主机（余额支付） |
+| 工单 | ticket.list | GET | 无 | 工单列表（分页） |
+| 工单 | ticket.detail | GET | id | 工单详情 |
+| 工单 | ticket.submit | POST | title, content | 提交工单 |
+| 工单 | ticket.reply | POST | id, content | 回复工单 |
+| 工单 | ticket.close | POST | id | 关闭工单 |
+| 公告 | announcement.list | GET | 无 | 公告列表（分页） |
+| 公告 | announcement.detail | GET | id | 公告详情 |
+| 签到 | checkin | POST | 无 | 每日签到 |
+| 积分 | points.shop | GET | 无 | 积分商城商品列表 |
+| 积分 | points.exchange | POST | product_id | 积分兑换（不支持兑换主机） |
+| 卡密 | cdkey.use | POST | cdkey | 使用卡密（仅余额类） |
+| 推广 | aff.info | GET | 无 | 推广信息 |
+| 推广 | aff.enable | POST | 无 | 开启推广 |
+| 推广 | aff.withdraw | POST | 无 | 推广佣金提现到余额 |
+| 财务 | payrecord.list | GET | 无 | 充值记录（分页） |
+| 财务 | transaction.list | GET | 无 | 余额/交易明细（分页） |
+| 购买 | product.list | GET | 无 | 产品分类与产品列表 |
+| 购买 | cart.add | POST | cartid, user, password, time | 加入购物车 |
+| 购买 | cart.list | GET | 无 | 购物车列表 |
+| 购买 | cart.delete | POST | id | 删除购物车项 |
+| 购买 | cart.checkout | POST | ids | 余额结算购买主机 |
+| 充值 | pay.ways | GET | 无 | 可用支付方式列表 |
+| 充值 | pay.create | POST | payid, money | 创建充值订单 |
+| 充值 | pay.status | GET | ordernumber 或 pay_order_id | 充值订单状态（自动补账） |
+| 转让 | transfer.market | GET | 无 | 转让市场列表（分页） |
+| 转让 | transfer.list | GET | 无 | 我的转让与可转让主机 |
+| 转让 | transfer.publish | POST | order_id, price, email_code | 发布主机到转让市场 |
+| 转让 | transfer.buy | POST | transfer_id | 购买转让市场主机 |
+| 转让 | transfer.contact | GET | transfer_id | 获取卖家联系方式 |
+| 转让 | transfer.detail | GET | transfer_id | 转让主机配置详情 |
+| 转让 | transfer.cancel | POST | transfer_id | 取消转让 |
+| 转让 | transfer.sendcode | POST | 无 | 发送转让邮箱验证码 |
+| 转让 | transfer.message.send | POST | transfer_id, content | 发送转让留言 |
+| 转让 | transfer.message.list | GET | transfer_id | 转让留言列表 |
+| 转让 | transfer.unread | GET | 无 | 未读转让留言数 |
+
+---
+
+## 六、接口详细说明
+
+### 6.0 登录认证（无需密钥）
+
+#### login — 账号密码登录（POST）
+- 参数：account（必填，用户名或邮箱）、password（必填，登录密码）
+- 请求：`curl -X POST -d "account=你的账号&password=你的密码" "__API_BASE__/login"`
+- 返回：`{"code":1,"msg":"登录成功","data":{"api_key":"LHX-...","userid":1,"username":"demo","nickname":"昵称","email":"a@b.com","balance":0,"points":0}}`
+- 说明：登录成功后自动签发或复用你的 API 密钥，用 data.api_key 调用后续接口；无需携带 X-API-Key。
+
+#### qrlogin.create — 生成扫码登录二维码（POST）
+- 参数：无
+- 请求：`curl -X POST "__API_BASE__/qrlogin.create"`
+- 返回：`{"code":1,"token":"a1b2c3...","qrurl":"https://站点/qrlogin/confirm?token=a1b2c3...","expire":300}`
+- 说明：把 qrurl 生成二维码，让用户在手机（已登录官网）扫码确认，随后轮询 qrlogin.status 获取密钥；token 5 分钟有效。
+
+#### qrlogin.status — 轮询扫码登录状态（POST）
+- 参数：token（必填，qrlogin.create 返回的 token）
+- 请求：`curl -X POST -d "token=a1b2c3..." "__API_BASE__/qrlogin.status"`
+- 返回：status=pending（未扫码）/scanned（已扫码待确认）/confirmed（已确认，data 含 api_key）/expired（已失效）
+- 说明：confirmed 时返回 `{"code":1,"status":"confirmed","msg":"登录成功","data":{"api_key":"LHX-...","userid":1,"username":"demo"}}`，用 data.api_key 调用后续接口。
+
+### 6.1 用户信息
+
+#### user.info — 获取当前用户信息（GET）
+- 参数：无
+- 请求：`curl -H "X-API-Key: 密钥" "__API_BASE__?action=user.info"`
+- 返回 data：id（用户ID）、username（登录账号）、nickname（昵称）、email（邮箱）、qq、address、balance（余额/元）、points（积分）、membership_level（会员等级）、total_recharge（累计充值）、realname_status（实名状态 0=未认证 1=已认证）、aff（推广码）、affmoney（佣金余额）、avatar（头像）
+
+#### user.update — 修改个人资料（POST）
+- 参数：name（必填，昵称）、qq（必填，4-12位纯数字）、address（可选，地址）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=user.update&name=昵称&qq=123456&address=地址" "__API_BASE__"`
+- 返回：`{"code":1,"msg":"修改资料成功"}`
+- 说明：不支持修改账号与密码
+
+### 6.2 主机管理
+
+#### host.list — 我的主机列表（GET）
+- 参数：无
+- 请求：`curl -H "X-API-Key: 密钥" "__API_BASE__?action=host.list"`
+- 返回 data：数组，每项含 id（订单ID，即 order_id）、user（主机账号）、product_name（产品名）、state（0=待开通 1=正常 2=已暂停 3=已终止）、state_text（状态中文）
+
+#### host.status — 实时主机状态（GET）
+- 参数：order_id（必填，int）、host_user（可选，主机用户名，不填用订单默认）
+- 请求：`curl -H "X-API-Key: 密钥" "__API_BASE__?action=host.status&order_id=123"`
+- 返回 data：order_id、host_user、state、state_text、opened_at（开通时间）、expire_at（到期时间）、panel（面板实时数据：空间/数据库/流量/运行时间等，字段以面板实际返回为准）
+- 说明：面板查询失败时 code=-1，但 data 仍返回站内状态（state/state_text），可据此判断主机在站内的状态
+
+#### host.panel — 一键登录控制面板（GET）
+- 参数：order_id（必填）
+- 别名：host.panel.login、host.login、host.sso
+- 请求：`curl -H "X-API-Key: 密钥" "__API_BASE__?action=host.panel&order_id=123"`
+- 返回 data：panel_type（mnbt/easypanel）、login_url（面板登录地址）、method（POST/GET）、fields（需提交到 login_url 的表单字段）
+
+#### host.reset — 重置主机面板密码（POST）
+- 参数：order_id（必填）、password（可选，6-50位不含中文；不传自动生成随机密码）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=host.reset&order_id=123" "__API_BASE__"`
+- 返回：`{"code":1,"msg":"密码已重置","data":{"order_id":123,"password":"Ab3k9xQm2"}}`
+
+#### host.suspend — 暂停主机（POST）
+- 参数：order_id（必填）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=host.suspend&order_id=123" "__API_BASE__"`
+- 返回：`{"code":1,"msg":"暂停成功"}`
+
+#### host.unsuspend — 恢复主机（POST）
+- 参数：order_id（必填）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=host.unsuspend&order_id=123" "__API_BASE__"`
+- 返回：`{"code":1,"msg":"恢复成功"}`
+
+#### host.delete — 删除主机（POST，不可恢复）
+- 参数：order_id（必填）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=host.delete&order_id=123" "__API_BASE__"`
+- 返回：`{"code":1,"msg":"删除成功"}`
+- 警告：删除后主机数据不可恢复，请谨慎操作
+
+#### host.upgrade — 升级/降级主机（POST）
+- 参数：order_id（必填）、newcartid（必填，目标产品ID，通过 product.list 获取）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=host.upgrade&order_id=123&newcartid=9" "__API_BASE__"`
+- 说明：差额使用账户余额支付，与官网升降级规则一致
+
+### 6.3 订单
+
+#### order.list — 订单列表（GET）
+- 参数：page（可选，默认1）、limit（可选，默认20，最大50）
+- 返回 data：total、page、limit、list（每项含 id、product_name、state、state_text 等）
+
+#### order.detail — 订单详情（GET）
+- 参数：id（必填，订单ID）
+- 返回 data：订单完整字段
+
+#### order.renew — 续费主机（POST）
+- 参数：order_id（必填）、time（必填，续费时长，正整数，单位通常为月）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=order.renew&order_id=123&time=1" "__API_BASE__"`
+- 说明：使用账户余额支付，费用与官网续费一致
+
+### 6.4 工单
+
+#### ticket.list — 工单列表（GET）
+- 参数：page、limit（可选）
+- 返回 data：list 每项含 id（工单ID）、title、content（对话记录数组）、state（1=处理中 0=已关闭）
+
+#### ticket.detail — 工单详情（GET）
+- 参数：id（必填，工单ID）
+
+#### ticket.submit — 提交工单（POST）
+- 参数：title（必填）、content（必填，问题描述）
+
+#### ticket.reply — 回复工单（POST）
+- 参数：id（必填）、content（必填，回复内容）
+
+#### ticket.close — 关闭工单（POST）
+- 参数：id（必填）
+
+### 6.5 公告
+
+#### announcement.list — 公告列表（GET）
+- 参数：page、limit（可选）
+
+#### announcement.detail — 公告详情（GET）
+- 参数：id（必填，公告ID）
+
+### 6.6 签到 / 积分 / 卡密 / 推广 / 财务
+
+#### checkin — 每日签到（POST）
+- 参数：无。重复签到返回失败提示
+
+#### points.shop — 积分商城商品列表（GET）
+- 参数：无。返回 data.points（当前积分）、data.products（商品列表）
+
+#### points.exchange — 积分兑换（POST）
+- 参数：product_id（必填，通过 points.shop 获取）。不支持兑换主机
+
+#### cdkey.use — 使用卡密（POST）
+- 参数：cdkey（必填，卡密字符串）。仅支持余额类卡密
+
+#### aff.info — 推广信息（GET）
+- 参数：无。返回 aff_code（推广码）、aff_url（推广链接）、affmoney（佣金余额）、affwithdrawal（最低提现金额）
+
+#### aff.enable — 开启推广（POST）
+- 参数：无
+
+#### aff.withdraw — 佣金提现到余额（POST）
+- 参数：无。需达到官网最低提现金额
+
+#### payrecord.list — 充值记录（GET）
+- 参数：page、limit（可选）
+
+#### transaction.list — 余额/交易明细（GET）
+- 参数：page、limit（可选）
+
+### 6.7 产品与购买
+
+#### product.list — 产品分类与产品列表（GET）
+- 参数：无
+- 返回 data.categories：数组，每项含 id、name（分类名）、products（产品数组，每个产品的 id 即 cartid）
+- 说明：购买主机前先调此接口获取产品ID
+
+#### cart.add — 加入购物车（POST）
+- 参数：cartid（必填，产品ID）、user（必填，面板账号，3-50位以字母开头）、password（必填，面板密码 6-50位不含中文）、time（必填，购买时长正整数）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=cart.add&cartid=5&user=test01&password=abc123&time=1" "__API_BASE__"`
+- 说明：加购后 15 分钟内未结算会自动过期
+
+#### cart.list — 购物车列表（GET）
+- 参数：无
+- 返回 data：total（合计金额）、list（每项含 id 购物车项ID、product_name、money 单价、expire_at 到期时间戳）
+
+#### cart.delete — 删除购物车项（POST）
+- 参数：id（必填，购物车项ID，通过 cart.list 获取）
+
+#### cart.checkout — 余额结算购买主机（POST）
+- 参数：ids（必填，要结算的购物车项ID，逗号分隔）、paytype（可选，固定 balance）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=cart.checkout&ids=31&paytype=balance" "__API_BASE__"`
+- 说明：仅支持余额支付，请先通过 pay.create 充值余额；余额不足会返回“账户余额不足”
+
+### 6.8 余额充值
+
+#### pay.ways — 可用支付方式列表（GET）
+- 参数：无。返回 data.list，每项 id 即 payid
+
+#### pay.create — 创建充值订单（POST）
+- 参数：payid（必填，支付方式ID）、money（必填，金额，≥0.01，最多两位小数）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=pay.create&payid=1&money=50" "__API_BASE__"`
+- 返回 data：pay_order_id（站内订单ID）、ordernumber（商户订单号）、money、pay_url（易支付链接）/qr_code（当面付二维码）、type
+- 说明：把 pay_url/qr_code 展示给用户支付；支付成功后余额自动到账
+
+#### pay.status — 充值订单状态（GET）
+- 参数：ordernumber（商户订单号）或 pay_order_id（站内订单ID），二选一
+- 请求：`curl -H "X-API-Key: 密钥" "__API_BASE__?action=pay.status&ordernumber=20260824103015123"`
+- 返回 data：state（1=已支付 2=未支付）、state_text、paid（布尔）、paid_time
+- 说明：未支付时接口会自动向支付上游核实一次，若上游已支付则立即补账，因此支付完成后轮询此接口即可确认到账
+
+### 6.9 转让市场
+
+#### transfer.market — 转让市场列表（GET）
+- 参数：page、limit（可选）
+- 返回 data.list：每项含 id（转让ID）、order_id、price（转让价）、host_user、atime/ztime（开通/到期）、product_name、seller_name、seller_qq
+
+#### transfer.list — 我的转让与可转让主机（GET）
+- 参数：无
+- 返回 data：my_transfers（我的转让记录，含 status_text）、sellable_orders（可发布转让的运行中主机，id 即发布用的 order_id）
+
+#### transfer.sendcode — 发送转让邮箱验证码（POST）
+- 参数：无（需先在官网绑定邮箱；60 秒内只能发一次；10 分钟有效）
+
+#### transfer.publish — 发布主机到转让市场（POST）
+- 参数：order_id（必填）、price（必填，转让价，不能超原价；免费主机只能0）、email_code（必填，先调 transfer.sendcode 获取）、target_userid（可选，指定买家）、contact_info（可选，联系方式）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=transfer.publish&order_id=123&price=8&email_code=123456" "__API_BASE__"`
+- 说明：发布后主机仍归你所有，有人购买后才转移归属
+
+#### transfer.buy — 购买转让市场主机（POST）
+- 参数：transfer_id（必填）、password（可选，新面板密码，不传自动生成）
+- 请求：`curl -X POST -H "X-API-Key: 密钥" -d "action=transfer.buy&transfer_id=12" "__API_BASE__"`
+- 说明：使用账户余额支付，成功后主机立即转入你的名下
+
+#### transfer.contact — 获取卖家联系方式（GET）
+- 参数：transfer_id（必填）。返回 seller_name、seller_qq、contact_info
+
+#### transfer.detail — 转让主机配置详情（GET）
+- 参数：transfer_id（必填）。返回产品、服务器、到期时间、价格等完整信息
+
+#### transfer.cancel — 取消转让（POST）
+- 参数：transfer_id（必填）。仅待转让状态可取消
+
+#### transfer.message.send — 发送转让留言（POST）
+- 参数：transfer_id（必填）、content（必填，≤500字）。买家可直接发；卖家只能回复已咨询的买家
+
+#### transfer.message.list — 转让留言列表（GET）
+- 参数：transfer_id（必填）、last_id（可选，只取大于该ID的新消息）。返回后对方消息自动标记已读
+
+#### transfer.unread — 未读转让留言数（GET）
+- 参数：无。返回 `{"code":1,"count":2}`
+
+---
+
+## 七、常见业务流程
+
+### 7.1 购买主机完整流程
+
+```
+1. 查产品：GET __API_BASE__?action=product.list  → 取产品 id（cartid）
+2. 加购物车：POST action=cart.add&cartid=5&user=test01&password=abc123&time=1
+3. 查购物车：GET action=cart.list → 取购物车项 id
+4. 结算开通：POST action=cart.checkout&ids=31&paytype=balance
+（余额不足时先走 7.2 充值流程）
+```
+
+### 7.2 充值余额完整流程
+
+```
+1. 查支付方式：GET action=pay.ways → 取 id（payid）
+2. 创建订单：POST action=pay.create&payid=1&money=50
+   → 得到 ordernumber 和 pay_url（或 qr_code）
+3. 把 pay_url/qr_code 展示给用户支付
+4. 轮询到账：GET action=pay.status&ordernumber=...
+   每 5 秒查一次，直到 paid=true（余额已到账）
+```
+
+### 7.3 转让市场完整流程
+
+```
+卖家：
+1. 查可转让主机：GET action=transfer.list → 取 sellable_orders 里的 id
+2. 发验证码：POST action=transfer.sendcode → 邮箱收到验证码
+3. 发布：POST action=transfer.publish&order_id=123&price=8&email_code=123456
+
+买家：
+4. 逛市场：GET action=transfer.market → 取 id（transfer_id）
+5. 看详情：GET action=transfer.detail&transfer_id=12
+6. 购买：POST action=transfer.buy&transfer_id=12
+   （余额支付，成功后主机立即转入名下，密码自动重置）
+```
+
+### 7.4 主机管理流程
+
+```
+查状态：GET action=host.status&order_id=123
+重置密码：POST action=host.reset&order_id=123
+暂停：POST action=host.suspend&order_id=123
+恢复：POST action=host.unsuspend&order_id=123
+删除：POST action=host.delete&order_id=123（谨慎！不可恢复）
+```
+
+---
+
+## 八、常见错误与排查
+
+| msg（错误提示） | 原因 | 解决办法 |
+| --- | --- | --- |
+| 缺少 API 密钥 | 未携带密钥 | 在请求头 X-API-Key 或参数 api_key 中提供 |
+| API 密钥无效 | 密钥不存在或已删除 | 重新申请密钥 |
+| API 密钥已被停用 | 密钥停用中 | 在开发者中心启用 |
+| 账号不存在或已禁用 / 封禁 | 账号状态异常 | 联系管理员 |
+| 缺少 action 参数 | 未指定接口，或请求体未被正确解析（如 Windows 终端 curl 用了单引号、fetch 发送 JSON 未设置 Content-Type） | 优先用 /api/接口名 路径方式或 GET 的 ?action= 参数；Windows curl 改用双引号；fetch 需带 Content-Type: application/x-www-form-urlencoded |
+| 未知的 action：xxx | 接口名拼写错误 | 对照接口总览表检查 |
+| 该操作被禁止 | 调用了修改账号密码等禁止操作 | 此类操作去官网完成 |
+| 请使用 POST 请求 | 写操作用了 GET | 改用 POST |
+| 订单/工单不存在或不属于当前用户 | id 错误或越权 | 检查 id 是否属于当前账号 |
+| 账户余额不足 | 余额不够 | 先走充值流程 |
+| 请先完成实名认证 | 站点开启实名限制 | 到官网完成实名认证 |
+| 连接失败 / API返回格式错误 | 主机面板接口异常 | 稍后重试或联系管理员 |
+| 接口异常：... | 服务端内部错误 | 联系管理员并附完整错误信息 |
+
+排查步骤：① 先确认密钥正确且未停用；② 确认 action 拼写与总览表一致；③ 确认写操作用 POST；④ 看 msg 的具体提示；⑤ 仍失败则携带完整请求与返回信息联系管理员。
+
+---
+
+## 九、多语言调用示例
+
+### curl（命令行）
+
+```
+# GET
+curl -H "X-API-Key: 你的密钥" "__API_BASE__?action=user.info"
+
+# POST 表单
+curl -X POST -H "X-API-Key: 你的密钥" -d "action=checkin" "__API_BASE__"
+
+# POST JSON
+# 注意：Windows 终端（CMD/PowerShell）不支持单引号，改用双引号并转义内部引号：
+# curl -X POST -H "X-API-Key: 你的密钥" -H "Content-Type: application/json" -d "{\"action\":\"order.renew\",\"order_id\":123,\"time\":1}" "__API_BASE__"
+# Linux/Mac 可直接使用：
+curl -X POST -H "X-API-Key: 你的密钥" -H "Content-Type: application/json" -d '{"action":"order.renew","order_id":123,"time":1}' "__API_BASE__"
+```
+
+### JavaScript（浏览器 fetch，支持跨域）
+
+```js
+// GET
+fetch('__API_BASE__?action=user.info', {
+    headers: { 'X-API-Key': '你的密钥' }
+}).then(r => r.json()).then(d => console.log(d));
+
+// POST 表单
+fetch('__API_BASE__', {
+    method: 'POST',
+    headers: { 'X-API-Key': '你的密钥', 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'action=checkin'
+}).then(r => r.json()).then(d => console.log(d));
+```
+
+### PHP
+
+```php
+&lt;?php
+// GET
+$opts = ['http' => ['header' => "X-API-Key: 你的密钥\r\n", 'timeout' => 30]];
+echo file_get_contents('__API_BASE__?action=user.info', false, stream_context_create($opts));
+
+// POST
+$ch = curl_init('__API_BASE__');
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => http_build_query(['api_key' => '你的密钥', 'action' => 'checkin']),
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 30,
+]);
+echo curl_exec($ch);
+curl_close($ch);
+?&gt;
+```
+
+### Python
+
+```python
+import requests
+
+# GET
+r = requests.get('__API_BASE__', params={'action': 'user.info'}, headers={'X-API-Key': '你的密钥'}, timeout=30)
+print(r.json())
+
+# POST 表单
+r = requests.post('__API_BASE__', data={'action': 'checkin'}, headers={'X-API-Key': '你的密钥'}, timeout=30)
+print(r.json())
+
+# POST JSON
+r = requests.post('__API_BASE__', json={'action': 'order.renew', 'order_id': 123, 'time': 1}, headers={'X-API-Key': '你的密钥'}, timeout=30)
+print(r.json())
+```
+
+---
+
+## 十、注意事项
+
+1. 接口返回均为 JSON，code=1 表示成功；业务失败时 HTTP 状态码通常仍为 200，以 code/msg 为准。
+2. 接口已开启 CORS 跨域，任意网站网页、PHP、Python 等客户端均可直接调用，无需代理。
+3. POST 接口支持表单（application/x-www-form-urlencoded）与 JSON（application/json）两种格式，参数名一致。
+4. 列表类接口默认 page=1、limit=20，limit 上限 50。
+5. 开发者 API 不支持在线支付结算购物车（cart.checkout 仅余额），在线充值请用 pay.create 返回的链接/二维码。
+6. 开发者 API 不支持修改账号与密码（user.password / user.account 被禁止）。
+7. 接口不限请求频率，但请勿滥用，否则管理员有权封禁账号或密钥。
+8. 写操作建议通过 HTTPS 访问，避免密钥泄露；密钥泄露请立即在开发者中心停用或删除。
+
+---
+
+*本文档由官网开发者中心自动生成，接口如有变动以页面最新版为准。*
+{/literal}</script>
+
+<!-- 密钥创建成功弹窗 -->
+<div class="modal-mask" id="keyModal">
+    <div class="modal-box">
+        <h3>密钥创建成功</h3>
+        <p style="font-size:13px;color:var(--text-secondary);margin:0 0 10px;">请立即复制并妥善保管，此密钥仅完整显示一次：</p>
+        <div class="mk-key" id="newKeyText"></div>
+        <p class="tip">提示：密钥等同于你的账号权限，请勿泄露给他人。</p>
+        <div style="text-align:right;margin-top:18px;">
+            <button type="button" class="btn-primary-dev" id="btnCopyNewKey">复制密钥</button>
+            <button type="button" class="btn-mini btn-off" style="padding:12px 24px;margin-left:8px;" id="btnCloseModal">关闭</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function(){ showToast('复制成功','success',2000); });
+    } else {
+        var t = document.createElement('textarea');
+        t.value = text; document.body.appendChild(t); t.select();
+        try { document.execCommand('copy'); showToast('复制成功','success',2000); } catch(e){ showToast('复制失败，请手动复制','danger',2500); }
+        document.body.removeChild(t);
+    }
+}
+
+$('#btnCreateKey').on('click', function(){
+    var name = $('#keyName').val().trim();
+    if(!name){ showToast('请填写密钥名称','danger',2500); return; }
+    var load = layer.load(1,{time:false});
+    $.post('__ROOT__/user/developerCreateKey', { name: name }, function(data){
+        layer.close(load);
+        if(data.code == 1){
+            $('#newKeyText').text(data.api_key);
+            $('#keyModal').css('display','flex');
+        } else {
+            showToast(data.msg,'danger',2500);
+        }
+    },'json');
+});
+
+$('#btnCloseModal').on('click', function(){ $('#keyModal').css('display','none'); });
+$('#keyModal').on('click', function(e){ if(e.target === this) $(this).css('display','none'); });
+$('#btnCopyNewKey').on('click', function(){
+    copyText($('#newKeyText').text());
+    $('#keyModal').css('display','none');
+});
+
+$('#keyList').on('click', '.btn-copy', function(){ copyText($(this).data('key')); });
+
+$('#keyList').on('click', '[data-toggle]', function(){
+    var btn = $(this);
+    var item = btn.closest('.key-item');
+    var id = item.data('id');
+    var status = btn.data('toggle');
+    var load = layer.load(1,{time:false});
+    $.post('__ROOT__/user/developerToggleKey', { id: id, status: status }, function(data){
+        layer.close(load);
+        if(data.code == 1){ showToast(data.msg,'success',2000); setTimeout(function(){ location.reload(); },800); }
+        else showToast(data.msg,'danger',2500);
+    },'json');
+});
+
+$('#keyList').on('click', '[data-del]', function(){
+    var item = $(this).closest('.key-item');
+    var id = item.data('id');
+    layer.confirm('确定要删除该密钥吗？删除后使用该密钥的接口将立即失效。', {title:'删除密钥',icon:3}, function(index){
+        layer.close(index);
+        var load = layer.load(1,{time:false});
+        $.post('__ROOT__/user/developerDeleteKey', { id: id }, function(data){
+            layer.close(load);
+            if(data.code == 1){ showToast(data.msg,'success',2000); setTimeout(function(){ location.reload(); },800); }
+            else showToast(data.msg,'danger',2500);
+        },'json');
+    });
+});
+
+// ==================== 在线调试工具 ====================
+var apiBase = '{$apiBase}';
+
+// ==================== 下载 Markdown 接口文档 ====================
+$('#btnDownloadDoc').on('click', function(){
+    var md = $('#apiDocMarkdown').text();
+    if(!md || md.length < 50){
+        showToast('文档内容读取失败，请刷新页面重试','danger',2500);
+        return;
+    }
+    // 替换占位符为真实接口地址
+    md = md.split('__API_BASE__').join(apiBase);
+    // 还原 PHP 示例中的标签（页面内为防模板执行做了 HTML 转义；用拼接避免 PHP 引擎解析本段 JS）
+    md = md.split('&lt;' + '?php').join('<' + '?php');
+    md = md.split('?' + '&gt;').join('?' + '>');
+    var blob = new Blob(['\uFEFF' + md], { type: 'text/markdown;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'API接口文档.md';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    showToast('文档已下载，可用 Typora / VS Code 等工具打开','success',2500);
+});
+var apiTestActions = [
+    { action: 'user.info',           method: 'GET',  demo: '',                                   desc: '获取当前用户信息（余额、积分、会员等）' },
+    { action: 'user.update',         method: 'POST', demo: '{"name":"昵称","qq":"123456","address":"地址"}', desc: '修改昵称/QQ/地址' },
+    { action: 'host.list',           method: 'GET',  demo: '',                                   desc: '我的主机/服务列表' },
+    { action: 'host.status',         method: 'GET',  demo: '{"order_id":1}',                     desc: '实时主机状态（空间/数据库/流量/运行时间等）' },
+    { action: 'host.panel',          method: 'GET',  demo: '{"order_id":1}',                     desc: '一键登录控制面板（返回登录地址与表单字段）' },
+    { action: 'order.list',          method: 'GET',  demo: '{"page":1,"limit":20}',              desc: '订单列表（分页）' },
+    { action: 'order.detail',        method: 'GET',  demo: '{"id":1}',                           desc: '订单详情' },
+    { action: 'order.renew',         method: 'POST', demo: '{"order_id":1,"time":1}',           desc: '续费主机（余额支付）' },
+    { action: 'ticket.list',         method: 'GET',  demo: '{"page":1,"limit":20}',              desc: '工单列表（分页）' },
+    { action: 'ticket.detail',       method: 'GET',  demo: '{"id":1}',                           desc: '工单详情' },
+    { action: 'ticket.submit',       method: 'POST', demo: '{"title":"标题","content":"内容"}',   desc: '提交工单' },
+    { action: 'ticket.reply',        method: 'POST', demo: '{"id":1,"content":"回复内容"}',       desc: '回复工单' },
+    { action: 'ticket.close',        method: 'POST', demo: '{"id":1}',                           desc: '关闭工单' },
+    { action: 'announcement.list',   method: 'GET',  demo: '{"page":1,"limit":20}',              desc: '公告列表（分页）' },
+    { action: 'announcement.detail', method: 'GET',  demo: '{"id":1}',                           desc: '公告详情' },
+    { action: 'checkin',             method: 'POST', demo: '',                                   desc: '每日签到' },
+    { action: 'points.shop',         method: 'GET',  demo: '',                                   desc: '积分商城商品列表' },
+    { action: 'points.exchange',     method: 'POST', demo: '{"product_id":1}',                   desc: '积分兑换（不支持兑换主机）' },
+    { action: 'cdkey.use',           method: 'POST', demo: '{"cdkey":"卡密"}',                   desc: '使用卡密（仅余额类）' },
+    { action: 'aff.info',            method: 'GET',  demo: '',                                   desc: '推广信息' },
+    { action: 'aff.enable',          method: 'POST', demo: '',                                   desc: '开启推广' },
+    { action: 'aff.withdraw',        method: 'POST', demo: '',                                   desc: '推广佣金提现到账户余额' },
+    { action: 'payrecord.list',      method: 'GET',  demo: '{"page":1,"limit":20}',              desc: '充值记录（分页）' },
+    { action: 'transaction.list',    method: 'GET',  demo: '{"page":1,"limit":20}',              desc: '余额/交易明细（分页）' },
+    { action: 'host.reset',          method: 'POST', demo: '{"order_id":1}',                     desc: '重置主机面板密码（不传password自动生成随机密码）' },
+    { action: 'host.suspend',        method: 'POST', demo: '{"order_id":1}',                     desc: '暂停主机' },
+    { action: 'host.unsuspend',      method: 'POST', demo: '{"order_id":1}',                     desc: '恢复（解除暂停）主机' },
+    { action: 'host.delete',         method: 'POST', demo: '{"order_id":1}',                     desc: '删除主机（不可恢复）' },
+    { action: 'host.upgrade',        method: 'POST', demo: '{"order_id":1,"newcartid":1}',       desc: '升级/降级主机' },
+    { action: 'product.list',        method: 'GET',  demo: '',                                   desc: '产品分类与产品列表' },
+    { action: 'cart.add',            method: 'POST', demo: '{"cartid":1,"user":"test01","password":"abc123","time":1}', desc: '加入购物车（购买主机）' },
+    { action: 'cart.list',           method: 'GET',  demo: '',                                   desc: '购物车列表' },
+    { action: 'cart.delete',         method: 'POST', demo: '{"id":1}',                           desc: '删除购物车项' },
+    { action: 'cart.checkout',       method: 'POST', demo: '{"ids":"1","paytype":"balance"}',    desc: '余额结算购买主机' },
+    { action: 'pay.ways',            method: 'GET',  demo: '',                                   desc: '可用支付方式列表' },
+    { action: 'pay.create',          method: 'POST', demo: '{"payid":1,"money":50}',             desc: '创建充值订单（返回支付链接/二维码）' },
+    { action: 'pay.status',          method: 'GET',  demo: '{"ordernumber":"20260824103015123"}', desc: '充值订单状态（自动补账）' },
+    { action: 'transfer.market',     method: 'GET',  demo: '{"page":1,"limit":20}',              desc: '转让市场列表' },
+    { action: 'transfer.list',       method: 'GET',  demo: '',                                   desc: '我的转让记录与可转让主机' },
+    { action: 'transfer.sendcode',   method: 'POST', demo: '',                                   desc: '发送转让邮箱验证码' },
+    { action: 'transfer.publish',    method: 'POST', demo: '{"order_id":1,"price":8,"email_code":"123456"}', desc: '发布主机到转让市场' },
+    { action: 'transfer.buy',        method: 'POST', demo: '{"transfer_id":1}',                  desc: '购买转让市场主机' },
+    { action: 'transfer.contact',    method: 'GET',  demo: '{"transfer_id":1}',                  desc: '获取卖家联系方式' },
+    { action: 'transfer.detail',     method: 'GET',  demo: '{"transfer_id":1}',                  desc: '转让主机配置详情' },
+    { action: 'transfer.cancel',     method: 'POST', demo: '{"transfer_id":1}',                  desc: '取消转让' },
+    { action: 'transfer.message.send', method: 'POST', demo: '{"transfer_id":1,"content":"你好"}', desc: '发送转让留言' },
+    { action: 'transfer.message.list', method: 'GET', demo: '{"transfer_id":1}',                 desc: '转让留言列表' },
+    { action: 'transfer.unread',     method: 'GET',  demo: '',                                   desc: '未读转让留言数' }
+];
+var apiTestMap = {};
+$.each(apiTestActions, function(i, item){
+    apiTestMap[item.action] = item;
+    $('#apiTestAction').append($('<option>').val(item.action).text(item.action + ' — ' + item.desc));
+});
+$('#apiTestAction').on('change', function(){
+    var item = apiTestMap[$(this).val()];
+    $('#apiTestParams').val(item.demo);
+    $('#apiTestDesc').text(item.desc + '（' + item.method + '）');
+});
+$('#apiTestAction').trigger('change');
+
+$('#btnApiTest').on('click', function(){
+    var action = $('#apiTestAction').val();
+    var item = apiTestMap[action];
+    var key = $('#apiTestKey').val().trim();
+    var paramsText = $('#apiTestParams').val().trim();
+    if(!key){ showToast('请先粘贴你的 API 密钥','danger',2500); return; }
+    var params = {};
+    if(paramsText){
+        try { params = JSON.parse(paramsText); } catch(e){ showToast('参数不是合法的 JSON：' + e.message,'danger',3000); return; }
+    }
+    var url = apiBase;
+    var opts = { headers: { 'X-API-Key': key } };
+    if(item.method === 'GET'){
+        var qs = [];
+        for(var k in params){ qs.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k])); }
+        url += '?action=' + encodeURIComponent(action) + (qs.length ? '&' + qs.join('&') : '');
+    } else {
+        opts.method = 'POST';
+        var body = ['action=' + encodeURIComponent(action)];
+        for(var k2 in params){ body.push(encodeURIComponent(k2) + '=' + encodeURIComponent(params[k2])); }
+        opts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        opts.body = body.join('&');
+    }
+    $('#apiTestResult').text('请求中...');
+    fetch(url, opts).then(function(r){ return r.json(); }).then(function(d){
+        $('#apiTestResult').text(JSON.stringify(d, null, 2));
+    }).catch(function(e){
+        $('#apiTestResult').text('请求失败：' + e.message + '\n\n提示：若报网络错误，请打开浏览器控制台查看跨域(CORS)信息，或确认站点当前可正常访问。');
+    });
+});
+</script>

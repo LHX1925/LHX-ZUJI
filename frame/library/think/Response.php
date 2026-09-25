@@ -201,7 +201,14 @@ class Response
             '__toString',
         ])
         ) {
-            throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)));
+            // 数组/对象无法直接作为页面内容输出：降级为 JSON，
+            // 避免接口类请求（未显式 json() 返回）整单 500
+            if (is_array($content) || is_object($content)) {
+                $content = json_encode($content, JSON_UNESCAPED_UNICODE);
+                $this->header['Content-Type'] = 'application/json; charset=utf-8';
+            } else {
+                throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)));
+            }
         }
 
         $this->content = (string) $content;
@@ -313,7 +320,14 @@ class Response
                 '__toString',
             ])
             ) {
-                throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)));
+                // 数组/对象无法直接作为页面内容输出：降级为 JSON，
+                // 避免接口类请求（未显式 json() 返回）整单 500
+                if (is_array($content) || is_object($content)) {
+                    $content = json_encode($content, JSON_UNESCAPED_UNICODE);
+                    $this->header['Content-Type'] = 'application/json; charset=utf-8';
+                } else {
+                    throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)));
+                }
             }
 
             $this->content = (string) $content;

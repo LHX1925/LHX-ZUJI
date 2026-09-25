@@ -27,6 +27,7 @@
               <th>标题</th>
               <th>提醒方式</th>
               <th>发送邮件</th>
+              <th>邮件状态</th>
               <th>状态</th>
               <th>发布时间</th>
               <th>操作</th>
@@ -46,6 +47,15 @@
                 {/if}
               </td>
               <td data-label="发送邮件">{if $item.send_email=='1'}<span class="new-badge success">是</span>{else}<span class="new-badge warning">否</span>{/if}</td>
+              <td data-label="邮件状态">
+                {if $item.send_email!='1'}
+                <span class="new-badge info">不需要</span>
+                {elseif $item.email_sent=='1'}
+                <span class="new-badge success">已发送</span>
+                {else}
+                <span class="new-badge warning">待发送</span>
+                {/if}
+              </td>
               <td data-label="状态">
                 {if $item.status=='1'}
                 <span class="new-badge success">显示</span>
@@ -57,6 +67,9 @@
               <td data-label="操作">
                 <button class="new-btn primary" onclick="openEditModal({$item.id})" title="编辑">
                   <span class="mdi mdi-pencil"></span>
+                </button>
+                <button class="new-btn outline" onclick="sendMail({$item.id})" title="重新群发邮件">
+                  <span class="mdi mdi-email-send-outline"></span>
                 </button>
                 <button class="new-btn outline" onclick="toggleStatus({$item.id})" title="切换状态">
                   <span class="mdi mdi-toggle-switch"></span>
@@ -247,22 +260,22 @@ function openEditModal(id){
           }
         });
       } else {
-        layer.msg(data.msg || '获取公告数据失败', {icon:2});
+        GlassTip.error(data.msg || '获取公告数据失败');
       }
     },
     error: function(){
       layer.close(loadIdx);
-      layer.msg('网络错误，请刷新页面后重试', {icon:2});
+      GlassTip.error('网络错误，请刷新页面后重试');
     }
   });
 }
 
 function submitAnnForm(layerIndex){
   if(!$('#ann-title').val().trim()){
-    layer.msg('标题不能为空', {icon:2});
+    GlassTip.error('标题不能为空');
     return;
   }
-  var load = layer.msg('提交中...', {icon:16, shade:0.3, time:false});
+  var load = layer.msg('提交中...', {icon:16, shade:0.8, time:false});
   var annId = $('#ann-id').val();
   var postData = {
     act: $('#ann-act').val(),
@@ -286,18 +299,39 @@ function submitAnnForm(layerIndex){
           window.location.reload();
         });
       } else {
-        layer.msg(data.msg || '操作失败', {icon:2});
+        GlassTip.error(data.msg || '操作失败');
       }
     },
     error: function(){
       layer.close(load);
-      layer.msg('网络错误', {icon:2});
+      GlassTip.error('网络错误');
     }
   });
 }
 
+function sendMail(id){
+  layer.confirm('确定把这条公告通过邮件群发给全体用户吗？<br><span style="color:#64748b">只会发给已填写邮箱的用户，群发由后台任务分批投递。</span>', {icon:2, title:'邮件群发确认'}, function(){
+    var load = layer.msg('正在入队...', {icon:16, shade:0.8, time:false});
+    $.ajax({
+      type: 'POST',
+      url: '',
+      data: { act: 'sendmail', id: id },
+      dataType: 'json',
+      success: function(data){
+        layer.close(load);
+        if(data.code == '1' || data.code == 1){
+          layer.msg(data.msg, {icon:1}, function(){ window.location.reload(); });
+        } else {
+          GlassTip.error(data.msg || '发送失败');
+        }
+      },
+      error: function(){ layer.close(load); GlassTip.error('网络错误'); }
+    });
+  });
+}
+
 function toggleStatus(id){
-  var load = layer.msg('处理中...', {icon:16, shade:0.3, time:false});
+  var load = layer.msg('处理中...', {icon:16, shade:0.8, time:false});
   $.ajax({
     type: 'POST',
     url: '',
@@ -310,12 +344,12 @@ function toggleStatus(id){
           window.location.reload();
         });
       } else {
-        layer.msg(data.msg || '操作失败', {icon:2});
+        GlassTip.error(data.msg || '操作失败');
       }
     },
     error: function(){
       layer.close(load);
-      layer.msg('网络错误', {icon:2});
+      GlassTip.error('网络错误');
     }
   });
 }
@@ -326,7 +360,7 @@ function deleteItem(id){
     title: '删除确认'
   }, function(index){
     layer.close(index);
-    var load = layer.msg('删除中...', {icon:16, shade:0.3, time:false});
+    var load = layer.msg('删除中...', {icon:16, shade:0.8, time:false});
     $.ajax({
       type: 'POST',
       url: '',
@@ -339,12 +373,12 @@ function deleteItem(id){
             window.location.reload();
           });
         } else {
-          layer.msg(data.msg || '删除失败', {icon:2});
+          GlassTip.error(data.msg || '删除失败');
         }
       },
       error: function(){
         layer.close(load);
-        layer.msg('网络错误', {icon:2});
+        GlassTip.error('网络错误');
       }
     });
   });

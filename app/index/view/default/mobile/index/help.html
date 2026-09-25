@@ -1,0 +1,90 @@
+{php}$title = '帮助中心'; $tab_active = 'home'; $back_url = '/';{/php}
+{include file="default/mobile/header" /}
+
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--text);margin:0 0 4px;">帮助中心</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin:0;">遇到问题？我们提供多种渠道为您答疑解惑。</p>
+</div>
+
+<div class="app-card" style="margin-bottom:12px;padding:20px 16px;border-color:var(--glass-border-strong);">
+    <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--glass-primary),var(--glass-primary-dark));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fab fa-qq" style="font-size:22px;color:#fff;"></i>
+        </div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;">官方QQ群</div>
+            <div style="font-size:18px;font-weight:800;color:var(--glass-primary);margin-bottom:4px;">{$qq_number|default='官方QQ群'}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">加入官方群，与更多用户交流，获取官方实时公告。</div>
+            {php}$qqGroupUrl = isset($qq_group) ? $qq_group : ''; if ($qqGroupUrl && strpos($qqGroupUrl, 'http') !== 0) { $qqGroupUrl = 'https://qm.qq.com/q/' . $qqGroupUrl; }{/php}
+            {if $qqGroupUrl}
+            <a href="{$qqGroupUrl}" target="_blank" class="app-btn app-btn-primary app-btn-sm"><i class="fab fa-qq"></i> 一键加入官方群</a>
+            {/if}
+        </div>
+    </div>
+</div>
+
+<div class="app-card" style="margin-bottom:12px;padding:20px 16px;">
+    <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:48px;height:48px;border-radius:14px;background:var(--glass-bg-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fas fa-envelope" style="font-size:20px;color:var(--glass-primary);"></i>
+        </div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;">客服邮箱</div>
+            <div style="font-size:18px;font-weight:800;color:var(--glass-primary);margin-bottom:4px;word-break:break-all;">{$email|default='未设置'}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">发送邮件至客服邮箱，我们将在工作时间内尽快回复。</div>
+            {if isset($email) && $email}
+            <a href="mailto:{$email}" class="app-btn app-btn-outline app-btn-sm"><i class="fas fa-paper-plane"></i> 发送邮件</a>
+            {/if}
+        </div>
+    </div>
+</div>
+
+<div class="app-card" style="margin-bottom:12px;padding:20px 16px;">
+    <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fas fa-headset" style="font-size:20px;color:var(--glass-warning);"></i>
+        </div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;">工单支持</div>
+            <div style="font-size:14px;font-weight:600;color:var(--glass-warning);margin-bottom:4px;">工作日 09:00 - 21:00</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">登录后提交工单，客服团队将一对一为您解决问题。</div>
+            <a href="__ROOT__/user/supportticket" class="app-btn app-btn-outline app-btn-sm"><i class="fas fa-ticket-alt"></i> 提交工单</a>
+        </div>
+    </div>
+</div>
+
+<div class="app-card" style="margin-bottom:12px;padding:20px 16px;">
+    <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(139,92,246,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="fas fa-book" style="font-size:20px;color:var(--glass-purple);"></i>
+        </div>
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;">使用文档</div>
+            <div style="font-size:14px;font-weight:600;color:var(--glass-purple);margin-bottom:4px;">常见问题与教程</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">查看详细使用文档，快速上手产品功能。</div>
+            <a href="__ROOT__/announcements" class="app-btn app-btn-outline app-btn-sm"><i class="fas fa-newspaper"></i> 查看公告</a>
+        </div>
+    </div>
+</div>
+
+<div class="app-card" style="padding:20px 16px;">
+    <div class="app-card-title">常见问题</div>
+    <div class="app-info-row" style="align-items:flex-start;flex-direction:column;gap:4px;">
+        <span style="font-size:14px;font-weight:600;color:var(--text);">如何购买虚拟主机？</span>
+        <span style="font-size:13px;color:var(--text-secondary);line-height:1.6;">注册并登录账号后，进入产品页面选择套餐，完成支付即可自动开通。</span>
+    </div>
+    <div class="app-info-row" style="align-items:flex-start;flex-direction:column;gap:4px;">
+        <span style="font-size:14px;font-weight:600;color:var(--text);">支持哪些支付方式？</span>
+        <span style="font-size:13px;color:var(--text-secondary);line-height:1.6;">支持账户余额支付以及平台接入的在线支付渠道，具体以支付页面显示为准。</span>
+    </div>
+    <div class="app-info-row" style="align-items:flex-start;flex-direction:column;gap:4px;">
+        <span style="font-size:14px;font-weight:600;color:var(--text);">如何申请退款？</span>
+        <span style="font-size:13px;color:var(--text-secondary);line-height:1.6;">请在用户控制台提交工单，说明退款原因，客服人员会在工作时间内处理。</span>
+    </div>
+    <div class="app-info-row" style="align-items:flex-start;flex-direction:column;gap:4px;border-bottom:none;">
+        <span style="font-size:14px;font-weight:600;color:var(--text);">如何加入官方QQ群？</span>
+        <span style="font-size:13px;color:var(--text-secondary);line-height:1.6;">点击上方"一键加入官方群"按钮，或搜索群号 {if isset($qq_group)}{$qq_group}{/if} 申请加入。</span>
+    </div>
+</div>
+
+{include file="default/mobile/footer" /}

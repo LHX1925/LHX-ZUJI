@@ -1,0 +1,418 @@
+{php}$title = '登录';{/php}
+{include file="default/mobile/header" /}
+
+<style>
+    .app-auth-page { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px 16px 24px; }
+    .app-auth-box {
+        width:100%; max-width:320px;
+        background:rgba(255,255,255,0.78);
+        backdrop-filter:blur(28px) saturate(200%);
+        -webkit-backdrop-filter:blur(28px) saturate(200%);
+        border:1px solid rgba(255,255,255,0.55);
+        border-radius:28px;
+        padding:28px 20px 20px;
+        box-shadow:0 16px 48px rgba(31,38,135,0.12), inset 0 1px 0 rgba(255,255,255,0.65);
+        overflow:hidden;
+    }
+    .app-auth-tabs {
+        display:flex; margin-bottom:24px;
+        background:rgba(0,0,0,0.04); border-radius:14px; padding:3px;
+    }
+    .app-auth-tab {
+        flex:1; text-align:center; padding:10px 0; background:none; border:none;
+        font-size:15px; font-weight:600; color:#94A3B8; cursor:pointer;
+        border-radius:12px; transition:all 0.2s;
+        -webkit-tap-highlight-color:transparent;
+        outline:none; -webkit-appearance:none;
+        position:relative; z-index:2; pointer-events:auto;
+    }
+    .app-auth-tab.active { background:#fff; color:#1E293B; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+    .app-auth-panel { display:none; }
+    .app-auth-panel.active { display:block; }
+    .app-code-wrap { position:relative; }
+    .app-get-code {
+        position:absolute; right:4px; top:4px; height:40px; padding:0 14px;
+        background:var(--glass-primary); color:#fff; border:none; border-radius:12px;
+        font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap;
+        -webkit-tap-highlight-color:transparent;
+        display:flex; align-items:center; justify-content:center;
+        pointer-events:auto; z-index:10;
+    }
+    .app-get-code.disabled { background:#94A3B8; pointer-events:none; }
+.app-verify-btn {
+        width:100%; height:48px; text-align:left; padding:0 16px; cursor:pointer;
+        background:rgba(255,255,255,0.55); border:1px dashed var(--glass-primary); border-radius:14px;
+        color:var(--glass-primary); font-size:15px; font-weight:500; transition:all 0.2s;
+        -webkit-tap-highlight-color:transparent;
+        display:flex; align-items:center; gap:8px;
+        position:relative; z-index:2; pointer-events:auto;
+    }
+    .app-verify-btn:active { background:rgba(79,124,255,0.08); }
+    .app-verify-btn.success { border-color:var(--glass-success); color:var(--glass-success); border-style:solid; background:rgba(16,185,129,0.08); }
+    .app-verify-btn.error { border-color:var(--glass-danger); color:var(--glass-danger); border-style:solid; background:rgba(239,68,68,0.08); }
+    .app-auth-input {
+        width:100%; height:50px; padding:0 16px; font-size:16px;
+        border:0.5px solid rgba(0,0,0,0.08); border-radius:16px;
+        background:rgba(255,255,255,0.55);
+        color:#1E293B; outline:none;
+        transition:all 0.2s; box-sizing:border-box; margin-bottom:14px;
+        -webkit-appearance:none;
+    }
+    .app-auth-input:focus {
+        border-color:var(--glass-primary);
+        box-shadow:0 0 0 3px rgba(79,124,255,0.12);
+        background:rgba(255,255,255,0.8);
+    }
+    .app-auth-input::placeholder { color:#B0B8C4; }
+    .app-auth-submit {
+        width:100%; height:50px; display:flex; align-items:center; justify-content:center;
+        background:linear-gradient(135deg, var(--glass-primary), var(--glass-primary-dark));
+        color:#fff; border:none; border-radius:16px;
+        font-size:16px; font-weight:600; cursor:pointer;
+        box-shadow:0 4px 16px rgba(79,124,255,0.35);
+        transition:all 0.2s; -webkit-tap-highlight-color:transparent;
+        position:relative; z-index:2; pointer-events:auto;
+    }
+    .app-auth-submit:active { transform:scale(0.97); }
+    .app-auth-submit:disabled, .app-auth-submit.disabled { opacity:0.5; pointer-events:none; }
+
+    /* 登录页：隐藏顶部标题栏，保留底部导航，卡片居中 */
+    .app-topbar { display:none !important; }
+    .app-page { padding-top:0 !important; }
+    .app-content { justify-content:center; }
+</style>
+
+<div class="app-auth-page">
+    <div class="app-auth-box">
+        {if isset($web.logo) && $web.logo}
+        <div style="margin:0 auto 14px;width:48px;height:48px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.55);border:2px solid rgba(255,255,255,0.25);">
+            <img src="{if strpos($web.logo, 'http') === 0}{$web.logo}{else}__ROOT__/{:ltrim($web.logo, '/')}{/if}" alt="logo" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+        {/if}
+        <div style="text-align:center;font-size:20px;font-weight:700;color:#1E293B;margin-bottom:4px;">{$webname|default='YunHost'}</div>
+        <div style="text-align:center;font-size:13px;color:#94A3B8;margin-bottom:20px;">登录后管理你的云主机</div>
+
+        <div class="app-auth-tabs" id="authTabs">
+            <button type="button" class="app-auth-tab active" onclick="switchLoginTab(this,'password')" data-tab="password">密码登录</button>
+            <button type="button" class="app-auth-tab" onclick="switchLoginTab(this,'code')" data-tab="code">验证码登录</button>
+        </div>
+
+        <!-- 密码登录 -->
+        <div class="app-auth-panel active" id="panel-password">
+            <form id="form1" autocomplete="off" onsubmit="return handlePwdLogin(event)">
+                <input type="hidden" name="__token__" value="{:csrf_token()}">
+                <div style="position:absolute;left:-9999px;top:-9999px;opacity:0;" aria-hidden="true">
+                    <input type="text" name="_hp" tabindex="-1" autocomplete="off">
+                </div>
+                <input type="text" class="app-auth-input" name="userName" placeholder="账号或邮箱" autocomplete="off">
+                <input type="password" class="app-auth-input" name="userPwd" placeholder="登录密码">
+                <div class="app-verify-btn" id="slide-captcha-btn" onclick="openCaptcha1()" ontouchstart=""><i class="fas fa-shield-alt"></i> 点击进行滑块验证</div>
+                <input type="hidden" name="captcha" id="captcha-verified" value="">
+                <div style="text-align:right;margin:8px 0 16px;">
+                    <a href="__ROOT__/pwreset" style="font-size:13px;color:var(--glass-primary);text-decoration:none;">忘记密码?</a>
+                </div>
+                <div class="app-auth-submit" id="btn-login-pwd" onclick="handlePwdLogin()" ontouchstart="">立即登录</div>
+            </form>
+        </div>
+
+        <!-- 验证码登录 -->
+        <div class="app-auth-panel" id="panel-code">
+            <form id="form2" autocomplete="off" onsubmit="return handleCodeLogin(event)">
+                <input type="email" class="app-auth-input" name="codeMail" placeholder="请输入邮箱地址" autocomplete="off">
+                <div class="app-code-wrap" style="margin-bottom:14px;">
+                    <input type="text" class="app-auth-input" name="codeVerify" placeholder="邮箱验证码" style="padding-right:100px;margin-bottom:0;">
+                    <div class="app-get-code" id="btn-get-code" onclick="getVerifyCode()" ontouchstart="">获取验证码</div>
+                </div>
+                <div class="app-verify-btn" id="slide-captcha-btn-code" onclick="openCaptcha2()" ontouchstart=""><i class="fas fa-shield-alt"></i> 点击进行滑块验证</div>
+                <input type="hidden" name="captcha" id="captcha-verified-code" value="">
+                <div style="margin-top:16px;">
+                    <div class="app-auth-submit" id="btn-login-code" onclick="handleCodeLogin()" ontouchstart="">验证并登录</div>
+                </div>
+            </form>
+        </div>
+
+        <div style="text-align:center;margin-top:20px;font-size:14px;color:#94A3B8;">
+            还没有账号? <a href="__ROOT__/register" style="color:var(--glass-primary);font-weight:600;text-decoration:none;">立即注册</a>
+        </div>
+
+        {if isset($web.oauth_enabled) && $web.oauth_enabled == '1'}
+        <div style="margin-top:24px;padding-top:20px;border-top:0.5px solid rgba(0,0,0,0.08);text-align:center;">
+            <p style="font-size:13px;color:#94A3B8;margin-bottom:12px;">其他登录方式</p>
+            <a href="__ROOT__/oauth/login/qq" class="app-btn app-btn-outline app-btn-sm" style="min-width:120px;"><i class="fab fa-qq"></i> QQ登录</a>
+        </div>
+        {/if}
+    </div>
+</div>
+
+{include file="default/captcha_assets" /}
+
+<script>
+// ===== 全局状态 =====
+var captcha1Verified = false;
+var captcha2Verified = false;
+var codeCountdown = 0;
+var codeTimer = null;
+
+// ===== Tab 切换 =====
+function switchLoginTab(el, tab) {
+    if (!el && tab) {
+        el = document.querySelector('#authTabs .app-auth-tab[data-tab="' + tab + '"]');
+    }
+    if (!el) return;
+    var tabs = document.querySelectorAll('#authTabs .app-auth-tab');
+    tabs.forEach(function(t) { t.classList.remove('active'); });
+    el.classList.add('active');
+    document.querySelectorAll('.app-auth-panel').forEach(function(p) { p.classList.remove('active'); });
+    var panel = document.getElementById('panel-' + tab);
+    if (panel) panel.classList.add('active');
+}
+
+// ===== 打开滑块验证 (密码登录) =====
+function openCaptcha1() {
+    if (typeof window.slideCaptcha !== 'function') {
+        showToast('验证组件加载中，请稍后重试', 'error');
+        return;
+    }
+    window.slideCaptcha({
+        onSuccess: function(token) {
+            captcha1Verified = true;
+            document.getElementById('captcha-verified').value = token;
+            var btn = document.getElementById('slide-captcha-btn');
+            btn.className = 'app-verify-btn success';
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> 验证通过';
+        },
+        onError: function() {
+            resetCaptcha1();
+            var btn = document.getElementById('slide-captcha-btn');
+            btn.className = 'app-verify-btn error';
+            btn.innerHTML = '<i class="fas fa-times-circle"></i> 验证失败，点击重试';
+        },
+        onClose: function() {
+            if (!captcha1Verified) resetCaptcha1();
+        }
+    });
+}
+
+function resetCaptcha1() {
+    captcha1Verified = false;
+    document.getElementById('captcha-verified').value = '';
+    var btn = document.getElementById('slide-captcha-btn');
+    btn.className = 'app-verify-btn';
+    btn.innerHTML = '<i class="fas fa-shield-alt"></i> 点击进行滑块验证';
+}
+
+// ===== 打开滑块验证 (验证码登录) =====
+function openCaptcha2() {
+    var mail = document.querySelector("input[name='codeMail']").value.trim();
+    if (!mail) {
+        document.querySelector("input[name='codeMail']").focus();
+        showToast('请先输入邮箱地址', 'error');
+        return;
+    }
+    if (typeof window.slideCaptcha !== 'function') {
+        showToast('验证组件加载中，请稍后重试', 'error');
+        return;
+    }
+    window.slideCaptcha({
+        onSuccess: function(token) {
+            captcha2Verified = true;
+            document.getElementById('captcha-verified-code').value = token;
+            var btn = document.getElementById('slide-captcha-btn-code');
+            btn.className = 'app-verify-btn success';
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> 验证通过';
+        },
+        onError: function() {
+            resetCaptcha2();
+            var btn = document.getElementById('slide-captcha-btn-code');
+            btn.className = 'app-verify-btn error';
+            btn.innerHTML = '<i class="fas fa-times-circle"></i> 验证失败，点击重试';
+        },
+        onClose: function() {
+            if (!captcha2Verified) resetCaptcha2();
+        }
+    });
+}
+
+function resetCaptcha2() {
+    captcha2Verified = false;
+    document.getElementById('captcha-verified-code').value = '';
+    var btn = document.getElementById('slide-captcha-btn-code');
+    btn.className = 'app-verify-btn';
+    btn.innerHTML = '<i class="fas fa-shield-alt"></i> 点击进行滑块验证';
+}
+
+// ===== 获取验证码 =====
+function getVerifyCode() {
+    var mail = document.querySelector("input[name='codeMail']").value.trim();
+    if (!mail) {
+        document.querySelector("input[name='codeMail']").focus();
+        showToast('请先输入邮箱地址', 'error');
+        return;
+    }
+    if (!captcha2Verified) {
+        showToast('请先完成滑块验证', 'error');
+        return;
+    }
+    var btn = document.getElementById('btn-get-code');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = '发送中...';
+
+    $.ajax({
+        type: 'POST',
+        url: window.__ROOT__ + '/login',
+        data: { act: 'yxvalidate', mail: mail, captcha: document.getElementById('captcha-verified-code').value },
+        dataType: 'json',
+        success: function(data) {
+            if (data.code == 1) {
+                showToast('验证码已发送', 'success');
+                codeCountdown = 60;
+                btn.textContent = codeCountdown + 's';
+                if (codeTimer) clearInterval(codeTimer);
+                codeTimer = setInterval(function() {
+                    codeCountdown--;
+                    if (codeCountdown <= 0) {
+                        clearInterval(codeTimer);
+                        codeTimer = null;
+                        btn.disabled = false;
+                        btn.textContent = '获取验证码';
+                    } else {
+                        btn.textContent = codeCountdown + 's';
+                    }
+                }, 1000);
+            } else {
+                btn.disabled = false;
+                btn.textContent = '获取验证码';
+                resetCaptcha2();
+                showToast(data.msg || '发送失败', 'error');
+            }
+        },
+        error: function() {
+            btn.disabled = false;
+            btn.textContent = '获取验证码';
+            resetCaptcha2();
+            showToast('网络错误，请稍后重试', 'error');
+        }
+    });
+}
+
+// ===== 密码登录 =====
+function handlePwdLogin(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var submitBtn = document.getElementById('btn-login-pwd');
+    var userName = document.querySelector("#form1 input[name='userName']").value.trim();
+    var userPwd = document.querySelector("#form1 input[name='userPwd']").value;
+    if (!userName || !userPwd) { showToast('请确保账号和密码不为空', 'error'); return false; }
+    if (!captcha1Verified) { showToast('请先完成滑块验证', 'error'); return false; }
+    submitBtn.classList.add('disabled');
+    submitBtn.textContent = '登录中...';
+    submitBtn.disabled = true;
+
+    $.ajax({
+        type: 'POST',
+        url: window.__ROOT__ + '/login',
+        data: {
+            act: 'ptdl',
+            user: userName,
+            password: userPwd,
+            captcha: document.getElementById('captcha-verified').value,
+            __token__: document.querySelector("#form1 input[name='__token__']").value
+        },
+        dataType: 'json',
+        success: function(data) {
+            if (data.code == 1) {
+                showToast(data.msg || '登录成功', 'success');
+                setTimeout(function() { location.href = window.__ROOT__ + '/user/index'; }, 1200);
+            } else {
+                resetCaptcha1();
+                submitBtn.classList.remove('disabled');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '立即登录';
+                showToast(data.msg || '登录失败', 'error');
+            }
+        },
+        error: function() {
+            resetCaptcha1();
+            submitBtn.classList.remove('disabled');
+            submitBtn.disabled = false;
+            submitBtn.textContent = '立即登录';
+            showToast('网络错误，请稍后重试', 'error');
+        }
+    });
+    return false;
+}
+
+// ===== 验证码登录 =====
+function handleCodeLogin(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var submitBtn = document.getElementById('btn-login-code');
+    var mail = document.querySelector("#form2 input[name='codeMail']").value.trim();
+    var code = document.querySelector("#form2 input[name='codeVerify']").value.trim();
+    if (!mail || !code) { showToast('请确保邮箱和验证码不为空', 'error'); return false; }
+    if (!captcha2Verified) { showToast('请先完成滑块验证', 'error'); return false; }
+    submitBtn.classList.add('disabled');
+    submitBtn.textContent = '登录中...';
+    submitBtn.disabled = true;
+
+    $.ajax({
+        type: 'POST',
+        url: window.__ROOT__ + '/login',
+        data: { act: 'yxdl', mail: mail, code: code },
+        dataType: 'json',
+        success: function(data) {
+            if (data.code == 1) {
+                showToast(data.msg || '登录成功', 'success');
+                setTimeout(function() { location.href = window.__ROOT__ + '/user/index'; }, 1200);
+            } else {
+                resetCaptcha2();
+                submitBtn.classList.remove('disabled');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '验证并登录';
+                showToast(data.msg || '登录失败', 'error');
+            }
+        },
+        error: function() {
+            resetCaptcha2();
+            submitBtn.classList.remove('disabled');
+            submitBtn.disabled = false;
+            submitBtn.textContent = '验证并登录';
+            showToast('网络错误', 'error');
+        }
+    });
+    return false;
+}
+
+// ===== Toast =====
+var _toastTimer = null;
+function showToast(msg, type) {
+    type = type || 'info';
+    var t = document.getElementById('appToast');
+    clearTimeout(_toastTimer);
+    if (!t) { alert(msg); return; }
+    t.className = 'app-toast app-toast-' + type + ' show';
+    t.textContent = msg;
+    _toastTimer = setTimeout(function() { t.className = 'app-toast'; }, 2500);
+}
+
+// ===== 初始化：等待 captcha 加载 =====
+(function initCheck() {
+    if (typeof window.slideCaptcha === 'function') return;
+    var btn1 = document.getElementById('slide-captcha-btn');
+    var btn2 = document.getElementById('slide-captcha-btn-code');
+    if (btn1) { btn1.className = 'app-verify-btn error'; btn1.innerHTML = '<i class="fas fa-exclamation-circle"></i> 验证组件加载中...'; }
+    if (btn2) { btn2.className = 'app-verify-btn error'; btn2.innerHTML = '<i class="fas fa-exclamation-circle"></i> 验证组件加载中...'; }
+    var count = 0;
+    var iv = setInterval(function() {
+        count++;
+        if (typeof window.slideCaptcha === 'function') {
+            if (btn1) { btn1.className = 'app-verify-btn'; btn1.innerHTML = '<i class="fas fa-shield-alt"></i> 点击进行滑块验证'; }
+            if (btn2) { btn2.className = 'app-verify-btn'; btn2.innerHTML = '<i class="fas fa-shield-alt"></i> 点击进行滑块验证'; }
+            clearInterval(iv);
+        } else if (count > 50) {
+            clearInterval(iv);
+        }
+    }, 200);
+})();
+</script>
+
+{include file="default/mobile/footer" /}

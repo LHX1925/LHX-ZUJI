@@ -1,0 +1,50 @@
+{include file="default/user/header" title="域名详情" /}
+<main id="main-container">
+<div class="content">
+<style>
+    .dd-page { max-width: 700px; margin: 0 auto; padding: 20px 16px 40px; }
+    .dd-card { background: #fff; border-radius: 16px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid #eef2f7; }
+    .dd-name { font-size: 26px; font-weight: 700; color: #1e293b; font-family: Consolas, monospace; margin-bottom: 8px; }
+    .dd-price { font-size: 28px; font-weight: 700; color: #f59e0b; margin-bottom: 20px; }
+    .dd-info { border-top: 1px solid #f1f5f9; padding-top: 16px; }
+    .dd-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; }
+    .dd-row .label { color: #64748b; }
+    .dd-row .val { color: #1e293b; font-weight: 500; }
+</style>
+
+<div class="dd-page">
+    <div class="dd-card">
+        <div class="dd-name"><i class="fas fa-globe" style="color:#2563eb;"></i> {$domain.domain}</div>
+        <div class="dd-price">¥{$domain.price} 元</div>
+        <div class="dd-info">
+            <div class="dd-row"><span class="label">注册商</span><span class="val">{if $domain.registrar=='aliyun'}阿里云万网{elseif $domain.registrar=='dnspod'}腾讯云DNSPod{/if}</span></div>
+            <div class="dd-row"><span class="label">卖家</span><span class="val">{$seller.name|default='用户'}</span></div>
+            <div class="dd-row"><span class="label">描述</span><span class="val">{$domain.description|default='暂无描述'}</span></div>
+            <div class="dd-row"><span class="label">上架时间</span><span class="val">{:date('Y-m-d H:i', $domain.create_time)}</span></div>
+        </div>
+        <div style="margin-top:24px;display:flex;gap:12px;">
+            {if $domain.userid != $user.id}
+            <button class="btn btn-primary" style="flex:1;padding:13px;" id="btnBuy">立即购买</button>
+            {/if}
+            <a href="__ROOT__/domain" class="btn btn-outline-secondary" style="flex:1;padding:13px;">返回商城</a>
+        </div>
+    </div>
+</div>
+</div>
+</main>
+{include file="default/user/footer" /}
+<script>
+$(function(){
+    $('#btnBuy').on('click', function(){
+        if(!confirm('确认购买域名 {$domain.domain}？价格：¥{$domain.price}')) return;
+        $.post('__ROOT__/domain/buy/{$domain.id}', {}, function(res){
+            if(res.code == 1){
+                showToast(res.msg, 'success', 2500);
+                setTimeout(function(){ location.href = '__ROOT__/domain'; }, 1500);
+            } else {
+                showToast(res.msg, 'danger', 2500);
+            }
+        }, 'json');
+    });
+});
+</script>

@@ -1,0 +1,285 @@
+{include file="default/header" title="Docker 容器开通"/}
+<style>
+.lyear-layout-content.page-wrap{position:relative!important;height:auto!important;width:100%!important;max-width:1280px!important;margin:0 auto!important;left:auto!important;padding:calc(64px + 24px) 20px 40px 20px!important}
+.page-wrap { --pri: #0ea5e9; --pri2: #0284c7; --radius: 16px; }
+.page-header-bar {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  border-radius: 16px; padding: 20px 24px; margin-bottom: 20px;
+  color: #fff; box-shadow: 0 4px 20px rgba(14,165,233,0.25);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+}
+.page-header-bar h2 { margin: 0; font-size: 20px; font-weight: 700; }
+.page-header-bar .sub { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+.content-card {
+  background: #fff; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+  border: 1px solid #e8ecf1; overflow: hidden; margin-bottom: 20px;
+}
+.content-card-header {
+  padding: 14px 20px; border-bottom: 1px solid #f1f5f9;
+  font-weight: 700; color: #1a1a2e; font-size: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.content-card-header::before {
+  content: ''; width: 4px; height: 18px; border-radius: 2px;
+  background: linear-gradient(180deg, #0ea5e9, #0284c7);
+}
+.content-card-body { padding: 18px 20px; }
+.new-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.new-table thead th {
+  background: #f8fafc; color: #475569; font-weight: 600;
+  padding: 10px 12px; border-bottom: 2px solid #e2e8f0;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+}
+.new-table tbody td {
+  padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle;
+}
+.new-table tbody tr:hover { background: #fafbfc; }
+.new-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 16px; border-radius: 10px; border: none;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; text-decoration: none;
+}
+.new-btn.primary { background: linear-gradient(135deg,#0ea5e9,#0284c7); color: #fff; box-shadow: 0 3px 10px rgba(14,165,233,0.3); }
+.new-btn.primary:hover { transform: translateY(-1px); }
+.new-btn.ok { background: linear-gradient(135deg,#10b981,#059669); color: #fff; }
+.new-btn.ok:hover { transform: translateY(-1px); }
+.new-btn.warn { background: linear-gradient(135deg,#f59e0b,#d97706); color: #fff; }
+.new-btn.warn:hover { transform: translateY(-1px); }
+.new-btn.danger { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; }
+.new-btn.danger:hover { transform: translateY(-1px); }
+.new-btn.outline { background: #fff; color: #0ea5e9; border: 2px solid #e2e8f0; }
+.new-btn.outline:hover { border-color: #0ea5e9; background: #f0f9ff; }
+.new-btn.sm { padding: 4px 10px; font-size: 11px; }
+.new-badge { display: inline-flex; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.new-badge.success { background: #ecfdf5; color: #059669; }
+.new-badge.warning { background: #fffbeb; color: #d97706; }
+.new-badge.danger { background: #fef2f2; color: #dc2626; }
+.new-badge.info { background: #eff6ff; color: #2563eb; }
+.new-badge.gray { background: #f1f5f9; color: #64748b; }
+.form-input { width: 100%; padding: 9px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 13px; transition: all 0.2s; background: #fff; color: #334155; }
+.form-input:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); outline: none; }
+.form-select { padding: 9px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 13px; background: #fff; color: #334155; min-width: 140px; }
+.form-select:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); outline: none; }
+.search-box { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: #fff; border: 1px solid #e8ecf1; border-radius: 14px; padding: 14px 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+.stat-card .n { font-size: 22px; font-weight: 700; color: #0f172a; line-height: 1.2; }
+.stat-card .l { font-size: 12px; color: #64748b; margin-top: 4px; }
+.notice-soft { background: #f0f9ff; border: 1px solid #bae6fd; color: #075985; border-radius: 12px; padding: 12px 16px; font-size: 12.5px; line-height: 1.8; margin-bottom: 18px; }
+.notice-soft b { color: #0369a1; }
+@media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+
+<main class="lyear-layout-content page-wrap">
+  <div class="page-header-bar">
+    <div>
+      <h2><i class="mdi mdi-docker"></i> Docker 容器开通</h2>
+      <div class="sub">用户在产品控制台自助开通（可付费），此处可人工开通 / 关闭 / 排查</div>
+    </div>
+    <div>
+      <button class="new-btn outline" onclick="openCreate()"><i class="mdi mdi-plus"></i> 手动为主机开通</button>
+      <a class="new-btn outline" href="{:url('admin/index/set')}"><i class="mdi mdi-cog"></i> 开通设置</a>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="n">{$stat.total|default=0}</div><div class="l">全部记录</div></div>
+    <div class="stat-card"><div class="n" style="color:#d97706;">{$stat.pending|default=0}</div><div class="l">待开通（人工）</div></div>
+    <div class="stat-card"><div class="n" style="color:#059669;">{$stat.active|default=0}</div><div class="l">已开通</div></div>
+    <div class="stat-card"><div class="n" style="color:#dc2626;">{$stat.failed|default=0}</div><div class="l">开通失败</div></div>
+  </div>
+
+  <div class="notice-soft">
+    <b>当前配置：</b>总开关 {if $globalOn}<span class="new-badge success">已开启</span>{else}<span class="new-badge gray">已关闭</span>{/if}
+    &nbsp;·&nbsp; 开通价 <b>¥{$dockerPrice}</b>
+    &nbsp;·&nbsp; 开通方式 <b>{if $dockerMode=='auto'}自动开通{else}人工开通{/if}</b>
+    &nbsp;·&nbsp; 支付方式 {if $payBalance}余额{/if}{if $payBalance && $payOnline} / {/if}{if $payOnline}在线支付{/if}<br>
+    用户能否看到开通入口 = 总开关开启 <b>且</b> 产品勾选「开放 Docker 容器开通」<b>且</b> 服务器插件为 mnbt。
+    开通仅开放权限，容器规格由用户在自己的面板内填写。
+  </div>
+
+  <div class="content-card">
+    <div class="content-card-header"><i class="mdi mdi-format-list-bulleted"></i> 开通记录</div>
+    <div class="content-card-body">
+      <form method="get" action="">
+        <div class="search-box" style="margin-bottom:16px;">
+          <input class="form-input" style="max-width:280px;" type="text" name="search" placeholder="搜索记录ID/主机订单ID/面板账号/用户名..." value="{$search|default=''}"/>
+          <select class="form-select" name="state" onchange="this.form.submit()">
+            <option value="">全部状态</option>
+            <option value="0" {if $stateFilter==='0'}selected{/if}>待支付</option>
+            <option value="1" {if $stateFilter==='1'}selected{/if}>待开通</option>
+            <option value="2" {if $stateFilter==='2'}selected{/if}>已开通</option>
+            <option value="3" {if $stateFilter==='3'}selected{/if}>已关闭</option>
+            <option value="4" {if $stateFilter==='4'}selected{/if}>开通失败</option>
+          </select>
+          <button class="new-btn primary">搜索</button>
+          {if $search || $stateFilter!==''}
+          <a href="{:url('admin/admin_host/docker')}" class="new-btn outline">清除筛选</a>
+          {/if}
+        </div>
+      </form>
+
+      <div class="table-responsive-sm">
+        <table class="new-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>用户</th>
+              <th>主机订单</th>
+              <th>面板账号</th>
+              <th>金额</th>
+              <th>支付/开通</th>
+              <th>状态</th>
+              <th>容器ID</th>
+              <th>更新时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+{foreach $list as $item}
+            <tr>
+              <td data-label="ID">{$item.id}</td>
+              <td data-label="用户">{$item.user_name|default='-'}{if $item.user_mail}<div style="font-size:11px;color:#94a3b8;">{$item.user_mail}</div>{/if}</td>
+              <td data-label="主机订单"><a class="mono" href="{:url('admin/admin_host/index')}?search={$item.orderid}">#{$item.orderid}</a></td>
+              <td data-label="面板账号"><span class="mono">{$item.username|default='-'}</span></td>
+              <td data-label="金额">¥{$item.price}</td>
+              <td data-label="支付/开通" style="font-size:11.5px;color:#64748b;">
+                {if $item.payway=='balance'}余额支付{elseif $item.payway=='online'}在线支付{elseif $item.payway=='free'}免费{elseif $item.payway=='admin'}后台开通{else}{$item.payway}{/if}
+                <br>{if $item.mode=='auto'}自动{else}人工{/if}{if $item.opened_by}（{if $item.opened_by=='admin'}管理员{else}系统{/if}）{/if}
+              </td>
+              <td data-label="状态">
+{if $item.state=="2"}<span class="new-badge success">已开通</span>
+{elseif $item.state=="1"}<span class="new-badge warning">待开通</span>
+{elseif $item.state=="0"}<span class="new-badge info">待支付</span>
+{elseif $item.state=="3"}<span class="new-badge gray">已关闭</span>
+{elseif $item.state=="4"}<span class="new-badge danger">开通失败</span>
+{else}<span class="new-badge gray">{$item.state}</span>{/if}
+{if $item.state=="4" && $item.fail_reason}
+                <div style="font-size:11px;color:#dc2626;max-width:220px;line-height:1.5;margin-top:4px;">{$item.fail_reason}</div>
+{/if}
+              </td>
+              <td data-label="容器ID"><span class="mono" style="font-size:11px;">{$item.container_id|default='-'}</span></td>
+              <td data-label="更新时间" style="font-size:12px;color:#64748b;">{$item.utime|date="Y-m-d H:i",###}</td>
+              <td data-label="操作">
+                <div style="display:flex;gap:4px;flex-wrap:wrap;">
+{if $item.state!="2"}
+                  <button onclick="dockerOperate({$item.id},'open')" class="new-btn ok sm">{if $item.state=="4"}重试开通{else}开通{/if}</button>
+{/if}
+{if $item.state=="2"}
+                  <button onclick="dockerOperate({$item.id},'close')" class="new-btn warn sm">关闭</button>
+{/if}
+                  <button onclick="dockerOperate({$item.id},'delete')" class="new-btn danger sm">删除</button>
+                </div>
+              </td>
+            </tr>
+{/foreach}
+{if empty($list)}
+            <tr>
+              <td colspan="10" style="text-align:center;padding:40px;color:#94a3b8;">
+                <i class="mdi mdi-docker" style="font-size:40px;display:block;margin-bottom:10px;"></i>
+                暂无 Docker 开通记录
+              </td>
+            </tr>
+{/if}
+          </tbody>
+        </table>
+      </div>
+      {if !empty($list)}
+      <div style="text-align:center;margin-top:16px;">{$list->render()}</div>
+      {/if}
+    </div>
+  </div>
+</main>
+{include file="default/footer" /}
+<script>
+var csrfToken = '{$csrf_token}';
+
+function dockerOperate(id, act) {
+    var titles = { open: '开通', close: '关闭', delete: '删除' };
+    var title = titles[act] || '操作';
+    var msg = '确定要' + title + '这条 Docker 记录吗？';
+    if (act === 'close') {
+        msg = '关闭后该主机的 Docker 容器将<span style="color:#d97706">停止运行</span>（用户已填写的规格会保留）。确认关闭？';
+    }
+    if (act === 'delete') {
+        msg = '确定要<span style="color:#dc2626">删除</span>这条记录吗？<br><span style="color:#94a3b8;font-size:12px;">仅删除记录，不会改动面板上的 Docker 开关。</span>';
+    }
+    layer.confirm(msg, { icon: 3 }, function () {
+        var load = layer.load(1, { time: false });
+        $.ajax({
+            type: 'POST',
+            url: '{:url("admin/admin_host/dockerOperate")}',
+            data: { id: id, act: act, __token__: csrfToken },
+            dataType: 'json',
+            success: function (data) {
+                layer.close(load);
+                if (data.code == 1) {
+                    layer.msg(data.msg, { icon: 1 }, function () { window.location.reload(); });
+                } else {
+                    layer.alert(data.msg || '操作失败', { icon: 2 });
+                }
+            },
+            error: function (xhr) {
+                layer.close(load);
+                layer.alert('请求失败（HTTP ' + (xhr && xhr.status ? xhr.status : '?') + '），请刷新页面后重试', { icon: 2 });
+            }
+        });
+    });
+}
+
+function openCreate() {
+    layer.open({
+        type: 1,
+        title: '后台手动为主机开通 Docker',
+        area: ['520px', 'auto'],
+        shadeClose: false,
+        content: '<div style="padding:20px 22px;">'
+            + '<div style="font-size:12.5px;color:#64748b;line-height:1.8;margin-bottom:14px;">'
+            + '填写要将 Docker 开通到哪台主机（填「主机管理」中的订单 ID）。此操作不从用户余额扣款，仅记录一条后台开通记录。'
+            + '</div>'
+            + '<div style="margin-bottom:12px;">'
+            + '<label style="display:block;font-size:12.5px;font-weight:600;color:#334155;margin-bottom:6px;">主机订单 ID</label>'
+            + '<input id="dcOrderId" class="form-input" type="number" min="1" placeholder="例如：12">'
+            + '</div>'
+            + '<div style="margin-bottom:6px;">'
+            + '<label style="display:block;font-size:12.5px;font-weight:600;color:#334155;margin-bottom:6px;">备注（可选）</label>'
+            + '<input id="dcRemark" class="form-input" type="text" placeholder="例如：客服代开 / 活动赠送">'
+            + '</div>'
+            + '<div style="text-align:right;margin-top:18px;">'
+            + '<button class="new-btn outline" onclick="layer.closeAll()">取消</button> '
+            + '<button class="new-btn primary" onclick="submitCreate()">立即开通</button>'
+            + '</div>'
+            + '</div>'
+    });
+}
+
+function submitCreate() {
+    var orderid = $('#dcOrderId').val();
+    var remark = $('#dcRemark').val();
+    if (!orderid || parseInt(orderid, 10) <= 0) {
+        layer.msg('请填写正确的主机订单 ID', { icon: 2 });
+        return;
+    }
+    var load = layer.load(1, { time: false });
+    $.ajax({
+        type: 'POST',
+        url: '{:url("admin/admin_host/dockerCreate")}',
+        data: { orderid: orderid, remark: remark, __token__: csrfToken },
+        dataType: 'json',
+        success: function (data) {
+            layer.close(load);
+            if (data.code == 1) {
+                layer.msg(data.msg || '开通成功', { icon: 1 }, function () { window.location.reload(); });
+            } else {
+                layer.alert(data.msg || '开通失败', { icon: 2 });
+            }
+        },
+        error: function (xhr) {
+            layer.close(load);
+            layer.alert('请求失败（HTTP ' + (xhr && xhr.status ? xhr.status : '?') + '），请刷新页面后重试', { icon: 2 });
+        }
+    });
+}
+</script>

@@ -1,0 +1,119 @@
+{php}$title = '产品过户'; $tab_active = 'order';{/php}
+{include file="default/mobile/header" /}
+<div class="app-card" style="margin-bottom:12px;text-align:center;padding:20px 16px;">
+    <h2 style="font-size:18px;font-weight:700;color:var(--glass-text);margin:0 0 4px;">产品过户</h2>
+    <p style="font-size:13px;color:var(--glass-text-secondary);margin:0;">将产品过户给其他用户</p>
+</div>
+<div class="app-card" style="padding:20px 16px;">
+    <form id="transferForm">
+        <input type="hidden" name="csrf_token" value="{:csrf_token()}">
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">产品</label>
+            <select name="orderid" class="app-input" style="appearance:auto;">
+                <option value="">不选择</option>
+                {if isset($order)}
+                {foreach $order as $o}
+                <option value="{$o.id}">ID:{$o.id}=>{$o.cartid}</option>
+                {/foreach}
+                {/if}
+            </select>
+        </div>
+        <div style="margin-bottom:14px;">
+            <button type="button" id="slide-captcha-btn" style="width:100%;height:44px;border:1.5px dashed var(--glass-primary);border-radius:10px;background:var(--glass-bg-light);color:var(--glass-primary);font-size:14px;cursor:pointer;font-weight:500;">点击进行滑块验证</button>
+            <input type="hidden" name="captcha" id="captcha-verified" value="">
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;">
+            <input type="text" class="app-input" name="code" placeholder="请输入邮箱验证码" required style="flex:1;">
+            <button type="button" class="app-btn" id="sendCode" style="flex-shrink:0;padding:10px 16px;font-size:13px;background:transparent;color:var(--glass-primary);border:1.5px solid var(--glass-primary);">获取验证码</button>
+        </div>
+        <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:14px;font-weight:600;color:var(--glass-text);margin-bottom:6px;">用户ID</label>
+            <input type="text" name="newuserid" class="app-input" placeholder="请输入对方的用户ID" required>
+        </div>
+        <button type="submit" class="app-btn" style="width:100%;">提交过户</button>
+    </form>
+</div>
+{include file="index@default/captcha_assets" /}
+<script>
+$(function() {
+    var captchaVerified = false;
+    if (typeof window.slideCaptcha !== 'function') {
+        $('#slide-captcha-btn').html('验证组件加载失败，请刷新').css({'border-color':'#f44336','background':'#FFEBEE','color':'#f44336'});
+    }
+    $('#slide-captcha-btn').on('click', function() {
+        if (typeof window.slideCaptcha !== 'function') return;
+        window.slideCaptcha({
+            onSuccess: function(token) {
+                captchaVerified = true;
+                $('#captcha-verified').val(token);
+                $('#slide-captcha-btn').css({'border-color':'#4caf50','background':'#E8F5E9','color':'#4caf50'}).html('验证通过');
+            },
+            onError: function() {
+                captchaVerified = false;
+                $('#captcha-verified').val('');
+                $('#slide-captcha-btn').css({'border-color':'#f44336','background':'#FFEBEE','color':'#f44336'}).html('验证失败，点击重试');
+            },
+            onClose: function() {
+                if (!captchaVerified) {
+                    $('#slide-captcha-btn').css({'border-color':'var(--glass-primary)','background':'var(--glass-bg-light)','color':'var(--glass-primary)'}).html('点击进行滑块验证');
+                }
+            }
+        });
+    });
+    function resetCaptcha() {
+        captchaVerified = false;
+        $('#captcha-verified').val('');
+        $('#slide-captcha-btn').css({'border-color':'var(--glass-primary)','background':'var(--glass-bg-light)','color':'var(--glass-primary)'}).html('点击进行滑块验证');
+    }
+    $('#sendCode').on('click', function() {
+        if (!captchaVerified) { appToast('请先完成滑块验证', 'warning'); return; }
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '发送中...';
+        $.post('', { act: 'sendcode', captcha: $('#captcha-verified').val() }, function(res) {
+            if (res.code == '1') {
+                appToast(res.msg, 'success');
+                var count = 60;
+                var timer = setInterval(function() {
+                    btn.textContent = count + '秒后重发';
+                    count--;
+                    if (count < 0) { clearInterval(timer); btn.disabled = false; btn.textContent = '获取验证码'; }
+                }, 1000);
+            } else {
+                appToast(res.msg, 'error');
+                btn.disabled = false;
+                btn.textContent = '获取验证码';
+                resetCaptcha();
+            }
+        }, 'json').fail(function() {
+            appToast('发送失败，请稍后再试', 'error');
+            btn.disabled = false;
+            btn.textContent = '获取验证码';
+        });
+    });
+    $('#transferForm').on('submit', function(e) {
+        e.preventDefault();
+        if (!captchaVerified) { appToast('请先完成滑块验证', 'warning'); return; }
+        var form = this;
+        var btn = form.querySelector('button[type="submit"]');
+        var data = new FormData(form);
+        data.append('act', 'transfer');
+        btn.disabled = true;
+        btn.textContent = '处理中...';
+        $.ajax({
+            type: 'POST', url: '', data: data, processData: false, contentType: false, dataType: 'json',
+            success: function(res) {
+                if (res.code == 1) {
+                    appToast(res.msg, 'success');
+                    setTimeout(function() { location.href = '__ROOT__/user/order'; }, 1500);
+                } else {
+                    appToast(res.msg, 'error');
+                    btn.disabled = false;
+                    btn.textContent = '提交过户';
+                }
+            }
+        });
+    });
+});
+</script>
+{include file="default/mobile/footer" /}

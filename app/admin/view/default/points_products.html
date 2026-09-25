@@ -162,23 +162,26 @@ $(function(){
     var btn = $(this).find('button[type=submit]').prop('disabled', true);
     $.post('{:url("admin/index/pointsProducts")}', $(this).serialize(), function(res){
       if (res.code == '1') {
-        alert(res.msg); location.reload();
+        GlassTip.success(res.msg || '保存成功');
+        setTimeout(function(){ location.reload(); }, 800);
       } else {
-        alert(res.msg); btn.prop('disabled', false);
+        GlassTip.error(res.msg || '保存失败'); btn.prop('disabled', false);
       }
     }, 'json').fail(function(xhr){
       var msg = '请求失败';
       try { var r = JSON.parse(xhr.responseText); if (r.msg) msg = r.msg; } catch(e) {}
-      alert(msg); btn.prop('disabled', false);
+      GlassTip.error(msg); btn.prop('disabled', false);
     });
   });
 });
 
 function delProduct(id) {
-  if (!confirm('确定删除该产品？')) return;
-  $.post('{:url("admin/index/pointsProducts")}', {act:'delete', del_id:id, csrf_token:'{:csrf_token()}'}, function(res){
-    if (res.code == '1') { alert(res.msg); location.reload(); }
-    else { alert(res.msg); }
-  }, 'json').fail(function(){ alert('请求失败'); });
+  layer.confirm('确定删除该产品？', {icon: 3, skin: 'glass-layer-skin', title: '删除确认'}, function(idx) {
+    layer.close(idx);
+    $.post('{:url("admin/index/pointsProducts")}', {act:'delete', del_id:id, csrf_token:'{:csrf_token()}'}, function(res){
+      if (res.code == '1') { GlassTip.success(res.msg || '删除成功'); setTimeout(function(){ location.reload(); }, 800); }
+      else { GlassTip.error(res.msg || '删除失败'); }
+    }, 'json').fail(function(){ GlassTip.error('请求失败'); });
+  });
 }
 </script>

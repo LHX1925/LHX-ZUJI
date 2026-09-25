@@ -169,6 +169,21 @@
         transform: none !important;
     }
 
+    .action-btn-danger {
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur));
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        color: var(--danger);
+        border: 1.5px solid var(--danger);
+    }
+
+    .action-btn-danger:hover {
+        background: var(--danger);
+        color: #fff;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
     .password-mask {
         font-family: monospace;
         letter-spacing: 2px;
@@ -204,6 +219,186 @@
 
     }
 
+    /* 主机实时状态监控卡片 */
+    .status-monitor-card {
+        grid-column: 1 / -1;
+    }
+
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .status-metric {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .status-metric-label {
+        font-size: 12px;
+        color: var(--glass-text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .status-metric-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--glass-text);
+    }
+
+    .status-progress {
+        width: 100%;
+        height: 6px;
+        background: var(--glass-bg-secondary);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .status-progress-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.8s ease;
+    }
+
+    .status-progress-bar.green { background: linear-gradient(90deg, #10B981, #34D399); }
+    .status-progress-bar.yellow { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+    .status-progress-bar.red { background: linear-gradient(90deg, #EF4444, #F87171); }
+
+    .status-progress-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: var(--glass-text-secondary);
+    }
+
+    .network-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .network-indicator.online {
+        background: rgba(16, 185, 129, 0.12);
+        color: #10B981;
+    }
+
+    .network-indicator.offline {
+        background: rgba(239, 68, 68, 0.12);
+        color: #EF4444;
+    }
+
+    .network-indicator.unknown {
+        background: rgba(148, 163, 184, 0.12);
+        color: #94A3B8;
+    }
+
+    .network-ping-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        animation: ping-pulse 1.5s ease-in-out infinite;
+    }
+
+    .network-ping-dot.online { background: #10B981; }
+    .network-ping-dot.offline { background: #EF4444; }
+    .network-ping-dot.unknown { background: #94A3B8; }
+
+    @keyframes ping-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+
+    .connection-info-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 4px;
+    }
+
+    .connection-info-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: var(--glass-bg-secondary);
+        border-radius: 6px;
+        font-size: 12px;
+        color: var(--glass-text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .connection-info-tag:hover {
+        background: var(--glass-primary);
+        color: #fff;
+    }
+
+    .connection-info-tag strong {
+        color: var(--glass-text);
+        font-weight: 600;
+    }
+
+    .connection-info-tag:hover strong {
+        color: #fff;
+    }
+
+    .status-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: var(--glass-text-secondary);
+        font-size: 13px;
+    }
+
+    .status-error {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 16px;
+        color: #EF4444;
+        font-size: 13px;
+        background: rgba(239, 68, 68, 0.06);
+        border-radius: 8px;
+    }
+
+    .status-refresh-btn {
+        background: none;
+        border: 1px solid var(--glass-border);
+        color: var(--glass-text-secondary);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .status-refresh-btn:hover {
+        border-color: var(--glass-primary);
+        color: var(--glass-primary);
+    }
+
+    .status-last-update {
+        font-size: 11px;
+        color: var(--glass-text-secondary);
+        opacity: 0.7;
+    }
+
+    @media (max-width: 991px) {
+        .status-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
     @media (max-width: 576px) {
         .console-page {
             padding: 20px 0 40px;
@@ -231,6 +426,328 @@
         .info-value {
             text-align: left;
         }
+
+        .status-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .connection-info-row {
+            gap: 8px;
+        }
+    }
+
+    /* ========== 主机退款弹窗（邮箱验证） ========== */
+    .refund-mask {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 99999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        box-sizing: border-box;
+        background: rgba(15, 23, 42, 0.55);
+        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(4px);
+    }
+
+    .refund-mask.show {
+        display: flex;
+    }
+
+    .refund-box {
+        width: 100%;
+        max-width: 470px;
+        max-height: 88vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        padding: 24px 24px 20px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: var(--glass-text, #1E293B);
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+        animation: refundPop 0.2s ease-out;
+    }
+
+    body[data-theme='dark'] .refund-box {
+        background: #1E293B;
+        border-color: rgba(255, 255, 255, 0.14);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    }
+
+    @keyframes refundPop {
+        from { opacity: 0; transform: translateY(14px) scale(0.98); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .refund-box h3 {
+        margin: 0 0 8px;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--glass-text, #1E293B);
+    }
+
+    .refund-box .sub {
+        margin-bottom: 16px;
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: var(--glass-text-secondary, #64748B);
+    }
+
+    .refund-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 0;
+        font-size: 13.5px;
+        border-bottom: 1px dashed rgba(148, 163, 184, 0.35);
+    }
+
+    .refund-row .k {
+        color: var(--glass-text-secondary, #64748B);
+        white-space: nowrap;
+    }
+
+    .refund-row .v {
+        color: var(--glass-text, #1E293B);
+        font-weight: 600;
+        text-align: right;
+        word-break: break-all;
+    }
+
+    .refund-row .refund-amount {
+        color: #EF4444;
+        font-size: 17px;
+        font-weight: 700;
+    }
+
+    .refund-warn {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: #b91c1c;
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    body[data-theme='dark'] .refund-warn {
+        color: #FCA5A5;
+        background: rgba(239, 68, 68, 0.14);
+    }
+
+    .refund-code-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .refund-code-row input {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 44px;
+        padding: 0 14px;
+        box-sizing: border-box;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: var(--glass-text, #1E293B);
+        font-size: 15px;
+        letter-spacing: 2px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .refund-code-row input:focus {
+        border-color: var(--glass-primary, #4F7CFF);
+        box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.18);
+    }
+
+    body[data-theme='dark'] .refund-code-row input {
+        background: rgba(15, 23, 42, 0.6);
+        border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    .refund-code-row button {
+        flex: 0 0 auto;
+        height: 44px;
+        padding: 0 16px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 13.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        color: #ffffff;
+        background: linear-gradient(135deg, var(--glass-primary, #4F7CFF), var(--glass-primary-dark, #3560D4));
+        transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .refund-code-row button:hover:not(:disabled) {
+        transform: translateY(-1px);
+    }
+
+    .refund-code-row button:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    .refund-btns {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .refund-btns .btn {
+        flex: 1 1 0;
+        width: auto;
+        height: 44px;
+        padding: 0 12px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .refund-btns .btn.cancel {
+        background: rgba(148, 163, 184, 0.16);
+        color: var(--glass-text, #1E293B);
+    }
+
+    .refund-btns .btn.ok {
+        color: #ffffff;
+        background: linear-gradient(135deg, #EF4444, #DC2626);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.28);
+    }
+
+    .refund-btns .btn.ok:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .refund-btns .btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+    }
+
+    @media (max-width: 480px) {
+        .refund-box {
+            padding: 20px 18px 16px;
+        }
+
+        .refund-code-row {
+            flex-wrap: wrap;
+        }
+
+        .refund-code-row input {
+            flex: 1 1 100%;
+        }
+
+        .refund-code-row button {
+            width: 100%;
+        }
+    }
+
+    /* ── Docker 容器开通弹窗 ── */
+    .docker-opened-btn {
+        border-color: rgba(22,163,74,.45) !important;
+        color: #16a34a !important;
+    }
+    body[data-theme='dark'] .docker-opened-btn {
+        border-color: rgba(74,222,128,.4) !important;
+        color: #4ade80 !important;
+    }
+    .docker-tip {
+        margin-top: 12px;
+        padding: 11px 13px;
+        font-size: 12.5px;
+        line-height: 1.7;
+        border-radius: 10px;
+        background: rgba(59,130,246,.08);
+        border: 1px solid rgba(59,130,246,.22);
+        color: var(--glass-text-secondary);
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    body[data-theme='dark'] .docker-tip {
+        background: rgba(59,130,246,.12);
+        border-color: rgba(96,165,250,.28);
+    }
+    .docker-pay-title {
+        margin: 16px 0 8px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--glass-text);
+    }
+    .docker-pay-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .docker-pay-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 13px;
+        border-radius: 10px;
+        border: 1.5px solid var(--glass-border);
+        background: var(--glass-bg-input, rgba(255,255,255,.6));
+        cursor: pointer;
+        transition: border-color .18s ease, background .18s ease;
+        margin: 0;
+    }
+    .docker-pay-item:hover {
+        border-color: var(--glass-primary);
+    }
+    .docker-pay-item input[type="radio"] {
+        accent-color: var(--glass-primary);
+        margin: 0;
+        flex: 0 0 auto;
+    }
+    .docker-pay-item .t {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--glass-text);
+    }
+    .docker-pay-item .d {
+        font-size: 11.5px;
+        color: var(--glass-text-secondary);
+        margin-left: auto;
+        text-align: right;
+    }
+    .docker-pay-item:has(input:checked) {
+        border-color: var(--glass-primary);
+        background: rgba(102,126,234,.1);
+    }
+    .docker-select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1.5px solid var(--glass-border);
+        background: var(--glass-bg-input, rgba(255,255,255,.6));
+        color: var(--glass-text);
+        font-size: 13px;
+        outline: none;
+    }
+    .docker-select:focus {
+        border-color: var(--glass-primary);
+    }
+    .docker-hint {
+        margin-top: 8px;
+        font-size: 12px;
+        line-height: 1.6;
+        color: #d97706;
+    }
+    body[data-theme='dark'] .docker-hint {
+        color: #fbbf24;
     }
 </style>
 
@@ -283,6 +800,7 @@
                                     {if $data.state=="2"}<span class="status-dot status-warning"></span>暂停{/if}
                                     {if $data.state=="3"}<span class="status-dot status-danger"></span>终止{/if}
                                     {if $data.state=="0"}<span class="status-dot status-warning"></span>待开通{/if}
+                                    {if $data.state=="4"}<span class="status-dot status-danger"></span>已退款{/if}
                                 </span>
                             </div>
                         </div>
@@ -332,15 +850,227 @@
                             <i class="fas fa-key"></i> 重置密码
                         </button>
 
+                        {if $dockerEnabled}
+                            {if $dockerOpened}
+                            <button type="button" class="action-btn action-btn-outline docker-opened-btn" onclick="openDocker()">
+                                <i class="fab fa-docker"></i> Docker 已开通
+                            </button>
+                            {elseif $dockerPending}
+                            <button type="button" class="action-btn action-btn-outline" onclick="openDocker()">
+                                <i class="fab fa-docker"></i> Docker {$dockerStateText}
+                            </button>
+                            {else}
+                            <button type="button" class="action-btn action-btn-primary" onclick="openDocker()">
+                                <i class="fab fa-docker"></i> Docker 容器开通
+                            </button>
+                            {/if}
+                        {/if}
+
                         <button type="button" class="action-btn action-btn-outline" onclick="upgrade()">
                             <i class="fas fa-arrow-up"></i> 升降级
                         </button>
+
+                        {if $data.state=="1"}
+                        <button type="button" class="action-btn action-btn-outline" onclick="suspendHost({$data.id})">
+                            <i class="fas fa-pause-circle"></i> 停用主机
+                        </button>
+                        {/if}
+
+                        {if $data.state=="2"}
+                        <button type="button" class="action-btn action-btn-outline" onclick="unsuspendHost({$data.id})">
+                            <i class="fas fa-play-circle"></i> 恢复主机
+                        </button>
+                        {/if}
+
+                        {if $data.state=="4"}
+                        <button type="button" class="action-btn action-btn-outline" onclick="showToast('该订单已完成退款，¥{$data.refund_amount} 已退回账户余额', 'warning', 2800)">
+                            <i class="fas fa-check-circle"></i> 已退款
+                        </button>
+                        {elseif $refundEnabled}
+                        <button type="button" class="action-btn action-btn-danger" onclick="openRefund()">
+                            <i class="fas fa-hand-holding-usd"></i> 主机退款
+                        </button>
+                        {else}
+                        <button type="button" class="action-btn action-btn-outline" onclick="showToast('本站未开启自助退款，请提交工单联系客服', 'warning', 2600)">
+                            <i class="fas fa-hand-holding-usd"></i> 主机退款
+                        </button>
+                        {/if}
                     </div>
                 </div>
             </div>
 
+            <!-- 主机实时状态监控 -->
+            {if $server.serverplugins=='mnbt' && $server.host && $server.port}
+            <div class="console-card status-monitor-card glass-reveal" id="hostStatusCard">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                    <div class="console-card-title" style="margin-bottom:0;">主机实时状态</div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span class="status-last-update" id="statusUpdateTime">--</span>
+                        <button class="status-refresh-btn" onclick="fetchHostStatus()" title="刷新状态">
+                            <i class="fas fa-sync-alt"></i> 刷新
+                        </button>
+                    </div>
+                </div>
+                <div id="hostStatusContent">
+                    <div class="status-loading">
+                        <i class="fas fa-spinner fa-pulse"></i>&nbsp;正在加载主机实时状态...
+                    </div>
+                </div>
+            </div>
+            {/if}
+
         </div>
     </div>
+
+    <!-- 主机退款弹窗（需邮箱验证） -->
+    <div class="refund-mask" id="refundMask">
+        <div class="refund-box">
+            <h3>主机退款</h3>
+            <div class="sub">为确认是本人操作，退款需要先通过您绑定的邮箱验证。验证通过后，主机将被终止并退回相应款项到账户余额。</div>
+
+            <div class="refund-row"><span class="k">订单编号</span><span class="v">{$data.ordernumber|default='—'}</span></div>
+            <div class="refund-row"><span class="k">到期时间</span><span class="v">{$data.ztime|date="Y-m-d H:i",###}</span></div>
+            <div class="refund-row"><span class="k">累计已支付</span><span class="v">¥{$refundInfo.paid}</span></div>
+
+            {if $refundInfo.can}
+            <div class="refund-row"><span class="k">剩余时长占比</span><span class="v">{:round($refundInfo['ratio']*100,1)}%</span></div>
+            {if $refundFeePercent > 0}
+            <div class="refund-row"><span class="k">手续费</span><span class="v">{$refundFeePercent}%</span></div>
+            {/if}
+            <div class="refund-row" style="border-bottom:none;"><span class="k">预计退回余额</span><span class="v refund-amount">¥{:number_format($refundInfo['amount'], 2)}</span></div>
+            <div class="refund-warn">
+                退款后该主机将被<b>立即终止并删除全部数据</b>，操作不可撤销，请先自行备份重要资料。
+            </div>
+            {else}
+            <div class="refund-warn" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:#b45309;">
+                {$refundInfo.msg|default='当前主机暂不支持自助退款'}
+            </div>
+            {/if}
+
+            {if $refundEnabled && $refundInfo.can}
+            <div style="font-size:12.5px;color:var(--glass-text-secondary);margin-top:14px;line-height:1.7;">
+                验证码将发送至绑定邮箱 <b style="color:var(--glass-text);">{$myMail|default='（未绑定邮箱）'}</b>
+            </div>
+            <div class="refund-code-row">
+                <input type="text" id="refundCode" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="请输入 6 位邮箱验证码">
+                <button type="button" id="refundCodeBtn" onclick="sendRefundCode()">发送验证码</button>
+            </div>
+            {/if}
+
+            <div class="refund-btns">
+                <button type="button" class="btn cancel" onclick="closeRefund()">取消</button>
+                {if $refundEnabled && $refundInfo.can}
+                <button type="button" class="btn ok" id="refundSubmitBtn" onclick="submitRefund()">确认退款 ¥{:number_format($refundInfo['amount'], 2)}</button>
+                {else}
+                <button type="button" class="btn ok" disabled>暂不可退款</button>
+                {/if}
+            </div>
+        </div>
+    </div>
+
+    {if $dockerEnabled}
+    <!-- Docker 容器开通弹窗 -->
+    <div class="refund-mask" id="dockerMask">
+        <div class="refund-box">
+            <h3>Docker 容器开通</h3>
+            <div class="sub">开通后即可在控制面板中创建与管理 Docker 容器。镜像、端口、目录挂载与环境变量由您在面板内自行填写，本站只负责开放权限，每台主机仅限一个容器。</div>
+
+            <div class="refund-row"><span class="k">开通费用</span><span class="v refund-amount">{if $dockerPrice > 0}¥{:number_format($dockerPrice, 2)}{else}免费{/if}</span></div>
+            <div class="refund-row"><span class="k">开通方式</span><span class="v">{if $dockerMode=='auto'}系统自动开通{else}管理员人工开通{/if}</span></div>
+            <div class="refund-row"><span class="k">账户余额</span><span class="v">¥{:number_format($myBalance, 2)}</span></div>
+            <div class="refund-row" style="border-bottom:none;">
+                <span class="k">开通状态</span>
+                <span class="v">
+                    {if $dockerOpened}<b style="color:#16a34a;">已开通</b>
+                    {elseif $dockerPending}{$dockerStateText}
+                    {else}未开通{/if}
+                </span>
+            </div>
+
+            {if $dockerOpened}
+                {if $dockerRecord.container_id}
+                <div class="refund-row"><span class="k">容器 ID</span><span class="v">{$dockerRecord.container_id}</span></div>
+                {/if}
+                {if $dockerRecord.opened_at}
+                <div class="refund-row"><span class="k">开通时间</span><span class="v">{$dockerRecord.opened_at}</span></div>
+                {/if}
+                <div class="docker-tip">
+                    请到「控制面板 → Docker」中配置镜像、端口、目录与环境变量，配置保存后容器即可启动。
+                </div>
+                {if $dockerAllowClose}
+                <div class="refund-warn">
+                    关闭后该主机的 Docker 容器将<b>停止运行</b>，重新开通可恢复（已填写的规格会保留）。
+                </div>
+                {/if}
+            {elseif $dockerPending}
+                <div class="refund-warn" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:#b45309;">
+                    {if $dockerRecord.state=='0'}
+                    您的在线支付订单尚未完成支付，完成后系统会自动为您开通。
+                    {else}
+                    开通申请已受理，管理员会尽快为您开通，请稍后在控制面板中查看。
+                    {/if}
+                </div>
+            {elseif $dockerReopen}
+                <div class="refund-warn" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:#b45309;">
+                    该主机此前已开通过 Docker（当前状态：{$dockerStateText}），重新开通<b>免二次扣费</b>。点击下方「重新开通 Docker」即可恢复（已填写的容器规格会保留）。
+                </div>
+            {else}
+                {if $dockerIntro}
+                <div class="docker-tip">{:nl2br(htmlspecialchars($dockerIntro))}</div>
+                {/if}
+                {if $dockerPrice > 0}
+                <div class="docker-pay-title">选择支付方式</div>
+                <div class="docker-pay-list">
+                    {if $dockerPayBalance}
+                    <label class="docker-pay-item">
+                        <input type="radio" name="dockerPayway" value="balance" checked>
+                        <span class="t">余额支付</span>
+                        <span class="d">当前余额 ¥{:number_format($myBalance, 2)}</span>
+                    </label>
+                    {/if}
+                    {if $dockerPayOnline}
+                    <label class="docker-pay-item">
+                        <input type="radio" name="dockerPayway" value="online" {if !$dockerPayBalance}checked{/if}>
+                        <span class="t">在线支付</span>
+                        <span class="d">跳转支付平台付款后自动开通</span>
+                    </label>
+                    {/if}
+                </div>
+                {if $dockerPayOnline}
+                <div class="docker-online-box" id="dockerOnlineBox" style="display:none;">
+                    <div class="docker-pay-title" style="margin-top:10px;">选择支付通道</div>
+                    <select id="dockerPayId" class="docker-select">
+                        {foreach $dockerPays as $p}
+                        <option value="{$p.id}">{$p.name}</option>
+                        {/foreach}
+                    </select>
+                    {if !$dockerPays}
+                    <div class="docker-hint">本站暂未配置可用的在线支付通道，请使用余额支付或联系客服。</div>
+                    {/if}
+                </div>
+                {/if}
+                {/if}
+            {/if}
+
+            <div class="refund-btns">
+                <button type="button" class="btn cancel" onclick="closeDocker()">关闭</button>
+                {if $dockerOpened}
+                    {if $dockerAllowClose}
+                    <button type="button" class="btn ok" id="dockerCloseBtn" onclick="closeDockerHost()">关闭 Docker</button>
+                    {/if}
+                {elseif $dockerPending}
+                    <button type="button" class="btn ok" disabled>处理中</button>
+                {elseif $dockerReopen}
+                    <button type="button" class="btn ok" id="dockerSubmitBtn" onclick="submitDocker()">重新开通 Docker</button>
+                {else}
+                    <button type="button" class="btn ok" id="dockerSubmitBtn" onclick="submitDocker()">
+                        {if $dockerPrice > 0}支付并开通 ¥{:number_format($dockerPrice, 2)}{else}立即免费开通{/if}
+                    </button>
+                {/if}
+            </div>
+        </div>
+    </div>
+    {/if}
 </main>
 
 {include file="default/user/footer" /}
@@ -377,6 +1107,286 @@
                 }else{
                     showToast(data.msg || '操作失败', 'danger', 2500);
                 }
+            }
+        });
+    }
+
+    function suspendHost(id){
+        layer.confirm('确定要停用该主机吗？停用后主机将暂停运行！',{icon:3}, function (){
+            hostAction('suspend', id);
+        });
+    }
+
+    function unsuspendHost(id){
+        layer.confirm('确定要恢复该主机吗？',{icon:3}, function (){
+            hostAction('unsuspend', id);
+        });
+    }
+
+    // ========== 主机退款（需邮箱验证码） ==========
+    var refundTimer = null;
+    var refundOrderId = {$data.id};
+
+    function openRefund(){
+        var mask = document.getElementById('refundMask');
+        if(!mask){ return; }
+        mask.classList.add('show');
+        var codeEl = document.getElementById('refundCode');
+        if(codeEl){ setTimeout(function(){ codeEl.focus(); }, 120); }
+    }
+
+    function closeRefund(){
+        var mask = document.getElementById('refundMask');
+        if(mask){ mask.classList.remove('show'); }
+    }
+
+    function sendRefundCode(){
+        var btn = document.getElementById('refundCodeBtn');
+        if(!btn || btn.disabled){ return; }
+        var oldText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '发送中...';
+        $.ajax({
+            type:'POST', url:'', data:{ act:'refund_code', id:refundOrderId }, dataType:'json',
+            success:function (data){
+                if(data.code == 1){
+                    showToast(data.msg || '验证码已发送，请查收邮箱', 'success', 2800);
+                    var left = 60;
+                    btn.textContent = left + 's 后重发';
+                    if(refundTimer){ clearInterval(refundTimer); }
+                    refundTimer = setInterval(function (){
+                        left--;
+                        if(left <= 0){
+                            clearInterval(refundTimer);
+                            refundTimer = null;
+                            btn.disabled = false;
+                            btn.textContent = oldText;
+                        }else{
+                            btn.textContent = left + 's 后重发';
+                        }
+                    }, 1000);
+                }else{
+                    btn.disabled = false;
+                    btn.textContent = oldText;
+                    showToast(data.msg || '验证码发送失败', 'danger', 3000);
+                }
+            },
+            error:function (){
+                btn.disabled = false;
+                btn.textContent = oldText;
+                showToast('请求失败，请稍后重试', 'danger', 2500);
+            }
+        });
+    }
+
+    function submitRefund(){
+        var codeEl = document.getElementById('refundCode');
+        var code = codeEl ? String(codeEl.value || '').replace(/\s/g, '') : '';
+        if(!/^\d{6}$/.test(code)){
+            showToast('请输入 6 位数字邮箱验证码', 'warning', 2500);
+            return;
+        }
+        var btn = document.getElementById('refundSubmitBtn');
+        if(btn){ btn.disabled = true; }
+        var load = layer.load('1', { time:false });
+        $.ajax({
+            type:'POST', url:'', data:{ act:'refund', id:refundOrderId, email_code:code }, dataType:'json',
+            success:function (data){
+                layer.close(load);
+                if(data.code == 1){
+                    closeRefund();
+                    showToast(data.msg || '退款成功', 'success', 2400);
+                    setTimeout(function (){ location.reload(); }, 2000);
+                }else{
+                    if(btn){ btn.disabled = false; }
+                    showToast(data.msg || '退款失败', 'danger', 3200);
+                }
+            },
+            error:function (){
+                layer.close(load);
+                if(btn){ btn.disabled = false; }
+                showToast('请求失败，请稍后重试', 'danger', 2500);
+            }
+        });
+    }
+
+    // 点击遮罩 / 按 ESC 关闭退款弹窗
+    (function (){
+        var mask = document.getElementById('refundMask');
+        if(!mask){ return; }
+        mask.addEventListener('click', function (e){
+            if(e.target === mask){ closeRefund(); }
+        });
+        document.addEventListener('keydown', function (e){
+            if(e.key === 'Escape'){ closeRefund(); }
+        });
+    })();
+
+    // ========== Docker 容器开通 ==========
+    var dockerOrderId = {$data.id};
+
+    function openDocker(){
+        var mask = document.getElementById('dockerMask');
+        if(!mask){ return; }
+        mask.classList.add('show');
+        toggleDockerPayway();
+    }
+
+    function closeDocker(){
+        var mask = document.getElementById('dockerMask');
+        if(mask){ mask.classList.remove('show'); }
+    }
+
+    function dockerSelectedPayway(){
+        var el = document.querySelector('input[name="dockerPayway"]:checked');
+        return el ? el.value : 'balance';
+    }
+
+    function toggleDockerPayway(){
+        var box = document.getElementById('dockerOnlineBox');
+        if(!box){ return; }
+        box.style.display = (dockerSelectedPayway() === 'online') ? 'block' : 'none';
+    }
+
+    (function (){
+        var list = document.querySelectorAll('input[name="dockerPayway"]');
+        for (var i = 0; i < list.length; i++) {
+            list[i].addEventListener('change', toggleDockerPayway);
+        }
+        var mask = document.getElementById('dockerMask');
+        if(!mask){ return; }
+        mask.addEventListener('click', function (e){
+            if(e.target === mask){ closeDocker(); }
+        });
+        document.addEventListener('keydown', function (e){
+            if(e.key === 'Escape'){ closeDocker(); }
+        });
+    })();
+
+    function submitDocker(){
+        var btn = document.getElementById('dockerSubmitBtn');
+        if(btn && btn.disabled){ return; }
+        var payway = dockerSelectedPayway();
+        var post = { act:'docker_pay', id: dockerOrderId, payway: payway };
+        if(payway === 'online'){
+            var sel = document.getElementById('dockerPayId');
+            var pid = sel ? sel.value : '';
+            if(!pid){
+                showToast('本站暂未配置在线支付通道，请改用余额支付', 'warning', 2800);
+                return;
+            }
+            post.payid = pid;
+        }
+        if(btn){ btn.disabled = true; }
+        var load = layer.load('1', { time:false });
+        $.ajax({
+            type:'POST', url:'', data: post, dataType:'json',
+            success:function (res){
+                layer.close(load);
+                if(res.code == 1){
+                    if(payway === 'online' && res.pay_url){
+                        showToast('支付订单已创建，正在新窗口打开支付页面...', 'success', 3000);
+                        window.open(res.pay_url, '_blank');
+                        startDockerPoll();
+                        return;
+                    }
+                    closeDocker();
+                    showToast(res.msg || '开通成功', 'success', 2600);
+                    setTimeout(function (){ location.reload(); }, 2200);
+                }else{
+                    if(btn){ btn.disabled = false; }
+                    if(res.need_recharge){
+                        layer.confirm(res.msg, {icon:2, title:'余额不足', btn:['去充值','取消']}, function (idx){
+                            layer.close(idx);
+                            window.location.href = '/user/pay';
+                        });
+                        return;
+                    }
+                    showToast(res.msg || '开通失败', 'danger', 3400);
+                }
+            },
+            error:function (){
+                layer.close(load);
+                if(btn){ btn.disabled = false; }
+                showToast('请求失败，请稍后重试', 'danger', 2500);
+            }
+        });
+    }
+
+    // 在线支付后轮询开通结果（最多约 3 分钟）
+    var dockerPollTimer = null;
+    var dockerPollLeft = 45;
+
+    function startDockerPoll(){
+        dockerPollLeft = 45;
+        if(dockerPollTimer){ clearInterval(dockerPollTimer); }
+        showToast('已在新窗口打开支付页面，完成支付后此处会自动开通', 'success', 4000);
+        dockerPollTimer = setInterval(function (){
+            dockerPollLeft--;
+            if(dockerPollLeft <= 0){
+                clearInterval(dockerPollTimer);
+                dockerPollTimer = null;
+                showToast('尚未检测到支付结果，支付完成后刷新本页即可', 'warning', 4000);
+                return;
+            }
+            $.ajax({
+                type:'POST', url:'', data:{ act:'docker_status', id: dockerOrderId }, dataType:'json',
+                success:function (res){
+                    if(!res || res.state === undefined){ return; }
+                    if(res.state === '2' || res.state === '1'){
+                        clearInterval(dockerPollTimer);
+                        dockerPollTimer = null;
+                        showToast(res.state === '2' ? 'Docker 容器已开通！' : '支付成功，开通申请已提交', 'success', 3000);
+                        setTimeout(function (){ location.reload(); }, 1800);
+                    }
+                }
+            });
+        }, 4000);
+    }
+
+    function closeDockerHost(){
+        layer.confirm('确定要关闭该主机的 Docker 容器吗？关闭后容器将停止运行（已填写的规格会保留）。', {icon:3}, function (){
+            var btn = document.getElementById('dockerCloseBtn');
+            if(btn){ btn.disabled = true; }
+            var load = layer.load('1', { time:false });
+            $.ajax({
+                type:'POST', url:'', data:{ act:'docker_close', id: dockerOrderId }, dataType:'json',
+                success:function (res){
+                    layer.close(load);
+                    if(res.code == 1){
+                        closeDocker();
+                        showToast(res.msg || '已关闭', 'success', 2400);
+                        setTimeout(function (){ location.reload(); }, 2000);
+                    }else{
+                        if(btn){ btn.disabled = false; }
+                        showToast(res.msg || '关闭失败', 'danger', 3000);
+                    }
+                },
+                error:function (){
+                    layer.close(load);
+                    if(btn){ btn.disabled = false; }
+                    showToast('请求失败，请稍后重试', 'danger', 2500);
+                }
+            });
+        });
+    }
+
+    function hostAction(act, id){
+        var load = layer.load('1',{time:false});
+        $.ajax({
+            type:'POST', url:'', data:{ act:act, id:id }, dataType:'json',
+            success:function (data){
+                layer.close(load);
+                if(data.code == 1){
+                    showToast(data.msg, 'success', 1800);
+                    setTimeout(function (){ location.href = '' },1800);
+                }else{
+                    showToast(data.msg || '操作失败', 'danger', 2500);
+                }
+            },
+            error:function(){
+                layer.close(load);
+                showToast('请求失败', 'danger', 2500);
             }
         });
     }
@@ -436,8 +1446,176 @@
         showToast('密码已复制到剪贴板', 'success', 1500);
     }
 
-    // 每5分钟自动刷新主机状态
-    var panelRefreshTimer = setInterval(function() {
-        location.reload();
-    }, 300000);
+    // ========== 主机实时状态监控 ==========
+    function getProgressClass(percent) {
+        if (percent > 80) return 'red';
+        if (percent > 60) return 'yellow';
+        return 'green';
+    }
+
+    function getRenewalLabel(status) {
+        var labels = {
+            'active': '正常',
+            'expiring_soon': '即将到期',
+            'expired': '已到期',
+            'permanent': '永久'
+        };
+        return labels[status] || status;
+    }
+
+    function getRenewalClass(status) {
+        var classes = {
+            'active': 'online',
+            'expiring_soon': 'unknown',
+            'expired': 'offline',
+            'permanent': 'online'
+        };
+        return classes[status] || 'unknown';
+    }
+
+    function fetchHostStatus() {
+        var container = document.getElementById('hostStatusContent');
+        if (!container) return;
+
+        container.innerHTML = '<div class="status-loading"><i class="fas fa-spinner fa-pulse"></i>&nbsp;正在刷新主机状态...</div>';
+
+        $.ajax({
+            type: 'POST',
+            url: '__ROOT__/api/host_status_proxy',
+            data: {
+                order_id: {$data.id},
+                host_user: '{$data.user}'
+            },
+            dataType: 'json',
+            timeout: 15000,
+            success: function(res) {
+                if (res.code == 200 && res.data) {
+                    renderHostStatus(res.data);
+                } else {
+                    container.innerHTML = '<div class="status-error"><i class="fas fa-exclamation-triangle"></i> ' + (res.msg || '主机状态查询失败') + '</div>';
+                }
+            },
+            error: function(xhr, status, err) {
+                container.innerHTML = '<div class="status-error"><i class="fas fa-exclamation-triangle"></i> 无法连接主机服务器 (' + (err || status) + ')</div>';
+            }
+        });
+    }
+
+    function renderHostStatus(data) {
+        var container = document.getElementById('hostStatusContent');
+        var updateTime = document.getElementById('statusUpdateTime');
+
+        // 更新时间
+        var now = new Date();
+        updateTime.textContent = '更新于 ' + now.toLocaleTimeString('zh-CN');
+
+        // 网络状态
+        var netClass = data.network ? data.network.status : 'unknown';
+        var netLabel = {'online': '在线', 'offline': '离线', 'unknown': '检测中', 'error': '异常'}[netClass] || '未知';
+        var pingText = data.network && data.network.ping_ms > 0 ? ' (' + data.network.ping_ms + 'ms)' : '';
+
+        // 续费状态
+        var renewalLabel = data.renewal ? getRenewalLabel(data.renewal.status) : '--';
+        var renewalClass = data.renewal ? getRenewalClass(data.renewal.status) : 'unknown';
+        var daysText = data.renewal && data.renewal.days_until_expire > 0 ? data.renewal.days_until_expire + '天后到期' : '';
+
+        // 空间使用
+        var webUsed = data.web_space ? data.web_space.used_mb : 0;
+        var webMax = data.web_space ? data.web_space.max_mb : 0;
+        var webPct = data.web_space ? data.web_space.used_percent : 0;
+        var webClass = getProgressClass(webPct);
+
+        var dbUsed = data.db_space ? data.db_space.used_mb : 0;
+        var dbMax = data.db_space ? data.db_space.max_mb : 0;
+        var dbPct = data.db_space ? data.db_space.used_percent : 0;
+        var dbClass = getProgressClass(dbPct);
+
+        var trafficUsed = data.traffic ? data.traffic.used_gb : 0;
+        var trafficMax = data.traffic ? data.traffic.max_gb : 0;
+        var trafficPct = data.traffic ? data.traffic.used_percent : 0;
+        var trafficClass = getProgressClass(trafficPct);
+
+        // 运行时间
+        var runtime = data.runtime || '--';
+
+        // 连接信息
+        var conn = data.connection || {};
+        var connHtml = '';
+        if (conn.ftp_host) {
+            connHtml += '<span class="connection-info-tag" title="FTP主机"><i class="fas fa-server"></i> FTP: <strong>' + conn.ftp_host + ':' + (conn.ftp_port || '21') + '</strong></span>';
+        }
+        if (conn.ftp_user) {
+            connHtml += '<span class="connection-info-tag" title="FTP账号"><i class="fas fa-user"></i> <strong>' + conn.ftp_user + '</strong></span>';
+        }
+        if (conn.site_name) {
+            connHtml += '<span class="connection-info-tag" title="站点名称"><i class="fas fa-globe"></i> <strong>' + conn.site_name + '</strong></span>';
+        }
+        if (conn.server_ip) {
+            connHtml += '<span class="connection-info-tag" title="服务器IP"><i class="fas fa-network-wired"></i> <strong>' + conn.server_ip + '</strong></span>';
+        }
+
+        var html = ''
+            + '<div class="status-grid">'
+            // 主机空间
+            + '<div class="status-metric">'
+            + '<span class="status-metric-label">主机空间</span>'
+            + '<span class="status-metric-value">' + webUsed.toFixed(1) + ' <small style="font-size:12px;color:var(--glass-text-secondary);">/ ' + webMax.toFixed(0) + ' MB</small></span>'
+            + '<div class="status-progress"><div class="status-progress-bar ' + webClass + '" style="width:' + Math.min(webPct, 100) + '%"></div></div>'
+            + '<div class="status-progress-info"><span>已用 ' + webPct + '%</span><span>剩余 ' + Math.max(webMax - webUsed, 0).toFixed(0) + ' MB</span></div>'
+            + '</div>'
+            // 数据库空间
+            + '<div class="status-metric">'
+            + '<span class="status-metric-label">数据库空间</span>'
+            + '<span class="status-metric-value">' + dbUsed.toFixed(1) + ' <small style="font-size:12px;color:var(--glass-text-secondary);">/ ' + dbMax.toFixed(0) + ' MB</small></span>'
+            + '<div class="status-progress"><div class="status-progress-bar ' + dbClass + '" style="width:' + Math.min(dbPct, 100) + '%"></div></div>'
+            + '<div class="status-progress-info"><span>已用 ' + dbPct + '%</span><span>剩余 ' + Math.max(dbMax - dbUsed, 0).toFixed(0) + ' MB</span></div>'
+            + '</div>'
+            // 本月流量
+            + '<div class="status-metric">'
+            + '<span class="status-metric-label">本月流量</span>'
+            + '<span class="status-metric-value">' + trafficUsed.toFixed(2) + ' <small style="font-size:12px;color:var(--glass-text-secondary);">/ ' + trafficMax.toFixed(0) + ' GB</small></span>'
+            + '<div class="status-progress"><div class="status-progress-bar ' + trafficClass + '" style="width:' + Math.min(trafficPct, 100) + '%"></div></div>'
+            + '<div class="status-progress-info"><span>已用 ' + trafficPct + '%</span><span>剩余 ' + Math.max(trafficMax - trafficUsed, 0).toFixed(2) + ' GB</span></div>'
+            + '</div>'
+            // 续费状态
+            + '<div class="status-metric">'
+            + '<span class="status-metric-label">续费状态</span>'
+            + '<span class="status-metric-value">'
+            + '<span class="network-indicator ' + renewalClass + '"><span class="network-ping-dot ' + renewalClass + '"></span>' + renewalLabel + '</span>'
+            + (daysText ? ' <small style="font-size:12px;color:var(--glass-text-secondary);">' + daysText + '</small>' : '')
+            + '</span>'
+            + '<span style="font-size:12px;color:var(--glass-text-secondary);">到期时间: ' + (data.expire_at || '永久') + '</span>'
+            + '</div>'
+            // 运行时间
+            + '<div class="status-metric">'
+            + '<span class="status-metric-label">运行时间</span>'
+            + '<span class="status-metric-value">' + runtime + '</span>'
+            + '<span style="font-size:12px;color:var(--glass-text-secondary);">开通于: ' + (data.opened_at || '--') + '</span>'
+            + '</div>'
+            // 网络状态
+            + '<div class="status-metric">'
+            + '<span class="status-metric-label">网络状态</span>'
+            + '<span class="status-metric-value">'
+            + '<span class="network-indicator ' + netClass + '"><span class="network-ping-dot ' + netClass + '"></span>' + netLabel + pingText + '</span>'
+            + '</span>'
+            + '<span style="font-size:12px;color:var(--glass-text-secondary);">' + (data.status == 'active' ? '主机运行中' : '主机已暂停') + '</span>'
+            + '</div>'
+            + '</div>'
+            // 主机连接信息
+            + '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--glass-border);">'
+            + '<span class="status-metric-label" style="display:block;margin-bottom:8px;">主机连接信息</span>'
+            + '<div class="connection-info-row">' + connHtml + '</div>'
+            + '</div>';
+
+        container.innerHTML = html;
+    }
+
+    // 页面加载时自动获取状态
+    $(function() {
+        if (document.getElementById('hostStatusCard')) {
+            fetchHostStatus();
+            // 每60秒自动刷新
+            setInterval(fetchHostStatus, 60000);
+        }
+    });
 </script>

@@ -1,0 +1,800 @@
+/* ==================== 手机端原生APP风格 CSS v9.0 ==================== */
+/* 液态玻璃效果与电脑端 glass-theme.css 完全一致 */
+/* 底部导航：药丸悬浮设计 */
+
+/* ========== CSS 变量 ========== */
+:root {
+    --glass-primary: #4F7CFF;
+    --glass-primary-dark: #3560D4;
+    --glass-primary-light: #7B9BFF;
+    --glass-primary-glow: rgba(79, 124, 255, 0.35);
+    --glass-success: #10B981;
+    --glass-warning: #F59E0B;
+    --glass-danger: #EF4444;
+    --glass-info: #0EA5E9;
+    --glass-purple: #8B5CF6;
+    --glass-blur: 20px;
+    --glass-blur-strong: 28px;
+    --glass-blur-light: 10px;
+    --glass-radius-lg: 20px;
+    --glass-radius: 14px;
+    --glass-radius-sm: 10px;
+    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.12);
+    --glass-shadow-sm: 0 4px 16px rgba(31, 38, 135, 0.08);
+    --glass-shadow-lg: 0 16px 48px rgba(31, 38, 135, 0.18);
+    --glass-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    --glass-page-bg: #f0f2f8;
+    --glass-text: #1E293B;
+    --glass-text-secondary: #64748B;
+    --glass-text-muted: #94A3B8;
+    --glass-card-bg: rgba(255, 255, 255, 0.72);
+    --glass-card-border: rgba(255, 255, 255, 0.45);
+    --glass-topbar-bg: rgba(255, 255, 255, 0.78);
+    --glass-tabbar-bg: rgba(255, 255, 255, 0.82);
+}
+
+/* ========== 基础重置 ========== */
+@media (max-width: 768px) {
+    * { -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+        padding: 0 !important; margin: 0 !important;
+        min-height: 100vh; min-height: 100dvh;
+        font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+        -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* 隐藏电脑端元素 */
+    .glass-topbar, #mainHeader, .page-wrapper > header,
+    .page-wrapper > .glass-topbar, #mobileMenu,
+    .page-wrapper > footer.glass-footer,
+    .page-wrapper > footer:not(.mobile-app-footer),
+    .mobile-menu-toggle, .desktop-only,
+    .glass-footer:not(.mobile-app-footer) { display: none !important; }
+
+    .page-wrapper { padding: 0 !important; margin: 0 !important; }
+    .page-content { padding: 0 !important; margin: 0 !important; }
+
+    /* ========== 页面背景 ========== */
+    html body.glass-enabled,
+    html body {
+        background: var(--glass-page-bg) !important;
+        background-color: #f0f2f8 !important;
+    }
+    html body.glass-enabled.glass-bg-image,
+    html body.glass-bg-image {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    /* ========== 页面容器 ========== */
+    .app-page {
+        display: flex; flex-direction: column;
+        min-height: 100vh; min-height: 100dvh;
+        padding-top: 56px;
+        padding-bottom: 80px;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        background: transparent;
+    }
+
+    /* ========== 顶部导航栏 - 液态玻璃 ========== */
+    .app-topbar {
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+        height: 56px; display: flex; align-items: center; padding: 0 16px;
+        background: var(--glass-topbar-bg);
+        backdrop-filter: blur(var(--glass-blur-strong)) saturate(180%);
+        -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(180%);
+        border-bottom: 0.5px solid rgba(255, 255, 255, 0.35);
+        box-shadow: 0 4px 20px rgba(31, 38, 135, 0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .app-topbar .app-logo {
+        width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+        overflow: hidden; margin-right: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .app-topbar .app-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .app-topbar .app-title {
+        font-size: 18px; font-weight: 700; color: #1E293B; flex: 1;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        letter-spacing: -0.2px;
+    }
+    .app-topbar .app-back {
+        width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; margin-right: 8px; margin-left: -8px;
+        color: #1E293B; font-size: 18px; text-decoration: none;
+        border-radius: 50%; transition: background 0.15s;
+    }
+    .app-topbar .app-back:active { background: rgba(0,0,0,0.06); }
+    .app-topbar .app-action {
+        font-size: 14px; color: var(--glass-primary); text-decoration: none;
+        font-weight: 600; flex-shrink: 0; padding: 6px 12px; border-radius: 8px;
+    }
+    .app-topbar .app-action:active { background: rgba(79,124,255,0.08); }
+
+    /* ========== 底部导航栏 - 药丸悬浮 ========== */
+    .app-tabbar {
+        position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
+        z-index: 1000; width: calc(100% - 32px); max-width: 440px;
+        height: 56px; display: flex; align-items: center; justify-content: space-around;
+        padding: 0 8px;
+        background: rgba(255, 255, 255, 0.78);
+        backdrop-filter: blur(28px) saturate(200%);
+        -webkit-backdrop-filter: blur(28px) saturate(200%);
+        border: 0.5px solid rgba(255, 255, 255, 0.5);
+        border-radius: 28px;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        .app-tabbar { bottom: calc(8px + env(safe-area-inset-bottom)); }
+    }
+    .app-tab {
+        flex: 1; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; height: 48px; gap: 1px; text-decoration: none;
+        color: #8E8E93; font-size: 10px; font-weight: 500;
+        position: relative; transition: all 0.2s ease;
+        border-radius: 20px;
+    }
+    .app-tab i { font-size: 22px; transition: all 0.2s ease; }
+    .app-tab.active {
+        color: #1E293B;
+    }
+    .app-tab.active i {
+        transform: translateY(-2px);
+        color: #1E293B;
+    }
+    .app-tab:active {
+        background: rgba(0, 0, 0, 0.04);
+    }
+    .app-tab .app-tab-badge {
+        position: absolute; top: 2px; right: 50%; margin-right: -16px;
+        min-width: 16px; height: 16px; background: var(--glass-danger);
+        color: #fff; border-radius: 8px; font-size: 10px; line-height: 16px;
+        text-align: center; padding: 0 4px;
+    }
+
+    /* ========== 内容区 ========== */
+    .app-content {
+        flex: 1; display: flex; flex-direction: column;
+        padding: 16px; overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* ========== 卡片 - 液态玻璃核心 ========== */
+    .app-card {
+        background: var(--glass-card-bg);
+        backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+        border: 0.5px solid var(--glass-card-border);
+        border-radius: var(--glass-radius-lg);
+        padding: 20px; margin-bottom: 12px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1), var(--glass-shadow-inset);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+    .app-card:active {
+        transform: scale(0.985);
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 4px 16px rgba(31, 38, 135, 0.06), var(--glass-shadow-inset);
+    }
+    .app-card-title {
+        font-size: 16px; font-weight: 700; color: #1E293B; margin-bottom: 14px;
+        display: flex; align-items: center; justify-content: space-between;
+        letter-spacing: -0.1px;
+    }
+    .app-card-title .app-card-more {
+        font-size: 13px; color: var(--glass-primary); font-weight: 500; text-decoration: none;
+    }
+
+    /* ========== 表单输入 ========== */
+    .app-input-group { margin-bottom: 14px; }
+    .app-input-label {
+        display: block; font-size: 13px; font-weight: 600; color: #1E293B; margin-bottom: 6px;
+    }
+    .app-input {
+        width: 100%; height: 48px; padding: 0 16px; font-size: 16px;
+        border: 0.5px solid rgba(0,0,0,0.08);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.55);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        color: #1E293B; outline: none;
+        transition: all 0.2s; box-sizing: border-box;
+        -webkit-appearance: none;
+    }
+    .app-input:focus {
+        border-color: var(--glass-primary);
+        box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.12);
+        background: rgba(255, 255, 255, 0.8);
+    }
+    .app-input::placeholder { color: #94A3B8; }
+    .app-textarea {
+        width: 100%; min-height: 100px; padding: 14px 16px; font-size: 15px;
+        border: 0.5px solid rgba(0,0,0,0.08); border-radius: 12px;
+        background: rgba(255, 255, 255, 0.6); color: #1E293B; outline: none;
+        font-family: inherit; resize: vertical; box-sizing: border-box;
+    }
+    .app-input-row { display: flex; gap: 8px; }
+    .app-input-row .app-input { flex: 1; }
+
+    /* ========== 按钮 ========== */
+    .app-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        height: 46px; padding: 0 24px; font-size: 15px; font-weight: 600;
+        border: none; border-radius: 14px; cursor: pointer; text-decoration: none;
+        transition: all 0.2s; white-space: nowrap; outline: none;
+        background: rgba(255, 255, 255, 0.6); color: #1E293B;
+        border: 0.5px solid rgba(0,0,0,0.08);
+        -webkit-tap-highlight-color: transparent;
+    }
+    .app-btn:active { transform: scale(0.97); }
+    .app-btn-primary {
+        background: linear-gradient(135deg, var(--glass-primary), var(--glass-primary-dark));
+        color: #fff; border: none;
+        box-shadow: 0 4px 14px rgba(79, 124, 255, 0.35);
+    }
+    .app-btn-primary:active { box-shadow: 0 2px 8px rgba(79, 124, 255, 0.3); }
+    .app-btn-outline {
+        background: transparent; color: var(--glass-primary);
+        border: 1.5px solid var(--glass-primary);
+    }
+    .app-btn-danger { background: var(--glass-danger); color: #fff; border: none; }
+    .app-btn-success { background: var(--glass-success); color: #fff; border: none; }
+    .app-btn-sm { height: 36px; padding: 0 16px; font-size: 13px; border-radius: 10px; }
+    .app-btn-block { width: 100%; }
+    .app-btn:disabled { opacity: 0.5; pointer-events: none; }
+
+    /* ========== 列表 ========== */
+    .app-list-item {
+        display: flex; align-items: center; padding: 14px 0;
+        border-bottom: 0.5px solid rgba(0, 0, 0, 0.04);
+        text-decoration: none; color: #1E293B; transition: background 0.15s;
+    }
+    .app-list-item:last-child { border-bottom: none; }
+    .app-list-item:active {
+        background: rgba(0,0,0,0.02); margin: 0 -20px; padding: 14px 20px; border-radius: 12px;
+    }
+    .app-list-icon {
+        width: 42px; height: 42px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; flex-shrink: 0; margin-right: 12px;
+    }
+    .app-list-icon.blue { background: rgba(79,124,255,0.1); color: var(--glass-primary); }
+    .app-list-icon.green { background: rgba(16,185,129,0.1); color: var(--glass-success); }
+    .app-list-icon.orange { background: rgba(245,158,11,0.1); color: var(--glass-warning); }
+    .app-list-icon.red { background: rgba(239,68,68,0.1); color: var(--glass-danger); }
+    .app-list-icon.purple { background: rgba(139,92,246,0.1); color: var(--glass-purple); }
+    .app-list-body { flex: 1; min-width: 0; }
+    .app-list-title { font-size: 15px; font-weight: 600; color: #1E293B; }
+    .app-list-sub { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+    .app-list-arrow { color: #94A3B8; font-size: 13px; flex-shrink: 0; margin-left: 8px; }
+    .app-list-right { font-size: 14px; color: #64748B; flex-shrink: 0; margin-left: 8px; font-weight: 500; }
+
+    /* ========== 标签/徽章 ========== */
+    .app-tag {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600;
+    }
+    .app-tag-primary { background: rgba(79,124,255,0.1); color: var(--glass-primary); }
+    .app-tag-success { background: rgba(16,185,129,0.1); color: var(--glass-success); }
+    .app-tag-warning { background: rgba(245,158,11,0.1); color: var(--glass-warning); }
+    .app-tag-danger { background: rgba(239,68,68,0.1); color: var(--glass-danger); }
+    .app-tag-info { background: rgba(14,165,233,0.1); color: var(--glass-info); }
+
+    /* ========== 状态指示器 ========== */
+    .app-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
+    .app-status-dot.online { background: var(--glass-success); }
+    .app-status-dot.offline { background: var(--glass-danger); }
+    .app-status-dot.pending { background: var(--glass-warning); }
+
+    /* ========== 网格 ========== */
+    .app-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .app-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+    /* ========== Toast 轻提示 ========== */
+    .app-toast {
+        position: fixed; top: 64px; left: 16px; right: 16px; z-index: 2000;
+        padding: 14px 18px; border-radius: 14px; font-size: 14px; font-weight: 500;
+        text-align: center; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+        display: none; animation: appToIn 0.3s ease;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .app-toast.show { display: block; }
+    .app-toast-success { background: rgba(16,185,129,0.92); color: #fff; }
+    .app-toast-error { background: rgba(239,68,68,0.92); color: #fff; }
+    .app-toast-info { background: rgba(0,0,0,0.8); color: #fff; }
+    @keyframes appToIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ========== 首页 Hero - 液态玻璃 ========== */
+    .app-hero {
+        position: relative; margin: -16px -16px 16px; padding: 28px 20px 24px;
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(28px) saturate(200%);
+        -webkit-backdrop-filter: blur(28px) saturate(200%);
+        border: 0.5px solid rgba(255, 255, 255, 0.45);
+        border-radius: 0 0 24px 24px;
+        color: #1E293B;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1), inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .app-hero::before {
+        content: ''; position: absolute; top: -40%; right: -25%;
+        width: 180px; height: 180px;
+        background: radial-gradient(circle, rgba(79,124,255,0.08) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .app-hero::after {
+        content: ''; position: absolute; bottom: -30%; left: -15%;
+        width: 140px; height: 140px;
+        background: radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .app-hero * { position: relative; z-index: 1; }
+    .app-hero h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.5px; color: #1E293B; }
+    .app-hero p { font-size: 13px; color: #64748B; margin-bottom: 0; }
+    .app-hero .app-hero-logo {
+        width: 52px; height: 52px; border-radius: 50%; overflow: hidden; margin-bottom: 12px;
+        background: rgba(255,255,255,0.4); backdrop-filter: blur(10px);
+        border: 2px solid rgba(255,255,255,0.5);
+    }
+    .app-hero .app-hero-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .app-hero-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .app-hero-btn {
+        flex: 1; height: 44px; display: flex; align-items: center; justify-content: center;
+        border-radius: 14px; font-size: 15px; font-weight: 600; text-decoration: none;
+        transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .app-hero-btn:active { transform: scale(0.97); }
+    .app-hero-btn-primary {
+        background: linear-gradient(135deg, var(--glass-primary), var(--glass-primary-dark));
+        color: #fff; box-shadow: 0 4px 16px rgba(79,124,255,0.35);
+    }
+    .app-hero-btn-outline {
+        background: rgba(255,255,255,0.5); color: var(--glass-primary);
+        border: 1.5px solid var(--glass-primary);
+    }
+    .app-hero-features { display: flex; gap: 10px; margin-top: 18px; }
+    .app-hero-feature {
+        flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+        padding: 12px 8px; background: rgba(255,255,255,0.5);
+        border: 0.5px solid rgba(255,255,255,0.6);
+        border-radius: 14px; font-size: 12px; font-weight: 600; color: #1E293B;
+    }
+    .app-hero-feature i { font-size: 20px; color: var(--glass-primary); }
+
+    /* ========== 首页宣传卖点 ========== */
+    .app-promo { margin-bottom: 16px; }
+    .app-promo-head { text-align: center; margin-bottom: 12px; }
+    .app-promo-title { font-size: 17px; font-weight: 700; color: #1E293B; }
+    .app-promo-sub { font-size: 12px; color: #94A3B8; margin-top: 2px; }
+    .app-promo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .app-promo-item {
+        display: flex; align-items: center; gap: 10px; padding: 12px;
+        background: rgba(255,255,255,0.6); border: 0.5px solid rgba(255,255,255,0.6);
+        border-radius: 14px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    .app-promo-item i { font-size: 22px; flex-shrink: 0; }
+    .app-promo-info { display: flex; flex-direction: column; gap: 2px; }
+    .app-promo-info b { font-size: 13px; color: #1E293B; }
+    .app-promo-info span { font-size: 11px; color: #94A3B8; }
+
+    /* ========== 首页悬浮药丸快捷入口 ========== */
+    .app-quick-pill {
+        display: flex; align-items: center; justify-content: space-around;
+        margin: 0 12px 16px; padding: 10px 6px;
+        background: rgba(255, 255, 255, 0.80);
+        backdrop-filter: blur(28px) saturate(200%);
+        -webkit-backdrop-filter: blur(28px) saturate(200%);
+        border: 0.5px solid rgba(255, 255, 255, 0.55);
+        border-radius: 28px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255,255,255,0.65);
+        position: relative; z-index: 10;
+    }
+    .app-quick-pill-item {
+        display: flex; flex-direction: column; align-items: center; gap: 5px;
+        text-decoration: none; color: #1E293B; font-size: 12px; font-weight: 600;
+        padding: 6px 14px; border-radius: 20px; transition: all 0.2s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .app-quick-pill-item:active { transform: scale(0.95); }
+    .app-quick-pill-icon {
+        width: 44px; height: 44px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center; font-size: 20px;
+        margin-bottom: 2px;
+        transition: all 0.2s ease;
+    }
+    .app-quick-pill-blue { background: rgba(79,124,255,0.12); color: var(--glass-primary); }
+    .app-quick-pill-green { background: rgba(16,185,129,0.12); color: var(--glass-success); }
+    .app-quick-pill-orange { background: rgba(245,158,11,0.12); color: var(--glass-warning); }
+    .app-quick-pill-red { background: rgba(239,68,68,0.12); color: var(--glass-danger); }
+
+    /* ========== 区块标题 ========== */
+    .app-section-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 12px; padding: 0 4px;
+    }
+    .app-section-title { font-size: 16px; font-weight: 700; color: #1E293B; letter-spacing: -0.1px; }
+    .app-section-more { font-size: 13px; color: var(--glass-primary); font-weight: 500; text-decoration: none; }
+
+    /* ========== 热门套餐轮播（整块显示，卡片占满宽度） ========== */
+    .app-carousel {
+        display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        padding: 4px 0 12px; margin: 0;
+    }
+    .app-carousel::-webkit-scrollbar { display: none; }
+    .app-carousel-card {
+        flex: 0 0 100%; scroll-snap-align: start; display: flex; flex-direction: column;
+        position: relative;
+        background: rgba(255,255,255,0.90);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 0.5px solid rgba(255,255,255,0.55);
+        border-radius: 24px; padding: 20px;
+        text-decoration: none; color: #1E293B;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    .app-carousel-card.featured { border: 1.5px solid #4F7CFF; }
+    .app-carousel-card:active { transform: scale(0.98); }
+    .app-carousel-badge {
+        position: absolute; top: 16px; right: 16px; padding: 4px 12px;
+        border-radius: 16px; font-size: 12px; font-weight: 600; color: #fff;
+        background: #4F7CFF;
+    }
+    .app-carousel-name { font-size: 20px; font-weight: 800; margin-bottom: 10px; padding-right: 52px; color: #E91E63; }
+    .app-carousel-desc { font-size: 12px; color: #64748B; margin-bottom: 14px; line-height: 1.5; min-height: 36px; }
+    .app-carousel-specs { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: #64748B; margin-bottom: 16px; }
+    .app-carousel-specs span { display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.04); padding: 5px 10px; border-radius: 10px; }
+    .app-carousel-price { margin-top: auto; font-size: 30px; font-weight: 800; color: #FF5722; }
+    .app-carousel-price small { font-size: 13px; font-weight: 400; color: #94A3B8; }
+    .app-carousel-price.free { color: #10B981; }
+    .app-carousel-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 16px; }
+    .app-carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,0.12); transition: all 0.2s; }
+    .app-carousel-dot.active { width: 16px; border-radius: 3px; background: #E91E63; }
+
+    /* ========== 产品小卡片 ========== */
+    .app-product-mini {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 0; border-bottom: 0.5px solid rgba(0,0,0,0.04);
+        text-decoration: none; color: #1E293B;
+    }
+    .app-product-mini:last-child { border-bottom: none; }
+    .app-product-mini-info { flex: 1; min-width: 0; }
+    .app-product-mini-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .app-product-mini-specs { display: flex; gap: 10px; font-size: 12px; color: #94A3B8; }
+    .app-product-mini-price { font-size: 17px; font-weight: 700; color: var(--glass-danger); white-space: nowrap; }
+    .app-product-mini-price.free { color: var(--glass-success); }
+
+    /* ========== 产品卡片 ========== */
+    .app-product-card {
+        display: block;
+        background: var(--glass-card-bg);
+        backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+        border: 0.5px solid var(--glass-card-border);
+        border-radius: var(--glass-radius-lg); padding: 20px; margin-bottom: 12px;
+        text-decoration: none; color: #1E293B;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1), var(--glass-shadow-inset);
+        transition: transform 0.15s;
+    }
+    .app-product-card:active { transform: scale(0.98); }
+    .app-product-card.featured {
+        border-color: var(--glass-primary);
+        box-shadow: 0 0 0 1px var(--glass-primary), 0 8px 32px rgba(31, 38, 135, 0.12);
+    }
+    .app-product-name { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .app-product-desc { font-size: 13px; color: #94A3B8; margin-bottom: 12px; }
+    .app-product-specs { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: #64748B; }
+    .app-product-specs span { display: flex; align-items: center; gap: 4px; }
+    .app-product-price { font-size: 22px; font-weight: 800; color: var(--glass-danger); margin-top: 12px; }
+    .app-product-price small { font-size: 12px; font-weight: 400; color: #94A3B8; }
+    .app-product-price.free { color: var(--glass-success); }
+
+    /* ========== 分类横向滚动 ========== */
+    .app-categories {
+        display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px;
+        -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    }
+    .app-categories::-webkit-scrollbar { display: none; }
+    .app-category-chip {
+        flex-shrink: 0; padding: 8px 18px; border-radius: 999px; font-size: 13px;
+        font-weight: 600; text-decoration: none;
+        background: rgba(255, 255, 255, 0.6); border: 0.5px solid rgba(0,0,0,0.06);
+        color: #64748B; transition: all 0.15s; white-space: nowrap;
+    }
+    .app-category-chip.active { background: var(--glass-primary); color: #fff; border-color: var(--glass-primary); }
+    .app-category-chip:active { transform: scale(0.95); }
+
+    /* ========== 搜索栏 ========== */
+    .app-search {
+        display: flex; align-items: center; gap: 10px;
+        background: rgba(255, 255, 255, 0.6);
+        border: 0.5px solid rgba(0,0,0,0.06); border-radius: 14px;
+        padding: 0 16px; height: 44px; margin-bottom: 16px;
+    }
+    .app-search i { color: #94A3B8; font-size: 16px; }
+    .app-search input { flex: 1; border: none; background: transparent; font-size: 15px; color: #1E293B; outline: none; height: 100%; }
+    .app-search input::placeholder { color: #94A3B8; }
+
+    /* ========== 空状态 ========== */
+    .app-empty { text-align: center; padding: 40px 20px; color: #94A3B8; }
+    .app-empty i { font-size: 48px; margin-bottom: 12px; display: block; opacity: 0.25; }
+    .app-empty h3 { font-size: 16px; color: #1E293B; margin-bottom: 4px; font-weight: 600; }
+    .app-empty p { font-size: 13px; }
+
+    /* ========== 表格 ========== */
+    .app-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .app-table th { text-align: left; padding: 10px 12px; font-weight: 600; color: #94A3B8; font-size: 11px; text-transform: uppercase; border-bottom: 0.5px solid rgba(0,0,0,0.04); }
+    .app-table td { padding: 12px; border-bottom: 0.5px solid rgba(0,0,0,0.04); color: #1E293B; }
+    .app-table tr:last-child td { border-bottom: none; }
+
+    /* ========== 弹窗/Modal ========== */
+    .app-modal-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.5); z-index: 1500;
+        display: flex; align-items: flex-end; justify-content: center;
+        animation: appFadeIn 0.2s ease;
+    }
+    .app-modal {
+        width: 100%; max-width: 500px; max-height: 80vh;
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border-radius: 20px 20px 0 0; padding: 20px;
+        padding-bottom: calc(20px + env(safe-area-inset-bottom)); overflow-y: auto;
+        border: 0.5px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 -8px 32px rgba(31, 38, 135, 0.12);
+        animation: appSlideUp 0.3s ease;
+    }
+    @keyframes appSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes appFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ========== 登录/注册页 ========== */
+    .app-auth-page {
+        flex: 1; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; padding: 20px 16px;
+        position: relative; overflow: hidden;
+    }
+    .app-auth-logo {
+        width: 64px; height: 64px; border-radius: 50%; overflow: hidden; margin-bottom: 16px;
+        background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    .app-auth-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .app-auth-title { font-size: 24px; font-weight: 800; color: #1E293B; margin-bottom: 4px; letter-spacing: -0.3px; }
+    .app-auth-sub { font-size: 14px; color: #94A3B8; margin-bottom: 32px; }
+    .app-auth-form { width: 100%; max-width: 360px; }
+    .app-auth-form .app-input-group { margin-bottom: 14px; }
+    .app-auth-form .app-btn { margin-top: 8px; }
+    .app-auth-link { text-align: center; margin-top: 16px; font-size: 14px; color: #94A3B8; }
+    .app-auth-link a { color: var(--glass-primary); text-decoration: none; font-weight: 600; }
+
+    /* ========== 信息行 ========== */
+    .app-info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid rgba(0,0,0,0.04); }
+    .app-info-row:last-child { border-bottom: none; }
+    .app-info-label { font-size: 14px; color: #94A3B8; }
+    .app-info-value { font-size: 14px; color: #1E293B; font-weight: 500; }
+
+    /* ========== 加载动画 ========== */
+    .app-loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
+    .app-spinner {
+        width: 32px; height: 32px; border: 3px solid rgba(0,0,0,0.06);
+        border-top-color: var(--glass-primary); border-radius: 50%;
+        animation: appSpin 0.8s linear infinite;
+    }
+    @keyframes appSpin { to { transform: rotate(360deg); } }
+
+    /* ========== 公告 ========== */
+    .app-notice-item { display: block; padding: 12px 0; border-bottom: 0.5px solid rgba(0,0,0,0.04); text-decoration: none; color: #1E293B; }
+    .app-notice-item:last-child { border-bottom: none; }
+    .app-notice-item .app-notice-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .app-notice-item .app-notice-time { font-size: 11px; color: #94A3B8; }
+
+    /* ========== 控制台统计 ========== */
+    .app-stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    .app-stat-card {
+        background: var(--glass-card-bg);
+        backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+        -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+        border: 0.5px solid var(--glass-card-border);
+        border-radius: var(--glass-radius-lg); padding: 16px; text-align: center;
+        box-shadow: 0 4px 16px rgba(31, 38, 135, 0.08), var(--glass-shadow-inset);
+    }
+    .app-stat-card .app-stat-icon { font-size: 24px; margin-bottom: 6px; }
+    .app-stat-card .app-stat-value { font-size: 22px; font-weight: 800; color: #1E293B; }
+    .app-stat-card .app-stat-label { font-size: 11px; color: #94A3B8; margin-top: 2px; }
+
+    /* ========== 开关 ========== */
+    .app-switch { position: relative; width: 48px; height: 28px; flex-shrink: 0; }
+    .app-switch input { display: none; }
+    .app-switch .app-switch-slider {
+        position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.15); border-radius: 14px; transition: 0.2s; cursor: pointer;
+    }
+    .app-switch .app-switch-slider::before {
+        content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px;
+        background: #fff; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .app-switch input:checked + .app-switch-slider { background: var(--glass-primary); }
+    .app-switch input:checked + .app-switch-slider::before { transform: translateX(20px); }
+
+    /* ========== 确认对话框 ========== */
+    .app-confirm-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.65); z-index: 2000;
+        display: flex; align-items: center; justify-content: center; padding: 24px;
+    }
+    .app-confirm {
+        width: 100%; max-width: 300px;
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border-radius: 20px; padding: 24px; text-align: center;
+        border: 0.5px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 16px 48px rgba(31, 38, 135, 0.18);
+    }
+    .app-confirm h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #1E293B; }
+    .app-confirm p { font-size: 14px; color: #94A3B8; margin-bottom: 20px; }
+    .app-confirm .app-confirm-btns { display: flex; gap: 10px; }
+    .app-confirm .app-confirm-btns .app-btn { flex: 1; }
+
+    /* ========== 滑动删除 ========== */
+    .app-swipe-item { position: relative; overflow: hidden; }
+    .app-swipe-delete {
+        position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
+        background: var(--glass-danger); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 600; border-radius: 0 12px 12px 0;
+        transform: translateX(100%); transition: transform 0.2s;
+    }
+
+    /* ========== 头像 ========== */
+    .app-avatar {
+        border-radius: 50%; overflow: hidden; flex-shrink: 0;
+        background: rgba(0,0,0,0.04); border: 2px solid rgba(255,255,255,0.5);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .app-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .app-avatar-sm { width: 36px; height: 36px; }
+    .app-avatar-md { width: 48px; height: 48px; }
+    .app-avatar-lg { width: 64px; height: 64px; }
+
+    /* ========== 分割线 ========== */
+    .app-divider {
+        height: 0.5px; background: rgba(0,0,0,0.06); margin: 16px 0;
+    }
+
+    /* ========== 背景图时卡片更高不透明度（与电脑端一致） ========== */
+    body.glass-enabled.glass-bg-image .app-card,
+    body.glass-enabled.glass-bg-image .app-carousel-card,
+    body.glass-enabled.glass-bg-image .app-product-card,
+    body.glass-enabled.glass-bg-image .app-stat-card {
+        background: rgba(255, 255, 255, 0.88) !important;
+        border-color: rgba(255, 255, 255, 0.4) !important;
+    }
+    body.glass-enabled.glass-bg-image .app-topbar {
+        background: rgba(255, 255, 255, 0.85) !important;
+    }
+    body.glass-enabled.glass-bg-image .app-input {
+        background: rgba(255, 255, 255, 0.75) !important;
+    }
+
+    /* ========== 深色主题适配 ========== */
+    body[data-theme='dark'] {
+        --glass-card-bg: rgba(15, 23, 42, 0.72);
+        --glass-card-border: rgba(255, 255, 255, 0.1);
+        --glass-topbar-bg: rgba(15, 23, 42, 0.78);
+        --glass-tabbar-bg: rgba(15, 23, 42, 0.78);
+    }
+    body[data-theme='dark'] .app-card,
+    body[data-theme='dark'] .app-carousel-card,
+    body[data-theme='dark'] .app-product-card,
+    body[data-theme='dark'] .app-stat-card {
+        background: rgba(15, 23, 42, 0.72) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: #E2E8F0;
+    }
+    body[data-theme='dark'] .app-topbar {
+        background: rgba(15, 23, 42, 0.78) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    body[data-theme='dark'] .app-topbar .app-title,
+    body[data-theme='dark'] .app-topbar .app-back,
+    body[data-theme='dark'] .app-card-title,
+    body[data-theme='dark'] .app-list-title,
+    body[data-theme='dark'] .app-section-title,
+    body[data-theme='dark'] .app-stat-value,
+    body[data-theme='dark'] .app-info-value,
+    body[data-theme='dark'] .app-product-name,
+    body[data-theme='dark'] .app-carousel-name,
+    body[data-theme='dark'] .app-notice-title,
+    body[data-theme='dark'] .app-confirm h3,
+    body[data-theme='dark'] .app-input-label {
+        color: #E2E8F0 !important;
+    }
+    body[data-theme='dark'] .app-list-sub,
+    body[data-theme='dark'] .app-stat-label,
+    body[data-theme='dark'] .app-info-label,
+    body[data-theme='dark'] .app-product-desc,
+    body[data-theme='dark'] .app-carousel-desc,
+    body[data-theme='dark'] .app-notice-time,
+    body[data-theme='dark'] .app-confirm p,
+    body[data-theme='dark'] .app-empty,
+    body[data-theme='dark'] .app-input::placeholder {
+        color: #64748B !important;
+    }
+    body[data-theme='dark'] .app-input {
+        background: rgba(15, 23, 42, 0.55) !important;
+        border-color: rgba(255, 255, 255, 0.1) !important;
+        color: #E2E8F0 !important;
+    }
+    body[data-theme='dark'] .app-list-item {
+        color: #E2E8F0; border-bottom-color: rgba(255, 255, 255, 0.06);
+    }
+    body[data-theme='dark'] .app-list-arrow,
+    body[data-theme='dark'] .app-list-right {
+        color: #94A3B8 !important;
+    }
+    body[data-theme='dark'] .app-tabbar {
+        background: rgba(15, 23, 42, 0.82) !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    body[data-theme='dark'] .app-tab { color: #64748B; }
+    body[data-theme='dark'] .app-tab.active { color: #E2E8F0; }
+    body[data-theme='dark'] .app-tab.active i { color: #E2E8F0; }
+    body[data-theme='dark'] .app-quick-pill {
+        background: rgba(15, 23, 42, 0.82) !important;
+        border-color: rgba(255, 255, 255, 0.12) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+    body[data-theme='dark'] .app-quick-pill-item { color: #E2E8F0; }
+    body[data-theme='dark'] .app-hero { background: rgba(15, 23, 42, 0.75); color: #E2E8F0; border-color: rgba(255, 255, 255, 0.12); }
+    body[data-theme='dark'] .app-hero h1 { color: #E2E8F0; }
+    body[data-theme='dark'] .app-hero p { color: #94A3B8; }
+    body[data-theme='dark'] .app-hero-feature { background: rgba(255,255,255,0.06); color: #E2E8F0; border-color: rgba(255,255,255,0.1); }
+    body[data-theme='dark'] .app-hero-btn-outline { background: rgba(255,255,255,0.06); }
+    body[data-theme='dark'] .app-promo-title { color: #E2E8F0; }
+    body[data-theme='dark'] .app-promo-item { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
+    body[data-theme='dark'] .app-promo-info b { color: #E2E8F0; }
+    body[data-theme='dark'] .app-btn {
+        background: rgba(15, 23, 42, 0.55); color: #E2E8F0; border-color: rgba(255, 255, 255, 0.1);
+    }
+    body[data-theme='dark'] .app-table th,
+    body[data-theme='dark'] .app-table td {
+        color: #E2E8F0; border-bottom-color: rgba(255, 255, 255, 0.06);
+    }
+    body[data-theme='dark'] .app-info-row,
+    body[data-theme='dark'] .app-notice-item,
+    body[data-theme='dark'] .app-product-mini {
+        border-bottom-color: rgba(255, 255, 255, 0.06);
+    }
+    body[data-theme='dark'] .app-divider {
+        background: rgba(255,255,255,0.06);
+    }
+    body[data-theme='dark'] .app-search {
+        background: rgba(15, 23, 42, 0.55); border-color: rgba(255, 255, 255, 0.1);
+    }
+    body[data-theme='dark'] .app-search input { color: #E2E8F0; }
+    body[data-theme='dark'] .app-category-chip {
+        background: rgba(15, 23, 42, 0.55); border-color: rgba(255, 255, 255, 0.1); color: #94A3B8;
+    }
+    body[data-theme='dark'].glass-enabled.glass-bg-image .app-card,
+    body[data-theme='dark'].glass-enabled.glass-bg-image .app-carousel-card,
+    body[data-theme='dark'].glass-enabled.glass-bg-image .app-product-card,
+    body[data-theme='dark'].glass-enabled.glass-bg-image .app-stat-card {
+        background: rgba(15, 23, 42, 0.88) !important;
+    }
+    body[data-theme='dark'].glass-enabled.glass-bg-image .app-topbar {
+        background: rgba(15, 23, 42, 0.85) !important;
+    }
+    body[data-theme='dark'] .app-page,
+    html body[data-theme='dark'].glass-enabled {
+        background: #0F172A !important;
+        background-color: #0F172A !important;
+    }
+    body[data-theme='dark'] .app-avatar {
+        border-color: rgba(255,255,255,0.15);
+    }
+}
